@@ -1,0 +1,16 @@
+.results {
+	border: 1px solid var(--wp-components-color-gray-100, rgb(240, 240, 240));
+	padding: 4px 0;
+	border-radius: 0 0 4px 4px;
+}
+
+.spinner {
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	padding: 16px 0;
+}
+
+.button {
+	height: auto;
+}

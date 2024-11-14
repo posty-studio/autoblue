@@ -5,10 +5,10 @@ namespace BSKY4WP\Endpoints;
 use WP_REST_Controller;
 use WP_REST_Server;
 
-class SearchController extends WP_REST_Controller {
+class AccountController extends WP_REST_Controller {
 	public function __construct() {
 		$this->namespace = 'bsky4wp/v1';
-		$this->rest_base = 'search';
+		$this->rest_base = 'account';
 	}
 
 	public function register_routes() {
@@ -18,8 +18,8 @@ class SearchController extends WP_REST_Controller {
 			[
 				[
 					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => [ $this, 'get_search_results' ],
-					'permission_callback' => [ $this, 'get_search_results_permissions_check' ],
+					'callback'            => [ $this, 'get_account_info' ],
+					'permission_callback' => [ $this, 'get_account_info_permissions_check' ],
 				],
 				'schema' => [ $this, 'get_public_item_schema' ],
 			]
@@ -29,23 +29,22 @@ class SearchController extends WP_REST_Controller {
 	/**
 	 * @return bool
 	 */
-	public function get_search_results_permissions_check() {
+	public function get_account_info_permissions_check() {
 		return current_user_can( 'edit_posts' );
 	}
 
 	/**
-	 * GET `/bsky4wp/v1/search`
+	 * GET `/bsky4wp/v1/account`
 	 *
 	 * @param WP_REST_Request $request The API request.
 	 * @return WP_REST_Response
 	 */
-	public function get_search_results( $request ) {
+	public function get_account_info( $request ) {
 		$url = add_query_arg(
 			[
-				'q'     => $request->get_param( 'q' ),
-				'limit' => 8,
+				'actor' => $request->get_param( 'did' ),
 			],
-			'https://public.api.bsky.app/xrpc/app.bsky.actor.searchActorsTypeahead'
+			'https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile'
 		);
 
 		$response = wp_safe_remote_get(
@@ -77,8 +76,8 @@ class SearchController extends WP_REST_Controller {
 			'title'      => 'bsky4wp-search',
 			'type'       => 'object',
 			'properties' => [
-				'q' => [
-					'description' => __( 'Search query prefix', 'bsky4wp' ),
+				'did' => [
+					'description' => __( 'DID of the account to fetch.', 'bsky4wp' ),
 					'type'        => 'string',
 					'context'     => [ 'view' ],
 					'default'     => '',
