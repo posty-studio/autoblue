@@ -1,0 +1,25 @@
+{
+	"name": "bsky-for-wp",
+	"description": "Add Bluesky to your WordPress website. Automatically share new posts to Bluesky and integrate Bluesky replies with the comments on your website.",
+	"version": "1.0.0",
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start"
+	},
+	"license": "GPL-3.0",
+	"prettier": "@wordpress/prettier-config",
+	"browserslist": [
+		"extends @wordpress/browserslist-config"
+	],
+	"devDependencies": {
+		"@wordpress/prettier-config": "^4.11.0",
+		"@wordpress/scripts": "^30.4.0",
+		"postcss-import": "^16.1.0",
+		"postcss-preset-env": "^10.1.0",
+		"prettier": "npm:wp-prettier@^3.0.3",
+		"replace-in-file": "^8.2.0"
+	},
+	"dependencies": {
+		"@wordpress/components": "^28.11.0"
+	}
+}
