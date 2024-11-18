@@ -31,7 +31,7 @@ const Notices = () => {
 };
 
 const AdminPage = () => {
-	const {
+	let {
 		accountDIDs,
 		setAccountDIDs,
 		appPassword,
@@ -40,6 +40,16 @@ const AdminPage = () => {
 		isSaving,
 		saveSettings,
 	} = useSettings();
+
+	console.log( {
+		accountDIDs,
+		appPassword,
+		isDirty,
+		isSaving,
+		saveSettings,
+	} );
+
+	accountDIDs = [];
 
 	const handleSubmit = ( event ) => {
 		event.preventDefault();

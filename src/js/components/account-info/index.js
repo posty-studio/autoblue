@@ -1,41 +1,75 @@
-import clsx from 'clsx';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import apiFetch from '@wordpress/api-fetch';
-import styles from './styles.module.scss';
 import { Spinner } from '@wordpress/components';
+import clsx from 'clsx';
+import styles from './styles.module.scss';
 
-const AccountInfo = ( { did, handle, displayName, avatar, className } ) => {
+const useAccountInfo = (
+	did,
+	initialHandle,
+	initialDisplayName,
+	initialAvatar
+) => {
 	const [ userData, setUserData ] = useState( {
-		handle,
-		displayName,
-		avatar,
+		handle: initialHandle,
+		displayName: initialDisplayName,
+		avatar: initialAvatar,
 	} );
 	const [ isLoading, setIsLoading ] = useState( false );
+	const fetchController = useRef( null );
 
 	useEffect( () => {
 		const fetchUserData = async () => {
-			if ( ! handle || ! displayName ) {
-				try {
-					setIsLoading( true );
-					const response = await apiFetch( {
-						path: `/bsky4wp/v1/account?did=${ did }`,
-					} );
+			if ( initialHandle && initialDisplayName ) {
+				return;
+			}
 
-					setUserData( {
-						handle: response.handle || handle,
-						displayName: response.displayName || displayName,
-						avatar: response.avatar || avatar,
-					} );
-				} catch ( error ) {
+			if ( fetchController.current ) {
+				fetchController.current.abort();
+			}
+
+			fetchController.current = new AbortController();
+
+			try {
+				setIsLoading( true );
+				const response = await apiFetch( {
+					path: `/bsky4wp/v1/account?did=${ did }`,
+					signal: fetchController.current.signal,
+				} );
+
+				setUserData( {
+					handle: response.handle || initialHandle,
+					displayName: response.displayName || initialDisplayName,
+					avatar: response.avatar || initialAvatar,
+				} );
+			} catch ( error ) {
+				if ( error.name !== 'AbortError' ) {
 					console.error( 'Error fetching user data:', error );
-				} finally {
-					setIsLoading( false );
 				}
+			} finally {
+				setIsLoading( false );
 			}
 		};
 
 		fetchUserData();
-	}, [ did, handle, displayName, avatar ] );
+
+		return () => {
+			if ( fetchController.current ) {
+				fetchController.current.abort();
+			}
+		};
+	}, [ did, initialHandle, initialDisplayName, initialAvatar ] );
+
+	return { userData, isLoading };
+};
+
+const AccountInfo = ( { did, handle, displayName, avatar, className } ) => {
+	const { userData, isLoading } = useAccountInfo(
+		did,
+		handle,
+		displayName,
+		avatar
+	);
 
 	if ( isLoading ) {
 		return (
