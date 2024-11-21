@@ -58,6 +58,10 @@ class AccountController extends WP_REST_Controller {
 
 		$body = json_decode( wp_remote_retrieve_body( $response ) );
 
+		if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) >= 300 ) {
+			return new \WP_Error( 'bsky4wp_profile_error', $body );
+		}
+
 		return rest_ensure_response( $body );
 	}
 
@@ -73,7 +77,7 @@ class AccountController extends WP_REST_Controller {
 
 		$schema = [
 			'$schema'    => 'http://json-schema.org/draft-04/schema#',
-			'title'      => 'bsky4wp-search',
+			'title'      => 'bsky4wp-account',
 			'type'       => 'object',
 			'properties' => [
 				'did' => [

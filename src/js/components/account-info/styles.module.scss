@@ -5,6 +5,32 @@
 }
 
 .wrapper {
+	--avatar-size: 40px;
+	--name-size: 15px;
+	--handle-size: 14px;
+	padding: 10px;
+	color: rgb(30, 30, 30);
+	background-color: rgb(255, 255, 255);
+	background-color: #fff;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	width: 100%;
+	box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 0px 1px;
+	outline: none;
+
+	&:first-of-type {
+		border-top-left-radius: 7px;
+		border-top-right-radius: 7px;
+	}
+
+	&:last-of-type {
+		border-bottom-left-radius: 7px;
+		border-bottom-right-radius: 7px;
+	}
+}
+
+.meta {
 	display: flex;
 	align-items: center;
 	gap: 12px;
@@ -13,8 +39,8 @@
 
 .avatar {
 	margin: 0;
-	width: 40px;
-	height: 40px;
+	width: var(--avatar-size);
+	height: var(--avatar-size);
 	border-radius: 50%;
 	background-color: #f1f1f1;
 	border: 1px solid #f1f1f1;
@@ -33,13 +59,13 @@
 }
 
 .name {
-	font-size: 15px;
+	font-size: var(--name-size);
 	font-weight: 600;
 	line-height: 1;
 }
 
 .handle {
-	font-size: 14px;
+	font-size: var(--handle-size);
 	opacity: 0.7;
 	line-height: 1;
 }

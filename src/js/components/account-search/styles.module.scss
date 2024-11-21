@@ -1,10 +1,10 @@
 .results {
-	border: 1px solid var(--wp-components-color-gray-100, rgb(240, 240, 240));
+	border: 1px solid rgba(0, 0, 0, 0.1);
 	padding: 4px 0;
 	border-radius: 0 0 4px 4px;
 }
 
-.spinner {
+.empty {
 	width: 100%;
 	display: flex;
 	justify-content: center;
@@ -12,5 +12,25 @@
 }
 
 .button {
+	position: relative;
 	height: auto;
+	padding: 0;
+
+	&:focus-within {
+		z-index: 1;
+	}
+}
+
+.account {
+	box-shadow: none;
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+.button:hover .account,
+.button:focus-within .account {
+	color: var(
+		--wp-components-color-accent,
+		var(--wp-admin-theme-color, #3858e9)
+	);
 }

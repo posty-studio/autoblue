@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import apiFetch from '@wordpress/api-fetch';
 
 const useSettings = () => {
-	const [ accountDIDs, setAccountDIDs ] = useState( [] );
+	const [ accounts, setAccounts ] = useState( [] );
 	const [ appPassword, setAppPassword ] = useState( '' );
 	const [ isDirty, setIsDirty ] = useState( false );
 	const [ isSaving, setIsSaving ] = useState( false );
@@ -16,12 +16,12 @@ const useSettings = () => {
 
 	const fetchSettings = useCallback( async () => {
 		try {
-			const { bsky4wp_app_password, bsky4wp_account_dids } =
-				await apiFetch( {
-					path: '/wp/v2/settings?_fields=bsky4wp_app_password,bsky4wp_account_dids',
-				} );
+			const response = await apiFetch( {
+				path: '/bsky4wp/v1/accounts',
+			} );
 
-			setAppPassword( bsky4wp_app_password );
+			setAccounts( response );
+			setAppPassword( response[ 0 ].appPassword );
 			setAccountDIDs( bsky4wp_account_dids );
 			initialValues.current = {
 				accountDIDs: bsky4wp_account_dids,

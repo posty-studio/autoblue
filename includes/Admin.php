@@ -7,6 +7,7 @@ class Admin {
 		add_action( 'admin_menu', [ $this, 'register_admin_page' ] );
 		add_action( 'admin_menu', [ $this, 'register_admin_page' ] );
 		add_filter( 'plugin_action_links_' . BSKY4WP_BASEFILE, [ $this, 'add_settings_link' ] );
+		add_action( 'init', [ $this, 'register_settings' ] );
 		add_action( 'rest_api_init', [ $this, 'register_settings' ] );
 	}
 
@@ -50,20 +51,6 @@ class Admin {
 									'type'     => 'string',
 									'pattern'  => '^[a-z0-9-]+$', // Allowed characters: a-z, 0-9, hyphen
 									'required' => true,
-								],
-								'meta'         => [
-									'type'       => 'object',
-									'properties' => [
-										'name'   => [
-											'type' => 'string',
-										],
-										'handle' => [
-											'type' => 'string',
-										],
-										'avatar' => [
-											'type' => 'uri',
-										],
-									],
 								],
 							],
 						],

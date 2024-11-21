@@ -1,5 +1,5 @@
 import { __ } from '@wordpress/i18n';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import {
 	Button,
@@ -14,6 +14,7 @@ const AccountSearch = ( { onSelect } ) => {
 	const [ searchValue, setSearchValue ] = useState( '' );
 	const [ loading, setLoading ] = useState( false );
 	const [ results, setResults ] = useState( [] );
+	const [ hasSearched, setHasSearched ] = useState( false );
 	let debounceTimer = null;
 
 	const fetchResults = useCallback( async ( query ) => {
@@ -31,13 +32,16 @@ const AccountSearch = ( { onSelect } ) => {
 				}
 
 				setResults( response.actors );
+				setHasSearched( true );
 			} catch ( error ) {
-				console.error( 'Error fetching results:', error );
+				setResults( [] );
+				setHasSearched( true );
 			} finally {
 				setLoading( false );
 			}
 		} else {
 			setResults( [] );
+			setHasSearched( false );
 		}
 	}, [] );
 
@@ -52,53 +56,79 @@ const AccountSearch = ( { onSelect } ) => {
 		return () => clearTimeout( debounceTimer );
 	}, [ searchValue, fetchResults ] );
 
-	console.log( results );
+	const getResultContent = () => {
+		if ( loading ) {
+			return (
+				<div className={ styles.empty }>
+					<Spinner />
+				</div>
+			);
+		}
+
+		if ( results.length === 0 && searchValue.length > 0 && hasSearched ) {
+			return (
+				<div className={ styles.empty }>
+					{ __(
+						'No accounts found. Please try another search.',
+						'bsky-for-wp'
+					) }
+				</div>
+			);
+		}
+
+		if ( results.length > 0 ) {
+			return results.map( ( { did, handle, displayName, avatar } ) => (
+				<Button
+					key={ did }
+					className={ styles.button }
+					onClick={ () =>
+						onSelect( {
+							did,
+							meta: { handle, name: displayName, avatar },
+						} )
+					}
+				>
+					<AccountInfo
+						account={ {
+							did,
+							meta: {
+								handle,
+								name: displayName,
+								avatar,
+							},
+						} }
+						className={ styles.account }
+					/>
+				</Button>
+			) );
+		}
+
+		return null;
+	};
+
+	const resultContent = getResultContent();
 
 	return (
 		<div>
 			<SearchControl
 				__nextHasNoMarginBottom
 				placeholder={ __(
-					'Search for your Bluesky account',
+					'Search for a Bluesky account',
 					'bsky-for-wp'
 				) }
 				label={ __( 'Bluesky Account', 'bsky-for-wp' ) }
-				hideLabelFromVision={ false }
 				value={ searchValue }
 				onChange={ ( newSearchValue ) =>
 					setSearchValue( newSearchValue )
 				}
 			/>
-			<div>
-				{ loading || ( results && results.length ) ? (
+			{ resultContent && (
+				<div>
 					<VStack spacing={ 0 } className={ styles.results }>
-						{ loading && (
-							<div className={ styles.spinner }>
-								<Spinner />
-							</div>
-						) }
-						{ results &&
-							! loading &&
-							results.length &&
-							results.map(
-								( { did, handle, displayName, avatar } ) => (
-									<Button
-										key={ did }
-										className={ styles.button }
-										onClick={ () => onSelect( did ) }
-									>
-										<AccountInfo
-											did={ did }
-											handle={ handle }
-											displayName={ displayName }
-											avatar={ avatar }
-										/>
-									</Button>
-								)
-							) }
+						{ resultContent }
 					</VStack>
-				) : null }
-			</div>
+				</div>
+			) }
 		</div>
 	);
 };

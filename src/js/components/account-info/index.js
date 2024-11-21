@@ -1,26 +1,22 @@
+import { __ } from '@wordpress/i18n';
 import { useState, useEffect, useRef } from 'react';
 import apiFetch from '@wordpress/api-fetch';
-import { Spinner } from '@wordpress/components';
+import { Spinner, Button } from '@wordpress/components';
 import clsx from 'clsx';
 import styles from './styles.module.scss';
 
-const useAccountInfo = (
-	did,
-	initialHandle,
-	initialDisplayName,
-	initialAvatar
-) => {
+const useAccountInfo = ( did, meta ) => {
 	const [ userData, setUserData ] = useState( {
-		handle: initialHandle,
-		displayName: initialDisplayName,
-		avatar: initialAvatar,
+		handle: meta.handle || '',
+		displayName: meta.name || '',
+		avatar: meta.avatar || '',
 	} );
 	const [ isLoading, setIsLoading ] = useState( false );
 	const fetchController = useRef( null );
 
 	useEffect( () => {
 		const fetchUserData = async () => {
-			if ( initialHandle && initialDisplayName ) {
+			if ( userData.handle ) {
 				return;
 			}
 
@@ -38,11 +34,12 @@ const useAccountInfo = (
 				} );
 
 				setUserData( {
-					handle: response.handle || initialHandle,
-					displayName: response.displayName || initialDisplayName,
-					avatar: response.avatar || initialAvatar,
+					handle: response.handle || userData.handle,
+					displayName: response.displayName || userData.displayName,
+					avatar: response.avatar || userData.avatar,
 				} );
 			} catch ( error ) {
+				console.error( 'Error fetching user data:', error );
 				if ( error.name !== 'AbortError' ) {
 					console.error( 'Error fetching user data:', error );
 				}
@@ -58,38 +55,64 @@ const useAccountInfo = (
 				fetchController.current.abort();
 			}
 		};
-	}, [ did, initialHandle, initialDisplayName, initialAvatar ] );
+	}, [ did, userData ] );
 
 	return { userData, isLoading };
 };
 
-const AccountInfo = ( { did, handle, displayName, avatar, className } ) => {
-	const { userData, isLoading } = useAccountInfo(
-		did,
-		handle,
-		displayName,
-		avatar
-	);
+const AccountInfo = ( {
+	account: { did, meta = {} },
+	className,
+	onDelete = null,
+} ) => {
+	const { userData, isLoading } = useAccountInfo( did, meta );
+	const [ isImageLoaded, setIsImageLoaded ] = useState( false );
+
+	className = clsx( styles.wrapper, className );
 
 	if ( isLoading ) {
 		return (
-			<div className={ styles.loading }>
-				<Spinner />
+			<div className={ className }>
+				<div className={ styles.loading }>
+					<Spinner />
+				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className={ clsx( styles.wrapper, className ) }>
-			<figure className={ styles.avatar }>
-				{ userData.avatar && (
-					<img src={ userData.avatar } alt={ userData.displayName } />
-				) }
-			</figure>
-			<div className={ styles.info }>
-				<span className={ styles.name }>{ userData.displayName }</span>
-				<span className={ styles.handle }>@{ userData.handle }</span>
+		<div className={ className }>
+			<div className={ styles.meta }>
+				<figure className={ styles.avatar }>
+					{ userData.avatar && (
+						<img
+							src={ userData.avatar }
+							alt={ userData.displayName }
+							style={ {
+								display: isImageLoaded ? 'block' : 'none',
+							} }
+							onLoad={ () => setIsImageLoaded( true ) }
+							onError={ () => setIsImageLoaded( false ) }
+						/>
+					) }
+				</figure>
+				<div className={ styles.info }>
+					<span className={ styles.name }>
+						{ userData.displayName }
+					</span>
+					<span className={ styles.handle }>
+						@{ userData.handle }
+					</span>
+				</div>
 			</div>
+			{ onDelete && (
+				<Button
+					icon="trash"
+					isDestructive
+					onClick={ onDelete }
+					label={ __( 'Remove Account', 'bsky-for-wp' ) }
+				/>
+			) }
 		</div>
 	);
 };
