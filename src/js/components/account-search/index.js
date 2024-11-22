@@ -1,11 +1,11 @@
 import { __ } from '@wordpress/i18n';
-import { useState, useEffect, useCallback } from '@wordpress/element';
+import { useState, useEffect, useCallback, useRef } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import {
 	Button,
 	Spinner,
 	SearchControl,
-	__experimentalVStack as VStack, // eslint-disable-line @wordpress/no-unsafe-wp-apis
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import AccountInfo from '../account-info';
 import styles from './styles.module.scss';
@@ -17,14 +17,24 @@ const AccountSearch = ( { onSelect } ) => {
 	const [ hasSearched, setHasSearched ] = useState( false );
 	let debounceTimer = null;
 
+	const abortControllerRef = useRef( null );
+
 	const fetchResults = useCallback( async ( query ) => {
 		if ( query.length > 0 ) {
 			setLoading( true );
+
+			if ( abortControllerRef.current ) {
+				abortControllerRef.current.abort();
+			}
+
+			abortControllerRef.current = new AbortController();
+
 			try {
 				const response = await apiFetch( {
 					path: `/bsky4wp/v1/search?q=${ encodeURIComponent(
 						query
 					) }`,
+					signal: abortControllerRef.current.signal,
 				} );
 
 				if ( ! response.actors ) {
@@ -34,10 +44,14 @@ const AccountSearch = ( { onSelect } ) => {
 				setResults( response.actors );
 				setHasSearched( true );
 			} catch ( error ) {
-				setResults( [] );
-				setHasSearched( true );
+				if ( error.name !== 'AbortError' ) {
+					setResults( [] );
+					setHasSearched( true );
+				}
 			} finally {
-				setLoading( false );
+				if ( abortControllerRef.current?.signal.aborted !== true ) {
+					setLoading( false );
+				}
 			}
 		} else {
 			setResults( [] );
@@ -53,7 +67,12 @@ const AccountSearch = ( { onSelect } ) => {
 			fetchResults( searchValue );
 		}, 300 );
 
-		return () => clearTimeout( debounceTimer );
+		return () => {
+			clearTimeout( debounceTimer );
+			if ( abortControllerRef.current ) {
+				abortControllerRef.current.abort();
+			}
+		};
 	}, [ searchValue, fetchResults ] );
 
 	const getResultContent = () => {

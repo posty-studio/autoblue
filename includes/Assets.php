@@ -55,7 +55,22 @@ class Assets {
 	public function register_admin_assets() {
 		wp_enqueue_style( 'wp-components' );
 		wp_enqueue_style( 'dataviews' );
-		$this->enqueue_script( 'admin' );
+		$this->enqueue_script(
+			'admin',
+			[
+				'initialState' => $this->get_initial_state(),
+			]
+		);
 		$this->enqueue_style( 'admin' );
+	}
+
+	private function get_initial_state(): array {
+		$accounts = new Accounts();
+
+		return [
+			'accounts' => [
+				'items' => $accounts->get_accounts(),
+			],
+		];
 	}
 }

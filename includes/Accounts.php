@@ -12,7 +12,7 @@ class Accounts {
 	}
 
 	/**
-	 * Check if an account with the given DID already exists
+	 * Check if an account with the given DID already exists.
 	 *
 	 * @param string $did      The DID to check
 	 * @return boolean True if account exists, false otherwise
@@ -20,18 +20,12 @@ class Accounts {
 	private function account_exists( $did ) {
 		$accounts = get_option( 'bsky4wp_accounts', [] );
 
-		return array_reduce(
-			$accounts,
-			function ( $exists, $account ) use ( $did ) {
-				return $exists || $account['did'] === $did;
-			},
-			false
-		);
+		return in_array( $did, array_column( $accounts, 'did' ) );
 	}
 
 
 	/**
-	 * Get accounts with optional profile data from API
+	 * Get accounts with profile data from API.
 	 *
 	 * @param bool $force_refresh Whether to force a refresh of the cached data
 	 * @return array Array of sanitized account data
@@ -52,9 +46,9 @@ class Accounts {
 		);
 
 		if ( ! $force_refresh ) {
-			$cached_profiles = get_transient( self::TRANSIENT_KEY );
-			if ( $cached_profiles !== false ) {
-				return $cached_profiles;
+			$cached_accounts = get_transient( self::TRANSIENT_KEY );
+			if ( $cached_accounts !== false ) {
+				return $cached_accounts;
 			}
 		}
 
@@ -73,7 +67,7 @@ class Accounts {
 	}
 
 	/**
-	 * Fetch profiles from API
+	 * Fetch profiles from API.
 	 *
 	 * @param array $dids Array of DIDs to fetch
 	 * @return object|false Profile data or false on failure
@@ -176,24 +170,31 @@ class Accounts {
 
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 
-		$accounts = get_option( 'bsky4wp_accounts', [] );
-
-		if ( ! empty( $data['accessJwt'] ) && ! empty( $data['refreshJwt'] ) && ! empty( $data['did'] ) ) {
-			if ( $this->account_exists( $data['did'] ) ) {
-				return new \WP_Error( 'bsky4wp_account_exists', __( 'Account already exists.', 'bsky4wp' ) );
-			}
-
-			$accounts[] = [
-				'did'         => sanitize_text_field( $data['did'] ),
-				'access_jwt'  => sanitize_text_field( $data['accessJwt'] ),
-				'refresh_jwt' => sanitize_text_field( $data['refreshJwt'] ),
-			];
-
-			update_option( 'bsky4wp_accounts', $accounts );
-			delete_transient( 'bsky4wp_accounts' );
+		if ( ! $data || empty( $data['accessJwt'] ) || empty( $data['refreshJwt'] ) || empty( $data['did'] ) ) {
+			return new \WP_Error( 'bsky4wp_new_account_error', __( 'Error creating new account.', 'bsky4wp' ) );
 		}
 
-		return $this->get_accounts();
+		if ( $this->account_exists( $data['did'] ) ) {
+			return new \WP_Error( 'bsky4wp_account_exists', __( 'Account already exists.', 'bsky4wp' ) );
+		}
+
+		$accounts   = get_option( 'bsky4wp_accounts', [] );
+		$account    = [
+			'did'         => sanitize_text_field( $data['did'] ),
+			'access_jwt'  => sanitize_text_field( $data['accessJwt'] ),
+			'refresh_jwt' => sanitize_text_field( $data['refreshJwt'] ),
+		];
+		$accounts[] = $account;
+
+		update_option( 'bsky4wp_accounts', $accounts );
+		delete_transient( self::TRANSIENT_KEY );
+
+		// TODO: This is not pretty at all. Refactor this.
+		$profiles = $this->fetch_profiles( [ $data['did'] ] );
+		$account  = $this->merge_profile_data( [ $account ], $profiles )[0];
+		unset( $account['access_jwt'], $account['refresh_jwt'] );
+
+		return $account;
 	}
 
 	public function delete_account( $did ) {
@@ -213,6 +214,6 @@ class Accounts {
 		update_option( 'bsky4wp_accounts', $accounts );
 		delete_transient( 'bsky4wp_accounts' );
 
-		return $this->get_accounts();
+		return true;
 	}
 }

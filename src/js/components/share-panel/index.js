@@ -7,13 +7,11 @@ import {
 } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { createInterpolateElement } from '@wordpress/element';
-import useSettings from './../../hooks/use-settings';
 import AccountInfo from './../account-info';
 
 const SharePanel = () => {
 	const { editPost } = useDispatch( 'core/editor' );
 	const { editEntityRecord } = useDispatch( 'core' );
-	const { appPassword, accountDIDs } = useSettings();
 
 	const { postId, postType, postTitle, bsky4wpPostMessage } = useSelect(
 		( select ) => {
@@ -37,6 +35,9 @@ const SharePanel = () => {
 	if ( postType !== 'post' ) {
 		return null;
 	}
+
+	const appPassword = '';
+	const accountDIDs = [];
 
 	if ( ! appPassword || accountDIDs.length === 0 ) {
 		return (

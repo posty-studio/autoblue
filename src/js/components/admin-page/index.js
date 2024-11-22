@@ -1,12 +1,13 @@
 import { __ } from '@wordpress/i18n';
-import { Button, BaseControl } from '@wordpress/components';
+import { BaseControl, __experimentalText as Text } from '@wordpress/components';
 import styles from './styles.module.scss';
-import useNewAccountModal from './../new-account-modal';
 import Header from './../header';
+import NoAccountsPlaceholder from './../no-accounts-placeholder';
 import AccountList from './../account-list';
+import useAccounts from './../../hooks/use-accounts';
 
 const AdminPage = () => {
-	const { renderModal, openModal } = useNewAccountModal();
+	const { hasAccounts } = useAccounts();
 
 	return (
 		<>
@@ -16,20 +17,16 @@ const AdminPage = () => {
 					<BaseControl
 						label={ __( 'Bluesky account', 'bsky-for-wp' ) }
 					>
-						<AccountList />
-						<Button
-							variant="primary"
-							size="large"
-							onClick={ () => openModal() }
-						>
-							{ __( 'Set up Bluesky account', 'bsky-for-wp' ) }
-						</Button>
-						{ renderModal() }
+						{ hasAccounts ? (
+							<AccountList />
+						) : (
+							<NoAccountsPlaceholder />
+						) }
 					</BaseControl>
-					<p>
+					<Text variant="muted">
 						Bluesky for WordPress is built by Daniel Post. Not
-						affiliated with Bluesky.
-					</p>
+						officially affiliated with or endorsed by Bluesky.
+					</Text>
 				</div>
 			</div>
 		</>

@@ -64,6 +64,7 @@ const AccountInfo = ( {
 	account: { did, meta = {} },
 	className,
 	onDelete = null,
+	deleteLabel = null,
 } ) => {
 	const { userData, isLoading } = useAccountInfo( did, meta );
 	const [ isImageLoaded, setIsImageLoaded ] = useState( false );
@@ -107,11 +108,14 @@ const AccountInfo = ( {
 			</div>
 			{ onDelete && (
 				<Button
-					icon="trash"
+					icon={ ! deleteLabel ? 'no-alt' : undefined }
 					isDestructive
+					variant={ ! deleteLabel ? undefined : 'secondary' }
 					onClick={ onDelete }
-					label={ __( 'Remove Account', 'bsky-for-wp' ) }
-				/>
+					label={ deleteLabel || __( 'Delete', 'bsky-for-wp' ) }
+				>
+					{ deleteLabel || null }
+				</Button>
 			) }
 		</div>
 	);

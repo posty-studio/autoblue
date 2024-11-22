@@ -5,13 +5,15 @@ import {
 	TextControl,
 	Button,
 	Spinner,
+	Icon,
 	__experimentalHStack as HStack,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import apiFetch from '@wordpress/api-fetch';
 import AccountInfo from '../account-info';
 import AccountSearch from '../account-search';
 import useAccounts from '../../hooks/use-accounts';
+import { warning } from '@wordpress/icons';
+import styles from './styles.module.scss';
 
 const NewAccountModal = ( {
 	isOpen,
@@ -30,7 +32,7 @@ const NewAccountModal = ( {
 
 	return (
 		<Modal
-			title={ __( 'Add new Bluesky account', 'bsky-for-wp' ) }
+			title={ __( 'Connect Bluesky account', 'bsky-for-wp' ) }
 			onRequestClose={ onClose }
 			focusOnMount="firstContentElement"
 			size="medium"
@@ -72,13 +74,16 @@ const NewAccountModal = ( {
 						onClick={ onAddAccount }
 						disabled={ status === 'loading' }
 					>
-						{ __( 'Add Account', 'bsky-for-wp' ) }
+						{ __( 'Connect Account', 'bsky-for-wp' ) }
 					</Button>
 					{ status === 'loading' && <Spinner /> }
-					{ status !== 'loading' && errorMessage && (
-						<div>{ errorMessage }</div>
-					) }
 				</HStack>
+				{ status !== 'loading' && errorMessage && (
+					<HStack alignment="left" className={ styles.error }>
+						<Icon icon={ warning } />
+						<p>{ errorMessage }</p>
+					</HStack>
+				) }
 			</VStack>
 		</Modal>
 	);
@@ -122,17 +127,16 @@ const useNewAccountModal = ( initialIsOpen = false ) => {
 			await addAccount( selectedAccount.did, appPassword );
 			setStatus( 'success' );
 			setErrorMessage( '' );
+			closeModal();
 		} catch ( error ) {
-			console.error( error );
 			setStatus( 'error' );
 			setErrorMessage(
 				__(
-					'Something went wrong, please make sure the app password is correct',
+					'Something went wrong. Make sure the app password is correct.',
 					'bsky4wp'
 				)
 			);
 		}
-		// closeModal();
 	};
 
 	const renderModal = () => (
