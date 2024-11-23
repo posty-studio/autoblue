@@ -13,10 +13,10 @@ class Admin {
 
 	public function register_admin_page() {
 		add_options_page(
-			esc_html__( 'Bluesky', 'autoblue' ),
-			esc_html__( 'Bluesky', 'autoblue' ),
+			'Autoblue',
+			'Autoblue',
 			'manage_options',
-			'bksy-for-wp',
+			'autoblue',
 			function () {
 				echo '<div id="autoblue"></div>';
 			}
@@ -24,7 +24,7 @@ class Admin {
 	}
 
 	public function add_settings_link( $links ) {
-		$settings_link = '<a href="options-general.php?page=bksy-for-wp">' . esc_html__( 'Settings', 'autoblue' ) . '</a>';
+		$settings_link = '<a href="options-general.php?page=autoblue' . esc_html__( 'Settings', 'autoblue' ) . '</a>';
 		array_unshift( $links, $settings_link );
 		return $links;
 	}

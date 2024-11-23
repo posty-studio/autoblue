@@ -4,17 +4,21 @@
 	gap: 15px;
 	background-color: #fff;
 	box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 0px 1px;
-	padding: 15px 20px;
+	padding: 20px;
 	margin-bottom: 20px;
 	// TODO: Remove padding from #wpcontent instead.
 	margin-left: -20px;
 
 	svg {
-		width: 24px;
+		width: auto;
 		height: 24px;
 	}
 }
 
-.title {
-	font-size: 24px !important;
+.version {
+	padding: 4px 8px;
+	border-radius: 4px;
+	background-color: #e1f0ff;
+	font-weight: 700;
+	color: #000;
 }

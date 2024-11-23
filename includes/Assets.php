@@ -9,7 +9,7 @@ class Assets {
 	}
 
 	private function get_asset_data( string $name ): array {
-		$asset_filepath = Autoblue_ASSETS_PATH . $name . '.asset.php';
+		$asset_filepath = AUTOBLUE_ASSETS_PATH . $name . '.asset.php';
 		$asset_file     = file_exists( $asset_filepath ) ? include $asset_filepath : [
 			'dependencies' => [],
 			'version'      => AUTOBLUE_VERSION,
@@ -59,6 +59,7 @@ class Assets {
 			'admin',
 			[
 				'initialState' => $this->get_initial_state(),
+				'version'      => AUTOBLUE_VERSION,
 			]
 		);
 		$this->enqueue_style( 'admin' );

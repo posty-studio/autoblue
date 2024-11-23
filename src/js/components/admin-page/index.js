@@ -22,8 +22,8 @@ const AdminPage = () => {
 						) }
 					</BaseControl>
 					<Text variant="muted">
-						Bluesky for WordPress is built by Daniel Post. Not
-						officially affiliated with or endorsed by Bluesky.
+						Autoblue is built by Daniel Post. Not officially
+						affiliated with or endorsed by Bluesky.
 					</Text>
 				</div>
 			</div>
