@@ -29,7 +29,7 @@ const useAccountInfo = ( did, meta ) => {
 			try {
 				setIsLoading( true );
 				const response = await apiFetch( {
-					path: `/bsky4wp/v1/account?did=${ did }`,
+					path: `/autoblue/v1/account?did=${ did }`,
 					signal: fetchController.current.signal,
 				} );
 
@@ -112,7 +112,7 @@ const AccountInfo = ( {
 					isDestructive
 					variant={ ! deleteLabel ? undefined : 'secondary' }
 					onClick={ onDelete }
-					label={ deleteLabel || __( 'Delete', 'bsky-for-wp' ) }
+					label={ deleteLabel || __( 'Delete', 'autoblue' ) }
 				>
 					{ deleteLabel || null }
 				</Button>

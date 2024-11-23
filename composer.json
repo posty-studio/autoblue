@@ -1,6 +1,6 @@
 {
 	"$schema": "https://getcomposer.org/schema.json",
-	"name": "posty/bsky-for-wp",
+	"name": "posty/autoblue",
 	"description": "Add Bluesky to your WordPress website. Automatically share new posts to Bluesky and integrate Bluesky replies with the comments on your website.",
 	"type": "project",
 	"license": "GPL-3.0",

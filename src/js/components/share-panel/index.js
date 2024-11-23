@@ -13,7 +13,7 @@ const SharePanel = () => {
 	const { editPost } = useDispatch( 'core/editor' );
 	const { editEntityRecord } = useDispatch( 'core' );
 
-	const { postId, postType, postTitle, bsky4wpPostMessage } = useSelect(
+	const { postId, postType, postTitle, autobluePostMessage } = useSelect(
 		( select ) => {
 			const {
 				getCurrentPostId,
@@ -25,8 +25,8 @@ const SharePanel = () => {
 				postId: _postId,
 				postType: getCurrentPostType(),
 				postTitle: getEditedPostAttribute( 'title' ),
-				bsky4wpPostMessage:
-					getEditedPostAttribute( 'meta' )?.bsky4wp_post_message,
+				autobluePostMessage:
+					getEditedPostAttribute( 'meta' )?.autoblue_post_message,
 			};
 		},
 		[]
@@ -45,12 +45,12 @@ const SharePanel = () => {
 				{ createInterpolateElement(
 					__(
 						'Please enter your Bluesky app password and select an account in the <a>settings page</a> to start sharing.',
-						'bsky-for-wp'
+						'autoblue'
 					),
 					{
 						a: (
-							<a href="/wp-admin/options-general.php?page=bsky-for-wp">
-								{ __( 'settings page', 'bsky-for-wp' ) }
+							<a href="/wp-admin/options-general.php?page=autoblue">
+								{ __( 'settings page', 'autoblue' ) }
 							</a>
 						),
 					}
@@ -62,25 +62,25 @@ const SharePanel = () => {
 	return (
 		<VStack spacing={ 3 }>
 			<ToggleControl
-				label={ __( 'Share to Bluesky', 'bsky-for-wp' ) }
+				label={ __( 'Share to Bluesky', 'autoblue' ) }
 				checked={ true }
 			/>
 			<TextareaControl
-				label={ __( 'Message', 'bsky-for-wp' ) }
+				label={ __( 'Message', 'autoblue' ) }
 				help={ __(
 					'Add a message to the Bluesky post. If left empty, the post title will be used.',
-					'bsky-for-wp'
+					'autoblue'
 				) }
-				value={ bsky4wpPostMessage }
+				value={ autobluePostMessage }
 				placeholder={ postTitle }
 				maxLength={ 250 }
 				onChange={ ( value ) =>
-					editPost( { meta: { bsky4wp_post_message: value } } )
+					editPost( { meta: { autoblue_post_message: value } } )
 				}
 			/>
 			<BaseControl
-				label={ __( 'Sharing to:', 'bsky-for-wp' ) }
-				id="bsky-for-wp-account"
+				label={ __( 'Sharing to:', 'autoblue' ) }
+				id="autoblue-account"
 			>
 				{ accountDIDs.map( ( did ) => (
 					<div key={ did }>

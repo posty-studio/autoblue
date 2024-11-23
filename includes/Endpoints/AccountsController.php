@@ -1,6 +1,6 @@
 <?php
 
-namespace BSKY4WP\Endpoints;
+namespace Autoblue\Endpoints;
 
 use WP_REST_Controller;
 use WP_REST_Server;
@@ -9,7 +9,7 @@ class AccountsController extends WP_REST_Controller {
 	private const DID_REGEX = '^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$';
 
 	public function __construct() {
-		$this->namespace = 'bsky4wp/v1';
+		$this->namespace = 'autoblue/v1';
 		$this->rest_base = 'accounts';
 	}
 
@@ -36,7 +36,7 @@ class AccountsController extends WP_REST_Controller {
 					'args'                => [
 						'did' => [
 							'type'        => 'string',
-							'description' => __( 'DID of the account to be deleted.', 'bsky4wp' ),
+							'description' => __( 'DID of the account to be deleted.', 'autoblue' ),
 							'required'    => true,
 							'pattern'     => self::DID_REGEX,
 						],
@@ -55,25 +55,25 @@ class AccountsController extends WP_REST_Controller {
 	}
 
 	/**
-	 * GET `/bsky4wp/v1/accounts`
+	 * GET `/autoblue/v1/accounts`
 	 *
 	 * @param WP_REST_Request $request The API request.
 	 * @return WP_REST_Response
 	 */
 	public function get_accounts() {
-		$accounts = new \BSKY4WP\Accounts();
+		$accounts = new \Autoblue\Accounts();
 
 		return rest_ensure_response( $accounts->get_accounts() );
 	}
 
 	/**
-	 * POST `/bsky4wp/v1/accounts`
+	 * POST `/autoblue/v1/accounts`
 	 *
 	 * @param WP_REST_Request $request The API request.
 	 * @return WP_REST_Response
 	 */
 	public function add_account( $request ) {
-		$accounts     = new \BSKY4WP\Accounts();
+		$accounts     = new \Autoblue\Accounts();
 		$did          = $request->get_param( 'did' );
 		$app_password = $request->get_param( 'app_password' );
 
@@ -82,13 +82,13 @@ class AccountsController extends WP_REST_Controller {
 
 
 	/**
-	 * DELETE `/bsky4wp/v1/accounts`
+	 * DELETE `/autoblue/v1/accounts`
 	 *
 	 * @param WP_REST_Request $request The API request.
 	 * @return WP_REST_Response
 	 */
 	public function delete_account( $request ) {
-		$accounts = new \BSKY4WP\Accounts();
+		$accounts = new \Autoblue\Accounts();
 		$did      = $request->get_param( 'did' );
 
 		return rest_ensure_response( $accounts->delete_account( $did ) );
@@ -106,17 +106,17 @@ class AccountsController extends WP_REST_Controller {
 
 		$schema = [
 			'$schema'    => 'https://json-schema.org/draft-04/schema#',
-			'title'      => 'bsky4wp-accounts',
+			'title'      => 'autoblue-accounts',
 			'type'       => 'object',
 			'properties' => [
 				'did'          => [
-					'description' => __( 'DID of the Bluesky account.', 'bsky4wp' ),
+					'description' => __( 'DID of the Bluesky account.', 'autoblue' ),
 					'type'        => 'string',
 					'pattern'     => self::DID_REGEX,
 					'context'     => [ 'view', 'edit' ],
 				],
 				'app_password' => [
-					'description' => __( 'An app password linked to the Bluesky account to be added.', 'bsky4wp' ),
+					'description' => __( 'An app password linked to the Bluesky account to be added.', 'autoblue' ),
 					'type'        => 'string',
 					'pattern'     => '^[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}$',
 					'context'     => [ 'edit' ],

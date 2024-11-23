@@ -1,10 +1,10 @@
 <?php
 
-namespace BSKY4WP;
+namespace Autoblue;
 
 class Accounts {
-	private const TRANSIENT_KEY = 'bsky4wp_accounts';
-	private const OPTION_KEY    = 'bsky4wp_accounts';
+	private const TRANSIENT_KEY = 'autoblue_accounts';
+	private const OPTION_KEY    = 'autoblue_accounts';
 	private const API_ENDPOINT  = 'https://public.api.bsky.app/xrpc/app.bsky.actor.getProfiles';
 
 	private function is_valid_did( $did ) {
@@ -18,7 +18,7 @@ class Accounts {
 	 * @return boolean True if account exists, false otherwise
 	 */
 	private function account_exists( $did ) {
-		$accounts = get_option( 'bsky4wp_accounts', [] );
+		$accounts = get_option( 'autoblue_accounts', [] );
 
 		return in_array( $did, array_column( $accounts, 'did' ) );
 	}
@@ -141,11 +141,11 @@ class Accounts {
 
 	public function add_account( $did, $app_password ) {
 		if ( ! $did || ! $this->is_valid_did( $did ) ) {
-			return new \WP_Error( 'bsky4wp_invalid_did', __( 'Invalid DID.', 'bsky4wp' ) );
+			return new \WP_Error( 'autoblue_invalid_did', __( 'Invalid DID.', 'autoblue' ) );
 		}
 
 		if ( ! $app_password ) {
-			return new \WP_Error( 'bsky4wp_invalid_app_password', __( 'Invalid App Password.', 'bsky4wp' ) );
+			return new \WP_Error( 'autoblue_invalid_app_password', __( 'Invalid App Password.', 'autoblue' ) );
 		}
 
 		$url      = 'https://bsky.social/xrpc/com.atproto.server.createSession';
@@ -165,20 +165,20 @@ class Accounts {
 		);
 
 		if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) >= 300 ) {
-			return new \WP_Error( 'bsky4wp_new_account_error', __( 'Error creating new account.', 'bsky4wp' ) );
+			return new \WP_Error( 'autoblue_new_account_error', __( 'Error creating new account.', 'autoblue' ) );
 		}
 
 		$data = json_decode( wp_remote_retrieve_body( $response ), true );
 
 		if ( ! $data || empty( $data['accessJwt'] ) || empty( $data['refreshJwt'] ) || empty( $data['did'] ) ) {
-			return new \WP_Error( 'bsky4wp_new_account_error', __( 'Error creating new account.', 'bsky4wp' ) );
+			return new \WP_Error( 'autoblue_new_account_error', __( 'Error creating new account.', 'autoblue' ) );
 		}
 
 		if ( $this->account_exists( $data['did'] ) ) {
-			return new \WP_Error( 'bsky4wp_account_exists', __( 'Account already exists.', 'bsky4wp' ) );
+			return new \WP_Error( 'autoblue_account_exists', __( 'Account already exists.', 'autoblue' ) );
 		}
 
-		$accounts   = get_option( 'bsky4wp_accounts', [] );
+		$accounts   = get_option( 'autoblue_accounts', [] );
 		$account    = [
 			'did'         => sanitize_text_field( $data['did'] ),
 			'access_jwt'  => sanitize_text_field( $data['accessJwt'] ),
@@ -186,7 +186,7 @@ class Accounts {
 		];
 		$accounts[] = $account;
 
-		update_option( 'bsky4wp_accounts', $accounts );
+		update_option( 'autoblue_accounts', $accounts );
 		delete_transient( self::TRANSIENT_KEY );
 
 		// TODO: This is not pretty at all. Refactor this.
@@ -199,10 +199,10 @@ class Accounts {
 
 	public function delete_account( $did ) {
 		if ( ! $did || ! $this->is_valid_did( $did ) ) {
-			return new \WP_Error( 'bsky4wp_invalid_did', __( 'Invalid DID.', 'bsky4wp' ) );
+			return new \WP_Error( 'autoblue_invalid_did', __( 'Invalid DID.', 'autoblue' ) );
 		}
 
-		$accounts = get_option( 'bsky4wp_accounts', [] );
+		$accounts = get_option( 'autoblue_accounts', [] );
 
 		$accounts = array_filter(
 			$accounts,
@@ -211,8 +211,8 @@ class Accounts {
 			}
 		);
 
-		update_option( 'bsky4wp_accounts', $accounts );
-		delete_transient( 'bsky4wp_accounts' );
+		update_option( 'autoblue_accounts', $accounts );
+		delete_transient( 'autoblue_accounts' );
 
 		return true;
 	}

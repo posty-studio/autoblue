@@ -32,7 +32,7 @@ const NewAccountModal = ( {
 
 	return (
 		<Modal
-			title={ __( 'Connect Bluesky account', 'bsky-for-wp' ) }
+			title={ __( 'Connect Bluesky account', 'autoblue' ) }
 			onRequestClose={ onClose }
 			focusOnMount="firstContentElement"
 			size="medium"
@@ -48,11 +48,11 @@ const NewAccountModal = ( {
 				) }
 				<TextControl
 					__nextHasNoMarginBottom
-					label={ __( 'App Password', 'bsky-for-wp' ) }
+					label={ __( 'App Password', 'autoblue' ) }
 					help={ createInterpolateElement(
 						__(
 							'You can create a new app password in your <a>Bluesky account settings</a>.',
-							'bsky-for-wp'
+							'autoblue'
 						),
 						{
 							a: (
@@ -74,7 +74,7 @@ const NewAccountModal = ( {
 						onClick={ onAddAccount }
 						disabled={ status === 'loading' }
 					>
-						{ __( 'Connect Account', 'bsky-for-wp' ) }
+						{ __( 'Connect Account', 'autoblue' ) }
 					</Button>
 					{ status === 'loading' && <Spinner /> }
 				</HStack>
@@ -111,13 +111,15 @@ const useNewAccountModal = ( initialIsOpen = false ) => {
 	const handleAddAccount = async () => {
 		if ( ! selectedAccount ) {
 			setErrorMessage(
-				__( 'Please pick an account to add.', 'bsky4wp' )
+				__( 'Please pick an account to add.', 'autoblue' )
 			);
 			return;
 		}
 
 		if ( ! appPassword ) {
-			setErrorMessage( __( 'Please enter an app password.', 'bsky4wp' ) );
+			setErrorMessage(
+				__( 'Please enter an app password.', 'autoblue' )
+			);
 			return;
 		}
 
@@ -133,7 +135,7 @@ const useNewAccountModal = ( initialIsOpen = false ) => {
 			setErrorMessage(
 				__(
 					'Something went wrong. Make sure the app password is correct.',
-					'bsky4wp'
+					'autoblue'
 				)
 			);
 		}

@@ -1,13 +1,13 @@
 <?php
 
-namespace BSKY4WP\Endpoints;
+namespace Autoblue\Endpoints;
 
 use WP_REST_Controller;
 use WP_REST_Server;
 
 class SearchController extends WP_REST_Controller {
 	public function __construct() {
-		$this->namespace = 'bsky4wp/v1';
+		$this->namespace = 'autoblue/v1';
 		$this->rest_base = 'search';
 	}
 
@@ -34,7 +34,7 @@ class SearchController extends WP_REST_Controller {
 	}
 
 	/**
-	 * GET `/bsky4wp/v1/search`
+	 * GET `/autoblue/v1/search`
 	 *
 	 * @param WP_REST_Request $request The API request.
 	 * @return WP_REST_Response
@@ -74,11 +74,11 @@ class SearchController extends WP_REST_Controller {
 
 		$schema = [
 			'$schema'    => 'http://json-schema.org/draft-04/schema#',
-			'title'      => 'bsky4wp-search',
+			'title'      => 'autoblue-search',
 			'type'       => 'object',
 			'properties' => [
 				'q' => [
-					'description' => __( 'Search query prefix', 'bsky4wp' ),
+					'description' => __( 'Search query prefix', 'autoblue' ),
 					'type'        => 'string',
 					'context'     => [ 'view' ],
 					'default'     => '',

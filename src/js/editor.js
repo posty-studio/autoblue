@@ -10,8 +10,8 @@ import SharePanel from './components/share-panel';
 const Panel = () => {
 	return (
 		<PluginDocumentSettingPanel
-			name="bsky4wp-share-panel"
-			title={ __( 'Bluesky', 'bsky-for-wp' ) }
+			name="autoblue-share-panel"
+			title={ __( 'Bluesky', 'autoblue' ) }
 			icon={ BlueskyIcon }
 		>
 			<SharePanel />
@@ -19,13 +19,13 @@ const Panel = () => {
 	);
 };
 
-registerPlugin( 'bsky4wp-share-panel', {
+registerPlugin( 'autoblue-share-panel', {
 	render: Panel,
 } );
 
 const PrePublishSharePanel = () => (
 	<PluginPrePublishPanel
-		title={ __( 'Bluesky', 'bsky-for-wp' ) }
+		title={ __( 'Bluesky', 'autoblue' ) }
 		initialOpen={ true }
 		icon={ BlueskyIcon }
 	>
@@ -33,6 +33,6 @@ const PrePublishSharePanel = () => (
 	</PluginPrePublishPanel>
 );
 
-registerPlugin( 'bsky4wp-prepublish-share-panel', {
+registerPlugin( 'autoblue-prepublish-share-panel', {
 	render: PrePublishSharePanel,
 } );

@@ -15,15 +15,13 @@ const NoAccountsPlaceholder = () => {
 		<Card>
 			<CardBody>
 				<VStack alignment="center" spacing={ 4 }>
-					<Text>
-						{ __( 'No account connected.', 'bsky-for-wp' ) }
-					</Text>
+					<Text>{ __( 'No account connected.', 'autoblue' ) }</Text>
 					<Button
 						variant="primary"
 						size="large"
 						onClick={ () => openModal() }
 					>
-						{ __( 'Connect a Bluesky account', 'bsky-for-wp' ) }
+						{ __( 'Connect a Bluesky account', 'autoblue' ) }
 					</Button>
 					{ renderModal() }
 				</VStack>

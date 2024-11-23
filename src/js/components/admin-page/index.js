@@ -14,9 +14,7 @@ const AdminPage = () => {
 			<Header />
 			<div className={ styles.container }>
 				<div className={ styles.wrapper }>
-					<BaseControl
-						label={ __( 'Bluesky account', 'bsky-for-wp' ) }
-					>
+					<BaseControl label={ __( 'Bluesky account', 'autoblue' ) }>
 						{ hasAccounts ? (
 							<AccountList />
 						) : (

@@ -31,7 +31,7 @@ const AccountSearch = ( { onSelect } ) => {
 
 			try {
 				const response = await apiFetch( {
-					path: `/bsky4wp/v1/search?q=${ encodeURIComponent(
+					path: `/autoblue/v1/search?q=${ encodeURIComponent(
 						query
 					) }`,
 					signal: abortControllerRef.current.signal,
@@ -89,7 +89,7 @@ const AccountSearch = ( { onSelect } ) => {
 				<div className={ styles.empty }>
 					{ __(
 						'No accounts found. Please try another search.',
-						'bsky-for-wp'
+						'autoblue'
 					) }
 				</div>
 			);
@@ -131,11 +131,8 @@ const AccountSearch = ( { onSelect } ) => {
 		<div>
 			<SearchControl
 				__nextHasNoMarginBottom
-				placeholder={ __(
-					'Search for a Bluesky account',
-					'bsky-for-wp'
-				) }
-				label={ __( 'Bluesky Account', 'bsky-for-wp' ) }
+				placeholder={ __( 'Search for a Bluesky account', 'autoblue' ) }
+				label={ __( 'Bluesky Account', 'autoblue' ) }
 				value={ searchValue }
 				onChange={ ( newSearchValue ) =>
 					setSearchValue( newSearchValue )

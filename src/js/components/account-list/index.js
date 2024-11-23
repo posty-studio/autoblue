@@ -45,11 +45,11 @@ const AccountList = () => {
 				isOpen={ isOpen }
 				onConfirm={ handleConfirm }
 				onCancel={ handleCancel }
-				confirmButtonText={ __( 'Disconnect', 'bsky-for-wp' ) }
+				confirmButtonText={ __( 'Disconnect', 'autoblue' ) }
 			>
 				{ __(
 					'Are you sure you want to disconnect this account?',
-					'bsky-for-wp'
+					'autoblue'
 				) }
 			</ConfirmDialog>
 
@@ -58,7 +58,7 @@ const AccountList = () => {
 					key={ account.did }
 					account={ account }
 					onDelete={ () => handleDisconnectClick( account ) }
-					deleteLabel={ __( 'Disconnect', 'bsky-for-wp' ) }
+					deleteLabel={ __( 'Disconnect', 'autoblue' ) }
 				/>
 			) ) }
 		</div>

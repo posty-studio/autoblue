@@ -4,14 +4,14 @@ import selectors from './selectors';
 import actions from './actions';
 import resolvers from './resolvers';
 
-export const STORE_NAME = 'bsky4wp';
-console.log( BSKY4WP );
+export const STORE_NAME = 'autoblue';
+console.log( Autoblue );
 const store = createReduxStore( STORE_NAME, {
 	reducer,
 	selectors,
 	actions,
 	resolvers,
-	initialState: BSKY4WP.initialState,
+	initialState: Autoblue.initialState,
 } );
 
 register( store );

@@ -4,7 +4,7 @@ import AdminPage from './components/admin-page';
 import './store';
 
 domReady( () => {
-	const rootElement = document.getElementById( 'bsky-for-wp' );
+	const rootElement = document.getElementById( 'autoblue' );
 	if ( rootElement ) {
 		createRoot( rootElement ).render( <AdminPage /> );
 	}

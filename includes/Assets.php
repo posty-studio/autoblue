@@ -1,6 +1,6 @@
 <?php
 
-namespace BSKY4WP;
+namespace Autoblue;
 
 class Assets {
 	public function register_hooks() {
@@ -9,10 +9,10 @@ class Assets {
 	}
 
 	private function get_asset_data( string $name ): array {
-		$asset_filepath = BSKY4WP_ASSETS_PATH . $name . '.asset.php';
+		$asset_filepath = Autoblue_ASSETS_PATH . $name . '.asset.php';
 		$asset_file     = file_exists( $asset_filepath ) ? include $asset_filepath : [
 			'dependencies' => [],
-			'version'      => BSKY4WP_VERSION,
+			'version'      => AUTOBLUE_VERSION,
 		];
 
 		return $asset_file;
@@ -22,8 +22,8 @@ class Assets {
 		$data = $this->get_asset_data( str_replace( 'style-', '', $name ) );
 
 		wp_enqueue_style(
-			"bsky-for-wp-{$name}-style",
-			BSKY4WP_ASSETS_URL . $name . '.css',
+			"autoblue-{$name}-style",
+			AUTOBLUE_ASSETS_URL . $name . '.css',
 			$dependencies,
 			$data['version']
 		);
@@ -33,18 +33,18 @@ class Assets {
 		$data = $this->get_asset_data( $name );
 
 		wp_register_script(
-			"bsky-for-wp-{$name}-plugin-script",
-			BSKY4WP_ASSETS_URL . $name . '.js',
+			"autoblue-{$name}-plugin-script",
+			AUTOBLUE_ASSETS_URL . $name . '.js',
 			array_merge( $data['dependencies'], $dependencies ),
 			$data['version'],
 			true
 		);
 
 		if ( ! empty( $params ) ) {
-			wp_add_inline_script( "bsky-for-wp-{$name}-plugin-script", 'const BSKY4WP = ' . wp_json_encode( $params ), 'before' );
+			wp_add_inline_script( "autoblue-{$name}-plugin-script", 'const Autoblue = ' . wp_json_encode( $params ), 'before' );
 		}
 
-		wp_enqueue_script( "bsky-for-wp-{$name}-plugin-script" );
+		wp_enqueue_script( "autoblue-{$name}-plugin-script" );
 	}
 
 	public function register_block_editor_assets() {

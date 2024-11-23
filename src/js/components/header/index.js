@@ -10,7 +10,7 @@ const Header = () => {
 		<div className={ styles.header }>
 			{ BlueskyIcon }
 			<Heading level={ 1 } className={ styles.title }>
-				{ __( 'Bluesky for WordPress ', 'bsky-for-wp' ) }
+				{ __( 'Bluesky for WordPress ', 'autoblue' ) }
 			</Heading>
 		</div>
 	);

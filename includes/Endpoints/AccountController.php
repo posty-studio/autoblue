@@ -1,13 +1,13 @@
 <?php
 
-namespace BSKY4WP\Endpoints;
+namespace Autoblue\Endpoints;
 
 use WP_REST_Controller;
 use WP_REST_Server;
 
 class AccountController extends WP_REST_Controller {
 	public function __construct() {
-		$this->namespace = 'bsky4wp/v1';
+		$this->namespace = 'autoblue/v1';
 		$this->rest_base = 'account';
 	}
 
@@ -34,7 +34,7 @@ class AccountController extends WP_REST_Controller {
 	}
 
 	/**
-	 * GET `/bsky4wp/v1/account`
+	 * GET `/autoblue/v1/account`
 	 *
 	 * @param WP_REST_Request $request The API request.
 	 * @return WP_REST_Response
@@ -59,7 +59,7 @@ class AccountController extends WP_REST_Controller {
 		$body = json_decode( wp_remote_retrieve_body( $response ) );
 
 		if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) >= 300 ) {
-			return new \WP_Error( 'bsky4wp_profile_error', $body );
+			return new \WP_Error( 'autoblue_profile_error', $body );
 		}
 
 		return rest_ensure_response( $body );
@@ -77,11 +77,11 @@ class AccountController extends WP_REST_Controller {
 
 		$schema = [
 			'$schema'    => 'http://json-schema.org/draft-04/schema#',
-			'title'      => 'bsky4wp-account',
+			'title'      => 'autoblue-account',
 			'type'       => 'object',
 			'properties' => [
 				'did' => [
-					'description' => __( 'DID of the account to fetch.', 'bsky4wp' ),
+					'description' => __( 'DID of the account to fetch.', 'autoblue' ),
 					'type'        => 'string',
 					'context'     => [ 'view' ],
 					'default'     => '',
