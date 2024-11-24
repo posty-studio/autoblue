@@ -59,6 +59,7 @@ const AccountList = () => {
 					account={ account }
 					onDelete={ () => handleDisconnectClick( account ) }
 					deleteLabel={ __( 'Disconnect', 'autoblue' ) }
+					size="large"
 				/>
 			) ) }
 		</div>

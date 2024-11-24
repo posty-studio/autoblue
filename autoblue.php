@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Autoblue
- * Description: Add Bluesky to your WordPress website. Automatically share new posts to Bluesky and integrate Bluesky replies with the comments on your website.
+ * Description: Automatically share new posts to Bluesky.
  * Author: Daniel Post
  * Author URI: https://danielpost.com
  * License: GPL-3.0

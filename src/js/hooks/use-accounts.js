@@ -9,8 +9,6 @@ const useAccounts = () => {
 		[]
 	);
 
-	console.log( { accounts } );
-
 	const { addAccount, deleteAccount } = useDispatch( STORE_NAME );
 
 	const hasAccounts = accounts.length > 0;

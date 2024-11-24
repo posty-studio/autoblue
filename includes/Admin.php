@@ -3,6 +3,9 @@
 namespace Autoblue;
 
 class Admin {
+	// TODO: Can we make this a bit better?
+	public const AUTOBLUE_ENABLED_BY_DEFAULT = false;
+
 	public function register_hooks() {
 		add_action( 'admin_menu', [ $this, 'register_admin_page' ] );
 		add_action( 'admin_menu', [ $this, 'register_admin_page' ] );
@@ -24,7 +27,7 @@ class Admin {
 	}
 
 	public function add_settings_link( $links ) {
-		$settings_link = '<a href="options-general.php?page=autoblue' . esc_html__( 'Settings', 'autoblue' ) . '</a>';
+		$settings_link = '<a href="options-general.php?page=autoblue">' . esc_html__( 'Settings', 'autoblue' ) . '</a>';
 		array_unshift( $links, $settings_link );
 		return $links;
 	}
@@ -42,15 +45,16 @@ class Admin {
 						'items'       => [
 							'type'       => 'object',
 							'properties' => [
-								'did'          => [
+								'did'         => [
 									'type'     => 'string',
 									'pattern'  => '^[a-z0-9:]+$', // Allowed characters: a-z, 0-9, colon
 									'required' => true,
 								],
-								'app_password' => [
-									'type'     => 'string',
-									'pattern'  => '^[a-z0-9-]+$', // Allowed characters: a-z, 0-9, hyphen
-									'required' => true,
+								'access_jwt'  => [
+									'type' => 'string',
+								],
+								'refresh_jwt' => [
+									'type' => 'string',
 								],
 							],
 						],
@@ -59,6 +63,17 @@ class Admin {
 				],
 				'default'      => [],
 			]
+		);
+
+		register_setting(
+			'autoblue',
+			'autoblue_enabled',
+			[
+				'type'         => 'boolean',
+				'description'  => __( 'True is sharing is enabled by default for new posts.', 'autoblue' ),
+				'show_in_rest' => true,
+				'default'      => self::AUTOBLUE_ENABLED_BY_DEFAULT,
+			],
 		);
 	}
 }

@@ -5,12 +5,17 @@
 	* {
 		box-sizing: border-box;
 	}
+
+	@media screen and (max-width: 782px) {
+		padding-right: 10px;
+	}
 }
 
 .wrapper {
-	display: flex;
-	gap: 20px;
-	flex-direction: column;
 	max-width: 600px;
 	margin: 0 auto;
+}
+
+.card.card {
+	padding: 20px;
 }

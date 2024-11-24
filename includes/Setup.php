@@ -17,7 +17,9 @@ class Setup {
 		$this->set_constants();
 
 		( new Admin() )->register_hooks();
+		( new Meta() )->register_hooks();
 		( new Assets() )->register_hooks();
+		( new PostHandler() )->register_hooks();
 
 		add_action( 'rest_api_init', [ new Endpoints\SearchController(), 'register_routes' ] );
 		add_action( 'rest_api_init', [ new Endpoints\AccountController(), 'register_routes' ] );

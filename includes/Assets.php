@@ -30,7 +30,9 @@ class Assets {
 	}
 
 	private function enqueue_script( string $name, array $params = [], $dependencies = [] ) {
-		$data = $this->get_asset_data( $name );
+		// TODO: Find a better way to prevent duplication.
+		static $autoblue_defined = false;
+		$data                    = $this->get_asset_data( $name );
 
 		wp_register_script(
 			"autoblue-{$name}-plugin-script",
@@ -40,15 +42,22 @@ class Assets {
 			true
 		);
 
-		if ( ! empty( $params ) ) {
-			wp_add_inline_script( "autoblue-{$name}-plugin-script", 'const Autoblue = ' . wp_json_encode( $params ), 'before' );
+		if ( ! empty( $params ) && ! $autoblue_defined ) {
+			wp_add_inline_script( "autoblue-{$name}-plugin-script", 'const autoblue = ' . wp_json_encode( $params ), 'before' );
+			$autoblue_defined = true;
 		}
 
 		wp_enqueue_script( "autoblue-{$name}-plugin-script" );
 	}
 
 	public function register_block_editor_assets() {
-		$this->enqueue_script( 'editor' );
+		$this->enqueue_script(
+			'editor',
+			[
+				'initialState' => $this->get_initial_state(),
+				'version'      => AUTOBLUE_VERSION,
+			]
+		);
 		$this->enqueue_style( 'editor' );
 	}
 
@@ -66,11 +75,13 @@ class Assets {
 	}
 
 	private function get_initial_state(): array {
-		$accounts = new Accounts();
+		$current_page     = get_current_screen();
+		$refresh_accounts = $current_page && $current_page->id === 'settings_page_autoblue';
+		$accounts         = new Accounts();
 
 		return [
 			'accounts' => [
-				'items' => $accounts->get_accounts(),
+				'items' => $accounts->get_accounts( $refresh_accounts ),
 			],
 		];
 	}

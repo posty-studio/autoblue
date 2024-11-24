@@ -4,90 +4,105 @@ import {
 	ToggleControl,
 	TextareaControl,
 	BaseControl,
+	Button,
 } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { createInterpolateElement } from '@wordpress/element';
 import AccountInfo from './../account-info';
+import PublishedPostPanel from './../published-post-panel';
+import useNewAccountModal from './../new-account-modal';
+import useAccounts from './../../hooks/use-accounts';
+import styles from './styles.module.scss';
 
 const SharePanel = () => {
+	const { accounts } = useAccounts();
+	const { renderModal, openModal } = useNewAccountModal();
 	const { editPost } = useDispatch( 'core/editor' );
-	const { editEntityRecord } = useDispatch( 'core' );
 
-	const { postId, postType, postTitle, autobluePostMessage } = useSelect(
+	const { postType, postStatus, isEnabled, customMessage } = useSelect(
 		( select ) => {
-			const {
-				getCurrentPostId,
-				getCurrentPostType,
-				getEditedPostAttribute,
-			} = select( 'core/editor' );
-			const _postId = getCurrentPostId();
+			const { getCurrentPostType, getEditedPostAttribute } =
+				select( 'core/editor' );
+
 			return {
-				postId: _postId,
 				postType: getCurrentPostType(),
-				postTitle: getEditedPostAttribute( 'title' ),
-				autobluePostMessage:
-					getEditedPostAttribute( 'meta' )?.autoblue_post_message,
+				postStatus: getEditedPostAttribute( 'status' ),
+				isEnabled: getEditedPostAttribute( 'meta' )?.autoblue_enabled,
+				customMessage:
+					getEditedPostAttribute( 'meta' )?.autoblue_custom_message,
 			};
 		},
 		[]
 	);
 
+	if ( postStatus === 'publish' ) {
+		return <PublishedPostPanel />;
+	}
+
+	// TODO: Add support for other post types.
 	if ( postType !== 'post' ) {
 		return null;
 	}
 
-	const appPassword = '';
-	const accountDIDs = [];
-
-	if ( ! appPassword || accountDIDs.length === 0 ) {
+	if ( ! accounts.length ) {
 		return (
-			<p>
-				{ createInterpolateElement(
-					__(
-						'Please enter your Bluesky app password and select an account in the <a>settings page</a> to start sharing.',
-						'autoblue'
-					),
-					{
-						a: (
-							<a href="/wp-admin/options-general.php?page=autoblue">
-								{ __( 'settings page', 'autoblue' ) }
-							</a>
-						),
-					}
-				) }
-			</p>
+			<VStack>
+				<Button variant="secondary" onClick={ () => openModal() }>
+					{ __( 'Connect a Bluesky account', 'autoblue' ) }
+				</Button>
+				{ renderModal() }
+			</VStack>
 		);
 	}
+
+	const setIsEnabled = ( value ) => {
+		editPost( {
+			meta: { autoblue_enabled: value },
+		} );
+	};
+
+	const setCustomMessage = ( value ) => {
+		editPost( {
+			meta: { autoblue_custom_message: value },
+		} );
+	};
 
 	return (
 		<VStack spacing={ 3 }>
 			<ToggleControl
+				__nextHasNoMarginBottom
 				label={ __( 'Share to Bluesky', 'autoblue' ) }
-				checked={ true }
+				checked={ isEnabled }
+				onChange={ setIsEnabled }
 			/>
-			<TextareaControl
-				label={ __( 'Message', 'autoblue' ) }
-				help={ __(
-					'Add a message to the Bluesky post. If left empty, the post title will be used.',
-					'autoblue'
-				) }
-				value={ autobluePostMessage }
-				placeholder={ postTitle }
-				maxLength={ 250 }
-				onChange={ ( value ) =>
-					editPost( { meta: { autoblue_post_message: value } } )
-				}
-			/>
-			<BaseControl
-				label={ __( 'Sharing to:', 'autoblue' ) }
-				id="autoblue-account"
-			>
-				{ accountDIDs.map( ( did ) => (
-					<div key={ did }>
-						<AccountInfo did={ did } />
-					</div>
-				) ) }
-			</BaseControl>
+			{ isEnabled && (
+				<>
+					<TextareaControl
+						__nextHasNoMarginBottom
+						label={ __( 'Message', 'autoblue' ) }
+						help={ __(
+							'Add an optional message to the Bluesky post.',
+							'autoblue'
+						) }
+						value={ customMessage }
+						maxLength={ 250 }
+						onChange={ setCustomMessage }
+					/>
+					<BaseControl
+						__nextHasNoMarginBottom
+						label={ __( 'Sharing to:', 'autoblue' ) }
+						id="autoblue-account"
+					>
+						{ accounts.map( ( account ) => (
+							<AccountInfo
+								key={ account.did }
+								account={ account }
+								className={ styles.account }
+								size="small"
+							/>
+						) ) }
+					</BaseControl>
+				</>
+			) }
 		</VStack>
 	);
 };

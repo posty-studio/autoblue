@@ -1,9 +1,9 @@
-=== Bluesky for WordPress ===
-Contributors: dnaielpost
-Requires at least: 6.5
-Tested up to: 6.5
+=== Autoblue ===
+Contributors: danielpost
+Requires at least: 6.6
+Tested up to: 6.7
 Stable tag: 1.0.0
-Requires PHP: 7.0
-License: GPLv2 or later
+Requires PHP: 8.1
+License: GPL-3.0
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
-Add Bluesky to your WordPress website. Automatically share new posts to Bluesky and integrate Bluesky replies with the comments on your website.
+Automatically share new posts to Bluesky.

@@ -65,11 +65,17 @@ const AccountInfo = ( {
 	className,
 	onDelete = null,
 	deleteLabel = null,
+	size = 'medium',
 } ) => {
 	const { userData, isLoading } = useAccountInfo( did, meta );
 	const [ isImageLoaded, setIsImageLoaded ] = useState( false );
 
-	className = clsx( styles.wrapper, className );
+	className = clsx(
+		styles.wrapper,
+		className,
+		size === 'small' && styles.small,
+		size === 'large' && styles.large
+	);
 
 	if ( isLoading ) {
 		return (

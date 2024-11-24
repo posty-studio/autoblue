@@ -28,8 +28,6 @@ const NewAccountModal = ( {
 } ) => {
 	if ( ! isOpen ) return null;
 
-	console.log( { status, errorMessage } );
-
 	return (
 		<Modal
 			title={ __( 'Connect Bluesky account', 'autoblue' ) }

@@ -37,14 +37,6 @@ class Accounts {
 			return [];
 		}
 
-		$accounts = array_map(
-			function ( $account ) {
-				unset( $account['access_jwt'], $account['refresh_jwt'] );
-				return $account;
-			},
-			$accounts
-		);
-
 		if ( ! $force_refresh ) {
 			$cached_accounts = get_transient( self::TRANSIENT_KEY );
 			if ( $cached_accounts !== false ) {
@@ -64,6 +56,18 @@ class Accounts {
 		set_transient( self::TRANSIENT_KEY, $accounts, DAY_IN_SECONDS );
 
 		return $accounts;
+	}
+
+	public function get_account_by_did( $did ) {
+		$accounts = $this->get_accounts();
+
+		foreach ( $accounts as $account ) {
+			if ( $account['did'] === $did ) {
+				return $account;
+			}
+		}
+
+		return null;
 	}
 
 	/**
@@ -165,6 +169,7 @@ class Accounts {
 		);
 
 		if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) >= 300 ) {
+			return new \WP_Error( 'autoblue_new_account_error', wp_remote_retrieve_body( $response ) );
 			return new \WP_Error( 'autoblue_new_account_error', __( 'Error creating new account.', 'autoblue' ) );
 		}
 
@@ -192,7 +197,6 @@ class Accounts {
 		// TODO: This is not pretty at all. Refactor this.
 		$profiles = $this->fetch_profiles( [ $data['did'] ] );
 		$account  = $this->merge_profile_data( [ $account ], $profiles )[0];
-		unset( $account['access_jwt'], $account['refresh_jwt'] );
 
 		return $account;
 	}
@@ -215,5 +219,64 @@ class Accounts {
 		delete_transient( 'autoblue_accounts' );
 
 		return true;
+	}
+
+	// TODO: Rework the logic for updating accounts.
+	public function refresh_tokens_for_account_by_did( $did ) {
+		$accounts = get_option( 'autoblue_accounts', [] );
+
+		$account = array_filter(
+			$accounts,
+			function ( $account ) use ( $did ) {
+				return $account['did'] === $did;
+			}
+		);
+
+		if ( empty( $account ) ) {
+			return new \WP_Error( 'autoblue_account_not_found', __( 'Account not found.', 'autoblue' ) );
+		}
+
+		$account = reset( $account );
+
+		$url      = 'https://bsky.social/xrpc/com.atproto.server.refreshSession';
+		$response = wp_safe_remote_post(
+			$url,
+			[
+				'headers' => [
+					'Content-Type'  => 'application/json',
+					'Authorization' => 'Bearer ' . $account['refresh_jwt'],
+				],
+			]
+		);
+
+		if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) >= 300 ) {
+			return new \WP_Error( 'autoblue_refresh_error', __( 'Error refreshing account.', 'autoblue' ) );
+		}
+
+		$data = json_decode( wp_remote_retrieve_body( $response ), true );
+
+		if ( ! $data || empty( $data['accessJwt'] ) || empty( $data['refreshJwt'] ) ) {
+			return new \WP_Error( 'autoblue_refresh_error', __( 'Error refreshing account.', 'autoblue' ) );
+		}
+
+		$account['access_jwt']  = sanitize_text_field( $data['accessJwt'] );
+		$account['refresh_jwt'] = sanitize_text_field( $data['refreshJwt'] );
+
+		$accounts = get_option( 'autoblue_accounts', [] );
+		$accounts = array_map(
+			function ( $a ) use ( $account ) {
+				if ( $a['did'] === $account['did'] ) {
+					return $account;
+				}
+
+				return $a;
+			},
+			$accounts
+		);
+
+		update_option( 'autoblue_accounts', $accounts );
+		delete_transient( 'autoblue_accounts' );
+
+		return $account;
 	}
 }
