@@ -36,6 +36,7 @@
 		<exclude name="WordPress.PHP.YodaConditions.NotYoda"/>
 		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound"/>
 		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+		<exclude name="WordPress.Files.FileName"/>
 	</rule>
 
 	<rule ref="Generic.CodeAnalysis.UnusedFunctionParameter"/>

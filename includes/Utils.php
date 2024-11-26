@@ -9,7 +9,7 @@ class Utils {
 
 	public static function error_log( $message ) {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( $message );
+			error_log( $message ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 		}
 	}
 }

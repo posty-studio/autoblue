@@ -77,11 +77,17 @@ class Assets {
 	private function get_initial_state(): array {
 		$current_page     = get_current_screen();
 		$refresh_accounts = $current_page && $current_page->id === 'settings_page_autoblue';
-		$accounts         = new Accounts();
+		$accounts         = ( new ConnectedAccounts() )->get_connected_accounts( $refresh_accounts );
+		$accounts         = array_map(
+			function ( $account ) {
+				return $account->to_array();
+			},
+			$accounts
+		);
 
 		return [
 			'accounts' => [
-				'items' => $accounts->get_accounts( $refresh_accounts ),
+				'items' => $accounts,
 			],
 		];
 	}

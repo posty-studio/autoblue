@@ -18,6 +18,7 @@ class Setup {
 
 		( new Admin() )->register_hooks();
 		( new Meta() )->register_hooks();
+		( new Blocks() )->register_hooks();
 		( new Assets() )->register_hooks();
 		( new PostHandler() )->register_hooks();
 

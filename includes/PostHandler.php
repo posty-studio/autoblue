@@ -29,9 +29,14 @@ class PostHandler {
 			return;
 		}
 
-		// TODO: Add check for production sites
+		if ( wp_next_scheduled( 'autoblue_share_to_bluesky', [ $post_id ] ) ) {
+			return;
+		}
 
-		if ( ! wp_next_scheduled( 'autoblue_share_to_bluesky', [ $post_id ] ) ) {
+		// If we're running a cron job, process the share immediately.
+		if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+			$this->process_scheduled_share( $post_id );
+		} else {
 			wp_schedule_single_event( time(), 'autoblue_share_to_bluesky', [ $post_id ] );
 		}
 	}
