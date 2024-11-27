@@ -1,12 +1,15 @@
 <?php
 /**
  * Plugin Name: Autoblue
+ * Plugin URI: https://autoblue.cc
  * Description: Automatically share new posts to Bluesky.
  * Author: Daniel Post
  * Author URI: https://danielpost.com
- * License: GPL-3.0
+ * License: GPLv2 or later
  * Version: 1.0.0
  * Text Domain: autoblue
+ * Requires at least: 6.6
+ * Requires PHP: 7.4
  */
 
 // If this file is called directly, abort.
