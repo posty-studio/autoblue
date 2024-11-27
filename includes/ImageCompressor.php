@@ -20,7 +20,6 @@ class ImageCompressor {
 			return false;
 		}
 
-		var_dump( $path );
 		$mime_type = mime_content_type( $path );
 
 		if ( ! $mime_type ) {

@@ -5,12 +5,12 @@ namespace Autoblue\Endpoints;
 use WP_REST_Controller;
 use WP_REST_Server;
 
-class AccountsController extends WP_REST_Controller {
+class ConnectionsController extends WP_REST_Controller {
 	private const DID_REGEX = '^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$';
 
 	public function __construct() {
 		$this->namespace = 'autoblue/v1';
-		$this->rest_base = 'accounts';
+		$this->rest_base = 'connections';
 	}
 
 	public function register_routes() {
@@ -20,23 +20,23 @@ class AccountsController extends WP_REST_Controller {
 			[
 				[
 					'methods'             => WP_REST_Server::READABLE,
-					'callback'            => [ $this, 'get_accounts' ],
-					'permission_callback' => [ $this, 'manage_accounts_permissions_check' ],
+					'callback'            => [ $this, 'get_connections' ],
+					'permission_callback' => [ $this, 'manage_connections_permissions_check' ],
 				],
 				[
 					'methods'             => WP_REST_Server::CREATABLE,
-					'callback'            => [ $this, 'add_account' ],
-					'permission_callback' => [ $this, 'manage_accounts_permissions_check' ],
+					'callback'            => [ $this, 'add_connection' ],
+					'permission_callback' => [ $this, 'manage_connections_permissions_check' ],
 					'args'                => $this->get_endpoint_args_for_item_schema( WP_REST_Server::CREATABLE ),
 				],
 				[
 					'methods'             => WP_REST_Server::DELETABLE,
-					'callback'            => [ $this, 'delete_account' ],
-					'permission_callback' => [ $this, 'manage_accounts_permissions_check' ],
+					'callback'            => [ $this, 'delete_connection' ],
+					'permission_callback' => [ $this, 'manage_connections_permissions_check' ],
 					'args'                => [
 						'did' => [
 							'type'        => 'string',
-							'description' => __( 'DID of the account to be deleted.', 'autoblue' ),
+							'description' => __( 'DID of the connection to be deleted.', 'autoblue' ),
 							'required'    => true,
 							'pattern'     => self::DID_REGEX,
 						],
@@ -50,48 +50,47 @@ class AccountsController extends WP_REST_Controller {
 	/**
 	 * @return bool
 	 */
-	public function manage_accounts_permissions_check() {
+	public function manage_connections_permissions_check() {
 		return current_user_can( 'manage_options' );
 	}
 
 	/**
-	 * GET `/autoblue/v1/accounts`
+	 * GET `/autoblue/v1/connections`
 	 *
 	 * @param WP_REST_Request $request The API request.
 	 * @return WP_REST_Response
 	 */
-	public function get_accounts() {
-		$accounts = new \Autoblue\Accounts();
+	public function get_connections() {
+		$connections = new \Autoblue\ConnectionsManager();
 
-		return rest_ensure_response( $accounts->get_accounts() );
+		return rest_ensure_response( $connections->get_all_connections() );
 	}
 
 	/**
-	 * POST `/autoblue/v1/accounts`
+	 * POST `/autoblue/v1/connections`
 	 *
 	 * @param WP_REST_Request $request The API request.
 	 * @return WP_REST_Response
 	 */
-	public function add_account( $request ) {
-		$accounts     = new \Autoblue\Accounts();
+	public function add_connection( $request ) {
+		$connections  = new \Autoblue\ConnectionsManager();
 		$did          = $request->get_param( 'did' );
 		$app_password = $request->get_param( 'app_password' );
 
-		return rest_ensure_response( $accounts->add_account( $did, $app_password ) );
+		return rest_ensure_response( $connections->add_connection( $did, $app_password ) );
 	}
 
-
 	/**
-	 * DELETE `/autoblue/v1/accounts`
+	 * DELETE `/autoblue/v1/connections`
 	 *
 	 * @param WP_REST_Request $request The API request.
 	 * @return WP_REST_Response
 	 */
-	public function delete_account( $request ) {
-		$accounts = new \Autoblue\Accounts();
-		$did      = $request->get_param( 'did' );
+	public function delete_connection( $request ) {
+		$connections = new \Autoblue\ConnectionsManager();
+		$did         = $request->get_param( 'did' );
 
-		return rest_ensure_response( $accounts->delete_account( $did ) );
+		return rest_ensure_response( $connections->delete_connection( $did ) );
 	}
 
 	/**
@@ -106,7 +105,7 @@ class AccountsController extends WP_REST_Controller {
 
 		$schema = [
 			'$schema'    => 'https://json-schema.org/draft-04/schema#',
-			'title'      => 'autoblue-accounts',
+			'title'      => 'autoblue-connections',
 			'type'       => 'object',
 			'properties' => [
 				'did'          => [

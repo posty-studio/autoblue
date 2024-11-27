@@ -25,7 +25,7 @@ export function deleteAccountFromState( did ) {
 export function addAccount( did, appPassword ) {
 	return async function ( { dispatch, select } ) {
 		const response = await apiFetch( {
-			path: '/autoblue/v1/accounts',
+			path: '/autoblue/v1/connections',
 			method: 'POST',
 			data: { did, app_password: appPassword },
 		} );
@@ -38,7 +38,7 @@ export function* deleteAccount( did ) {
 	try {
 		// yield setAccountsLoading( true );
 		const response = yield apiFetch( {
-			path: '/autoblue/v1/accounts',
+			path: '/autoblue/v1/connections',
 			method: 'DELETE',
 			data: { did },
 		} );

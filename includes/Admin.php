@@ -35,7 +35,7 @@ class Admin {
 	public function register_settings() {
 		register_setting(
 			'autoblue',
-			'autoblue_accounts',
+			'autoblue_connections',
 			[
 				'type'         => 'array',
 				'description'  => __( 'List of connected Bluesky accounts.', 'autoblue' ),

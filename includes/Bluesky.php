@@ -3,17 +3,20 @@
 namespace Autoblue;
 
 class Bluesky {
-	private function get_account() {
-		$accounts_class = new Accounts();
-		$accounts       = $accounts_class->get_accounts();
+	private $api_client;
 
-		if ( empty( $accounts ) ) {
+	public function __construct() {
+		$this->api_client = new Bluesky\API();
+	}
+
+	private function get_connection() {
+		$connections = ( new ConnectionsManager() )->get_all_connections();
+
+		if ( empty( $connections ) ) {
 			return false;
 		}
 
-		$account = $accounts[0];
-
-		return $account;
+		return $connections[0];
 	}
 
 	private function upload_image( $image_id, $access_token ) {
@@ -34,28 +37,13 @@ class Bluesky {
 			return false;
 		}
 
-		$args = [
-			'headers' => [
-				'Content-Type'  => $mime_type,
-				'Authorization' => 'Bearer ' . $access_token,
-			],
-			'body'    => $image_blob,
-		];
+		$blob = $this->api_client->upload_blob( $image_blob, $mime_type, $access_token );
 
-		$blob_response = wp_remote_post( 'https://bsky.social/xrpc/com.atproto.repo.uploadBlob', $args );
-
-		if ( is_wp_error( $blob_response ) ) {
-			Utils::error_log( 'Failed to upload image to Bluesky: ' . $blob_response->get_error_message() );
+		if ( is_wp_error( $blob ) ) {
 			return false;
 		}
 
-		$response_body = json_decode( wp_remote_retrieve_body( $blob_response ), true );
-
-		if ( ! isset( $response_body['blob'] ) ) {
-			return false;
-		}
-
-		return $response_body['blob'];
+		return $blob;
 	}
 
 	public function share_to_bluesky( $post_id ) {
@@ -65,29 +53,27 @@ class Bluesky {
 			return false;
 		}
 
-		// For now, get the first account we have.
-		$account = $this->get_account();
+		$connection = $this->get_connection();
 
-		if ( ! $account ) {
+		if ( ! $connection ) {
 			return false;
 		}
 
-		$account = ( new Accounts() )->refresh_tokens_for_account_by_did( $account['did'] );
-
-		$user_agent = apply_filters( 'http_headers_useragent', 'WordPress/' . get_bloginfo( 'version' ) . '; ' . get_bloginfo( 'url' ) );
+		$connections_manager = new ConnectionsManager();
+		$connections_manager->refresh_tokens( $connection['did'] );
 
 		$message = get_post_meta( $post_id, 'autoblue_custom_message', true );
-		$message = ! empty( $message ) ? sanitize_text_field( $message ) : '';
+		$message = ! empty( $message ) ? wp_kses_post( $message ) : get_the_excerpt( $post->ID );
 
 		$image_blob = false;
 		if ( has_post_thumbnail( $post->ID ) ) {
-			$image_blob = $this->upload_image( get_post_thumbnail_id( $post->ID ), $account['access_jwt'] );
+			$image_blob = $this->upload_image( get_post_thumbnail_id( $post->ID ), $connection['access_jwt'] );
 		}
 
 		$body = [
 			'collection' => 'app.bsky.feed.post',
-			'did'        => esc_html( $account['did'] ),
-			'repo'       => esc_html( $account['did'] ),
+			'did'        => esc_html( $connection['did'] ),
+			'repo'       => esc_html( $connection['did'] ),
 			'record'     => [
 				'$type'     => 'app.bsky.feed.post',
 				'text'      => $message,
@@ -107,34 +93,17 @@ class Bluesky {
 			$body['record']['embed']['external']['thumb'] = $image_blob;
 		}
 
-		$response = wp_safe_remote_post(
-			'https://bsky.social/xrpc/com.atproto.repo.createRecord',
-			[
-				'user-agent' => "$user_agent; Autoblue",
-				'headers'    => [
-					'Content-Type'  => 'application/json',
-					'Authorization' => 'Bearer ' . $account['access_jwt'],
-				],
-				'body'       => wp_json_encode( $body ),
-			]
-		);
+		$response = $this->api_client->create_record( $body, $connection['access_jwt'] );
 
-		$status = wp_remote_retrieve_response_code( $response );
-		$body   = wp_remote_retrieve_body( $response );
-
-		if ( 200 !== $status ) {
-			Utils::error_log( 'Failed to share post to Bluesky: ' . $body );
+		if ( is_wp_error( $response ) ) {
 			return false;
 		}
 
-		$encoded_body = $body;
-		$body         = json_decode( $body );
-
 		$share = [
-			'did'      => $account['did'],
+			'did'      => $connection['did'],
 			'date'     => gmdate( 'c' ),
-			'uri'      => $body->uri,
-			'response' => $encoded_body,
+			'uri'      => $response['uri'],
+			'response' => wp_json_encode( $response ),
 		];
 
 		$shares   = get_post_meta( $post_id, 'autoblue_shares', true );

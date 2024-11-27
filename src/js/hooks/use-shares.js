@@ -3,8 +3,8 @@ import { useSelect } from '@wordpress/data';
 import { useState, useEffect } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 
-const POLL_INTERVAL = 2000;
-const MAX_POLL_ATTEMPTS = 30;
+const POLL_INTERVAL = 1000;
+const MAX_POLL_ATTEMPTS = 60;
 
 const useShares = () => {
 	const [ polledMeta, setPolledMeta ] = useState( null );
