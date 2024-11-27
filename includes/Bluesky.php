@@ -63,7 +63,8 @@ class Bluesky {
 		$connections_manager->refresh_tokens( $connection['did'] );
 
 		$message = get_post_meta( $post_id, 'autoblue_custom_message', true );
-		$message = ! empty( $message ) ? wp_kses_post( $message ) : get_the_excerpt( $post->ID );
+		$excerpt = html_entity_decode( get_the_excerpt( $post->ID ) );
+		$message = ! empty( $message ) ? wp_strip_all_tags( html_entity_decode( $message ) ) : $excerpt;
 
 		$image_blob = false;
 		if ( has_post_thumbnail( $post->ID ) ) {
@@ -83,7 +84,7 @@ class Bluesky {
 					'external' => [
 						'uri'         => get_permalink( $post->ID ),
 						'title'       => get_the_title( $post->ID ),
-						'description' => get_the_excerpt( $post->ID ),
+						'description' => $excerpt,
 					],
 				],
 			],
