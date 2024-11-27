@@ -213,6 +213,10 @@ class API {
 
 		$url = trailingslashit( $args['base_url'] ) . 'xrpc/' . $args['endpoint'];
 
+		if ( 'GET' === $args['method'] && ! empty( $args['body'] ) ) {
+			$url = add_query_arg( $args['body'], $url );
+		}
+
 		$default_headers = [
 			'Content-Type' => 'application/json',
 		];
@@ -222,7 +226,7 @@ class API {
 		$request_args = [
 			'method'  => $args['method'],
 			'headers' => $headers,
-			'body'    => is_array( $args['body'] ) ? wp_json_encode( $args['body'] ) : $args['body'],
+			'body'    => $args['method'] === 'POST' ? wp_json_encode( $args['body'] ) : null,
 		];
 
 		return wp_safe_remote_request( $url, $request_args );

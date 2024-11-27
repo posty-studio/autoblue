@@ -39,9 +39,9 @@ class ConnectionsManager {
 		}
 
 		$new_connection = [
-			'did'         => $auth_response['did'],
-			'access_jwt'  => $auth_response['accessJwt'],
-			'refresh_jwt' => $auth_response['refreshJwt'],
+			'did'         => sanitize_text_field( $did ),
+			'access_jwt'  => sanitize_text_field( $auth_response['accessJwt'] ),
+			'refresh_jwt' => sanitize_text_field( $auth_response['refreshJwt'] ),
 		];
 
 		$this->store_connection( $new_connection );
@@ -148,9 +148,9 @@ class ConnectionsManager {
 		}
 
 		$connection = [
-			'did'         => $did,
-			'access_jwt'  => $response['accessJwt'],
-			'refresh_jwt' => $response['refreshJwt'],
+			'did'         => sanitize_text_field( $did ),
+			'access_jwt'  => sanitize_text_field( $response['accessJwt'] ),
+			'refresh_jwt' => sanitize_text_field( $response['refreshJwt'] ),
 		];
 
 		$this->store_connection( $connection, true );
@@ -166,18 +166,18 @@ class ConnectionsManager {
 	 * @return array|null Sanitized profile data or null if not found.
 	 */
 	private function fetch_and_cache_profile( $did, $force_refresh = false ) {
-		$transient_key = $this->get_transient_key( $did );
+		$transient_key  = $this->get_transient_key( $did );
+		$cached_profile = get_transient( $transient_key );
 
-		if ( ! $force_refresh ) {
-			$cached_profile = get_transient( $transient_key );
-			if ( $cached_profile ) {
-				return $cached_profile;
-			}
+		if ( ! $force_refresh && $cached_profile ) {
+			return $cached_profile;
 		}
 
 		$profile_data = $this->api_client->get_profiles( [ $did ] );
+
+		// If something went wrong, return the cached profile if available.
 		if ( ! $profile_data || empty( $profile_data[0] ) ) {
-			return null;
+			return $cached_profile ?: null;
 		}
 
 		$sanitized_profile = $this->sanitize_profile( $profile_data[0] );
@@ -229,9 +229,9 @@ class ConnectionsManager {
 	 */
 	private function sanitize_profile( $profile ) {
 		return [
-			'handle' => sanitize_text_field( $profile->handle ?? '' ),
-			'name'   => sanitize_text_field( $profile->displayName ?? '' ),
-			'avatar' => esc_url_raw( $profile->avatar ?? '' ),
+			'handle' => sanitize_text_field( $profile['handle'] ?? '' ),
+			'name'   => sanitize_text_field( $profile['displayName'] ?? '' ),
+			'avatar' => esc_url_raw( $profile['avatar'] ?? '' ),
 		];
 	}
 

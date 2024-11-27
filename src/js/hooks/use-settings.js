@@ -24,7 +24,10 @@ const useSettings = () => {
 	};
 
 	return {
-		isEnabled: isEnabled || false, // TODO: Remove this when we figure out why setting the property to false makes the REST API return null instead.
+		isEnabled:
+			isEnabled !== undefined && isEnabled !== null
+				? isEnabled
+				: autoblue?.initialState?.settings?.enabled, // TODO: Add to store.
 		setIsEnabled,
 		isSaving,
 	};

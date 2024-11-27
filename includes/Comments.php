@@ -12,9 +12,14 @@ class Comments {
 			return false;
 		}
 
-		$path   = parse_url( $url, PHP_URL_PATH );
+		$path = wp_parse_url( $url, PHP_URL_PATH );
+
+		if ( ! $path ) {
+			return false;
+		}
+
 		$parts  = explode( '/', trim( $path, '/' ) );
-		$handle = $parts[1];
+		$handle = $parts[1] ?? false;
 
 		if ( ! $handle ) {
 			return false;

@@ -83,6 +83,9 @@ class Assets {
 			'accounts' => [
 				'items' => $connections,
 			],
+			'settings' => [
+				'enabled' => get_option( 'autoblue_enabled', false ),
+			],
 		];
 	}
 }

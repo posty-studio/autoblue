@@ -29,7 +29,7 @@ class ImageCompressor {
 		$size = filesize( $path );
 
 		if ( $size <= $max_size ) {
-			return file_get_contents( $path );
+			return file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		}
 
 		// For now, we only support jpeg, png, and gif.
