@@ -2,5 +2,6 @@
 node_modules
 build
 vendor
+autoblue.zip
 .wp-env.json
 .rgignore
