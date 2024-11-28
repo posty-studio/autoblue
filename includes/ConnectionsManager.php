@@ -3,13 +3,26 @@
 namespace Autoblue;
 
 class ConnectionsManager {
-	private const OPTION_KEY       = 'autoblue_connections';
-	private const TRANSIENT_PREFIX = 'autoblue_connection_';
+	public const REFRESH_CONNECTIONS_HOOK = 'autoblue_refresh_connections';
+	private const OPTION_KEY              = 'autoblue_connections';
+	private const TRANSIENT_PREFIX        = 'autoblue_connection_';
 
+	/**
+	 * The Bluesky API client.
+	 *
+	 * @var Bluesky\API
+	 */
 	private $api_client;
 
 	public function __construct() {
 		$this->api_client = new Bluesky\API();
+	}
+
+	/**
+	 * Register hooks.
+	 */
+	public function register_hooks() {
+		add_action( self::REFRESH_CONNECTIONS_HOOK, [ $this, 'refresh_all_connections' ] );
 	}
 
 	/**
@@ -116,7 +129,7 @@ class ConnectionsManager {
 			return [];
 		}
 
-		// TODO: When we have multiple accounts, fetch this all in one call instead.
+		// TODO: When we have multiple accounts (in the future), fetch this all in one call instead.
 		foreach ( $connections as &$connection ) {
 			$profile_data = $this->fetch_and_cache_profile( $connection['did'], $force_refresh );
 
@@ -210,7 +223,25 @@ class ConnectionsManager {
 	}
 
 	/**
+	 * Refresh all connections.
+	 */
+	public function refresh_all_connections() {
+		$connections = $this->get_all_connections( true );
+
+		if ( empty( $connections ) ) {
+			return;
+		}
+
+		foreach ( $connections as $connection ) {
+			$this->refresh_tokens( $connection['did'] );
+		}
+	}
+
+	/**
 	 * Check if a connection with the given DID already exists.
+	 *
+	 * @param string $did The DID to check.
+	 * @return bool True if the connection exists, false otherwise.
 	 */
 	private function connection_exists( $did ) {
 		$connections = get_option( self::OPTION_KEY, [] );
@@ -219,6 +250,9 @@ class ConnectionsManager {
 
 	/**
 	 * Validate DID format.
+	 *
+	 * @param string $did The DID to validate.
+	 * @return bool True if the DID is valid, false otherwise.
 	 */
 	private function is_valid_did( $did ) {
 		return preg_match( '/^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$/', $did );
@@ -226,6 +260,9 @@ class ConnectionsManager {
 
 	/**
 	 * Sanitize profile data.
+	 *
+	 * @param array $profile The profile data to sanitize.
+	 * @return array The sanitized profile data.
 	 */
 	private function sanitize_profile( $profile ) {
 		return [
@@ -237,6 +274,9 @@ class ConnectionsManager {
 
 	/**
 	 * Get the transient key for a specific DID.
+	 *
+	 * @param string $did The DID to generate the key for.
+	 * @return string The transient key.
 	 */
 	private function get_transient_key( $did ) {
 		return self::TRANSIENT_PREFIX . md5( $did );

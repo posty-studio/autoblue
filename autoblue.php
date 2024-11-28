@@ -21,3 +21,6 @@ if ( ! defined( 'WPINC' ) ) {
 require_once __DIR__ . '/vendor/autoload.php';
 
 ( new Autoblue\Setup() )->init();
+
+register_activation_hook( __FILE__, [ 'Autoblue\Setup', 'activate' ] );
+register_deactivation_hook( __FILE__, [ 'Autoblue\Setup', 'deactivate' ] );

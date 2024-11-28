@@ -24,10 +24,10 @@ class TextParser {
 	 *
 	 * @var API
 	 */
-	public $api;
+	public $api_client;
 
 	public function __construct() {
-		$this->api = new API();
+		$this->api_client = new API();
 	}
 
 	/**
@@ -135,7 +135,7 @@ class TextParser {
 		$facets = [];
 
 		foreach ( $this->parse_mentions( $text ) as $mention ) {
-			$did = $this->api->get_did_for_handle( $mention['handle'] );
+			$did = $this->api_client->get_did_for_handle( $mention['handle'] );
 
 			if ( ! $did ) {
 				continue;

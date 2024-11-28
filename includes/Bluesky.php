@@ -3,6 +3,11 @@
 namespace Autoblue;
 
 class Bluesky {
+	/**
+	 * The Bluesky API client.
+	 *
+	 * @var Bluesky\API
+	 */
 	private $api_client;
 
 	public function __construct() {
