@@ -1,7 +1,7 @@
 === Autoblue ===
 Contributors: danielpost
 Tags: social, bluesky, auto, share, post
-Stable tag: 1.0.0
+Stable tag: 0.0.1
 Requires at least: 6.6
 Tested up to: 6.7
 Requires PHP: 7.4
