@@ -99,6 +99,7 @@ class API {
 				'endpoint' => 'com.atproto.server.refreshSession',
 				'method'   => 'POST',
 				'headers'  => [
+					'Content-Type'  => 'application/json',
 					'Authorization' => 'Bearer ' . $refresh_jwt,
 				],
 				'base_url' => self::BASE_URL,
@@ -226,8 +227,11 @@ class API {
 		$request_args = [
 			'method'  => $args['method'],
 			'headers' => $headers,
-			'body'    => $args['method'] === 'POST' ? wp_json_encode( $args['body'] ) : null,
 		];
+
+		if ( $args['method'] === 'POST' && ! empty( $args['body'] ) ) {
+			$request_args['body'] = wp_json_encode( $args['body'] );
+		}
 
 		return wp_safe_remote_request( $url, $request_args );
 	}

@@ -13,6 +13,7 @@
 		"extends @wordpress/browserslist-config"
 	],
 	"devDependencies": {
+		"@wordpress/icons": "^10.13.0",
 		"@wordpress/prettier-config": "^4.12.0",
 		"@wordpress/scripts": "^30.5.1",
 		"postcss-import": "^16.1.0",

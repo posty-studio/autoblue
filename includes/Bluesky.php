@@ -60,16 +60,15 @@ class Bluesky {
 		}
 
 		$connections_manager = new ConnectionsManager();
-		$connections_manager->refresh_tokens( $connection['did'] );
+		$connection          = $connections_manager->refresh_tokens( $connection['did'] );
+
+		if ( is_wp_error( $connection ) ) {
+			return false;
+		}
 
 		$message = get_post_meta( $post_id, 'autoblue_custom_message', true );
 		$excerpt = html_entity_decode( get_the_excerpt( $post->ID ) );
 		$message = ! empty( $message ) ? wp_strip_all_tags( html_entity_decode( $message ) ) : $excerpt;
-
-		$image_blob = false;
-		if ( has_post_thumbnail( $post->ID ) ) {
-			$image_blob = $this->upload_image( get_post_thumbnail_id( $post->ID ), $connection['access_jwt'] );
-		}
 
 		$body = [
 			'collection' => 'app.bsky.feed.post',
@@ -89,6 +88,17 @@ class Bluesky {
 				],
 			],
 		];
+
+		$facets = ( new Bluesky\TextParser() )->parse_facets( $message );
+
+		if ( ! empty( $facets ) ) {
+			$body['record']['facets'] = $facets;
+		}
+
+		$image_blob = false;
+		if ( has_post_thumbnail( $post->ID ) ) {
+			$image_blob = $this->upload_image( get_post_thumbnail_id( $post->ID ), $connection['access_jwt'] );
+		}
 
 		if ( ! empty( $image_blob ) ) {
 			$body['record']['embed']['external']['thumb'] = $image_blob;
