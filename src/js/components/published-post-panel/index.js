@@ -1,4 +1,5 @@
 import { __ } from '@wordpress/i18n';
+import { useSelect } from '@wordpress/data';
 import { dateI18n, humanTimeDiff, getSettings } from '@wordpress/date';
 import {
 	Tooltip,
@@ -21,6 +22,20 @@ const getUriFromAtUri = ( atUri, did ) => {
 
 const PublishedPostPanel = () => {
 	const { shares, isSharingEnabled } = useShares();
+
+	const { postType } = useSelect( ( select ) => {
+		const { getCurrentPostType } = select( 'core/editor' );
+
+		return {
+			postType: getCurrentPostType(),
+		};
+	}, [] );
+
+	// TODO: Add support for other post types.
+	if ( postType !== 'post' ) {
+		return null;
+	}
+
 	const { formats } = getSettings();
 
 	if ( ! isSharingEnabled ) {

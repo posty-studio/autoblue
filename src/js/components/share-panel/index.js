@@ -34,13 +34,13 @@ const SharePanel = () => {
 		[]
 	);
 
-	if ( postStatus === 'publish' ) {
-		return <PublishedPostPanel />;
-	}
-
 	// TODO: Add support for other post types.
 	if ( postType !== 'post' ) {
 		return null;
+	}
+
+	if ( postStatus === 'publish' ) {
+		return <PublishedPostPanel />;
 	}
 
 	if ( ! accounts.length ) {
