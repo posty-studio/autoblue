@@ -57,7 +57,6 @@ class ConnectionsController extends WP_REST_Controller {
 	/**
 	 * GET `/autoblue/v1/connections`
 	 *
-	 * @param WP_REST_Request $request The API request.
 	 * @return WP_REST_Response
 	 */
 	public function get_connections() {

@@ -84,7 +84,7 @@ class ImageCompressor {
 			}
 		}
 
-		// If quality reduction alone didn't work, try reducing dimensions
+		// If quality reduction alone didn't work, try reducing dimensions.
 		if ( ! $optimized_contents || strlen( $optimized_contents ) > $max_size ) {
 			$min_scale       = 0.1;
 			$max_scale       = 1.0;

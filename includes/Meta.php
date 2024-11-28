@@ -8,7 +8,7 @@ class Meta {
 	}
 
 	public function register_post_meta() {
-		// TODO: Add support for multiple post types
+		// TODO: Add support for multiple post types.
 		register_post_meta(
 			'post',
 			'autoblue_enabled',

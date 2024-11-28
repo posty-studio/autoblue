@@ -47,7 +47,7 @@ class Admin {
 							'properties' => [
 								'did'         => [
 									'type'     => 'string',
-									'pattern'  => '^[a-z0-9:]+$', // Allowed characters: a-z, 0-9, colon
+									'pattern'  => '^[a-z0-9:]+$', // Allowed characters: a-z, 0-9, colon.
 									'required' => true,
 								],
 								'access_jwt'  => [

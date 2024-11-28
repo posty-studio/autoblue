@@ -18,9 +18,6 @@ class ConnectionsManager {
 		$this->api_client = new Bluesky\API();
 	}
 
-	/**
-	 * Register hooks.
-	 */
 	public function register_hooks() {
 		add_action( self::REFRESH_CONNECTIONS_HOOK, [ $this, 'refresh_all_connections' ] );
 	}
@@ -245,7 +242,7 @@ class ConnectionsManager {
 	 */
 	private function connection_exists( $did ) {
 		$connections = get_option( self::OPTION_KEY, [] );
-		return in_array( $did, array_column( $connections, 'did' ) );
+		return in_array( $did, array_column( $connections, 'did' ), true );
 	}
 
 	/**

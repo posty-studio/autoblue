@@ -14,9 +14,9 @@ class TextParser {
 	public const MENTION_REGEX = '/(^|\s|\()(@)([a-zA-Z0-9.-]+)(\b)/u';
 	public const URL_REGEX     = '/[$|\W](https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&\/\/=]*[-a-zA-Z0-9@%_\+~#\/\/=])?)/u';
 	// Hashtag regex pattern - matches tags that:
-	// - Start with # and aren't followed by a number
-	// - Can contain letters, numbers, underscores
-	// - Excludes trailing punctuation
+	// - Start with # and aren't followed by a number.
+	// - Can contain letters, numbers, underscores.
+	// - Excludes trailing punctuation.
 	public const TAG_REGEX = '/(?:^|\s)(#[^\d\s]\S*?)(?:\s|$|[!.,;?])/u';
 
 	/**
@@ -106,11 +106,11 @@ class TextParser {
 
 		foreach ( $matches[1] as $match ) {
 			$tag = $match[0];
-			// Clean up the tag
+			// Clean up the tag.
 			$tag = trim( $tag );
 			$tag = preg_replace( '/\p{P}+$/u', '', $tag );
 
-			// Skip if tag is too long (over 64 chars including #)
+			// Skip if tag is too long (over 64 chars including #).
 			if ( mb_strlen( $tag ) > 66 ) {
 				continue;
 			}

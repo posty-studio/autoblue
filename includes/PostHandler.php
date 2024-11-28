@@ -18,8 +18,8 @@ class PostHandler {
 			return;
 		}
 
-		// TODO: Add support for multiple post types
-		if ( ! in_array( $post->post_type, [ 'post' ] ) ) {
+		// TODO: Add support for multiple post types.
+		if ( ! in_array( $post->post_type, [ 'post' ], true ) ) {
 			return;
 		}
 
