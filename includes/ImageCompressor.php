@@ -1,150 +1,160 @@
 <?php
-
 namespace Autoblue;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+require_once ABSPATH . 'wp-admin/includes/file.php';
 
 class ImageCompressor {
 	/**
 	 * Compress an image if it exceeds the maximum size.
 	 *
 	 * @param string $path     Path to the image file.
+	 * @param string $mime_type MIME type of the image.
 	 * @param int    $max_size Maximum size in bytes.
 	 *
 	 * @return bool|string Compressed image data or false on failure.
 	 */
-	public function compress_image( $path, $max_size = 1000000 ) {
-		if ( ! extension_loaded( 'gd' ) ) {
-			return false;
-		}
-
+	public function compress_image( $path, $mime_type, $max_size = 500000 ) {
 		if ( ! file_exists( $path ) ) {
 			return false;
 		}
 
-		$mime_type = mime_content_type( $path );
-
-		if ( ! $mime_type ) {
+		if ( ! $mime_type || ! in_array( $mime_type, [ 'image/jpeg', 'image/png' ] ) ) {
 			return false;
 		}
 
 		$size = filesize( $path );
 
 		if ( $size <= $max_size ) {
-			return file_get_contents( $path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			return file_get_contents( $path );
 		}
 
-		// For now, we only support jpeg, png, and gif.
-		switch ( $mime_type ) {
-			case 'image/jpeg':
-				$image = imagecreatefromjpeg( $path );
-				break;
-			case 'image/png':
-				$image = imagecreatefrompng( $path );
-				break;
-			case 'image/gif':
-				$image = imagecreatefromgif( $path );
-				break;
-			default:
-				return false;
-		}
+		$editor = wp_get_image_editor( $path );
 
-		if ( $image === false ) {
+		if ( is_wp_error( $editor ) ) {
 			return false;
 		}
 
-		$min_quality        = 0;
-		$max_quality        = 100;
-		$optimized_contents = null;
+		$image_size      = $editor->get_size();
+		$original_width  = $image_size['width'];
+		$original_height = $image_size['height'];
+		$extension       = wp_get_default_extension_for_mime_type( $mime_type );
 
-		while ( $max_quality - $min_quality > 5 ) {
-			$current_quality = floor( ( $min_quality + $max_quality ) / 2 );
+		if ( $original_width > 1020 && $original_height > 534 ) {
+			$editor->resize( 1020, 534, true );
 
-			ob_start();
+			$temp_file          = wp_tempnam();
+			$temp_file_with_ext = $temp_file . $extension;
+			rename( $temp_file, $temp_file_with_ext );
 
-			switch ( $mime_type ) {
-				case 'image/jpeg':
-					imagejpeg( $image, null, $current_quality );
-					break;
-				case 'image/png':
-					$png_quality = floor( ( 100 - $current_quality ) / 11.111111 );
-					imagepng( $image, null, $png_quality );
-					break;
-				case 'image/gif':
-					imagegif( $image );
-					break;
+			$result = $editor->save( $temp_file_with_ext, $mime_type );
+
+			if ( ! is_wp_error( $result ) ) {
+				$resized_size = filesize( $result['path'] );
+
+				// If the resized image is already small enough, return it
+				if ( $resized_size <= $max_size ) {
+					$contents = file_get_contents( $result['path'] );
+					unlink( $result['path'] );
+					return $contents;
+				}
+
+				unlink( $result['path'] );
 			}
 
-			$current_contents = ob_get_clean();
-			$current_size     = strlen( $current_contents );
+			// Update dimensions for further processing
+			$image_size      = $editor->get_size();
+			$original_width  = $image_size['width'];
+			$original_height = $image_size['height'];
+		}
 
-			if ( $current_size > $max_size ) {
-				$max_quality = $current_quality;
-			} else {
+		do {
+			// Use proper extension based on mime type
+			$extension = $mime_type === 'image/png' ? '.png' : '.jpg';
+			$temp_file = wp_tempnam( $extension );
+
+			// Ensure temp file has correct extension
+			$temp_file_with_ext = $temp_file . $extension;
+			rename( $temp_file, $temp_file_with_ext );
+
+			$quality_level = $mime_type === 'image/png' ?
+				min( 9, max( 0, floor( ( 100 - $quality ) / 11.111111 ) ) ) :
+				$quality;
+
+			$editor->set_quality( $quality_level );
+
+			// Save with explicit mime type and proper extension
+			$result = $editor->save( $temp_file_with_ext, $mime_type );
+
+			if ( is_wp_error( $result ) ) {
+				if ( file_exists( $temp_file_with_ext ) ) {
+					unlink( $temp_file_with_ext );
+				}
+				return false;
+			}
+
+			$saved_path = $result['path'];
+
+			// Use binary safe reading
+			$current_contents = file_get_contents( $saved_path, false );
+			if ( $current_contents === false ) {
+				if ( file_exists( $saved_path ) ) {
+					unlink( $saved_path );
+				}
+				return false;
+			}
+
+			$current_size = strlen( $current_contents );
+
+			if ( file_exists( $saved_path ) ) {
+				unlink( $saved_path );
+			}
+
+			if ( $current_size <= $max_size ) {
 				$optimized_contents = $current_contents;
-				$min_quality        = $current_quality;
+				break;
 			}
-		}
 
-		// If quality reduction alone didn't work, try reducing dimensions.
+			$quality -= 5;
+
+			if ( $quality < 30 ) {
+				$quality    = 90;
+				$scale      = 0.9;
+				$new_width  = max( 1, floor( $original_width * $scale ) );
+				$new_height = max( 1, floor( $original_height * $scale ) );
+
+				$editor->resize( $new_width, $new_height, true );
+
+				$original_width  = $new_width;
+				$original_height = $new_height;
+
+				if ( $new_width < 200 || $new_height < 200 ) {
+					break;
+				}
+			}
+		} while ( $quality >= 30 || ( $original_width >= 200 && $original_height >= 200 ) );
+
+		// Final attempt with minimal quality
 		if ( ! $optimized_contents || strlen( $optimized_contents ) > $max_size ) {
-			$min_scale       = 0.1;
-			$max_scale       = 1.0;
-			$original_width  = imagesx( $image );
-			$original_height = imagesy( $image );
+			$temp_file          = wp_tempnam( $extension );
+			$temp_file_with_ext = $temp_file . $extension;
+			rename( $temp_file, $temp_file_with_ext );
 
-			while ( $max_scale - $min_scale > 0.05 ) {
-				$current_scale = ( $min_scale + $max_scale ) / 2;
-				$new_width     = floor( $original_width * $current_scale );
-				$new_height    = floor( $original_height * $current_scale );
+			$editor->set_quality( $mime_type === 'image/png' ? 9 : 20 );
+			$editor->resize( 800, 800, false );
+			$result = $editor->save( $temp_file_with_ext, $mime_type );
 
-				$resized = imagecreatetruecolor( $new_width, $new_height );
-
-				if ( $mime_type === 'image/png' ) {
-					imagealphablending( $resized, false );
-					imagesavealpha( $resized, true );
+			if ( ! is_wp_error( $result ) ) {
+				$final_contents = file_get_contents( $result['path'] );
+				if ( $final_contents !== false && strlen( $final_contents ) <= $max_size ) {
+					$optimized_contents = $final_contents;
 				}
-
-				imagecopyresampled(
-					$resized,
-					$image,
-					0,
-					0,
-					0,
-					0,
-					$new_width,
-					$new_height,
-					$original_width,
-					$original_height
-				);
-
-				ob_start();
-
-				switch ( $mime_type ) {
-					case 'image/jpeg':
-						imagejpeg( $resized, null, 90 );
-						break;
-					case 'image/png':
-						imagepng( $resized, null, 1 );
-						break;
-					case 'image/gif':
-						imagegif( $resized );
-						break;
-				}
-
-				$current_contents = ob_get_clean();
-				$current_size     = strlen( $current_contents );
-
-				if ( $current_size > $max_size ) {
-					$max_scale = $current_scale;
-				} else {
-					$optimized_contents = $current_contents;
-					$min_scale          = $current_scale;
-				}
-
-				imagedestroy( $resized );
+				unlink( $result['path'] );
 			}
 		}
-
-		imagedestroy( $image );
 
 		return $optimized_contents ?: false;
 	}

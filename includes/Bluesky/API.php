@@ -230,7 +230,7 @@ class API {
 		];
 
 		if ( $args['method'] === 'POST' && ! empty( $args['body'] ) ) {
-			$request_args['body'] = wp_json_encode( $args['body'] );
+			$request_args['body'] = $headers['Content-Type'] === 'application/json' ? wp_json_encode( $args['body'] ) : $args['body'];
 		}
 
 		return wp_safe_remote_request( $url, $request_args );

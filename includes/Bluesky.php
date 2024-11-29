@@ -35,8 +35,26 @@ class Bluesky {
 			return false;
 		}
 
-		$image_blob = ( new ImageCompressor() )->compress_image( $image_path, 1000000 );
-		$mime_type  = get_post_mime_type( $image_id );
+		$mime_type = get_post_mime_type( $image_id );
+
+		if ( ! $mime_type || ! in_array( $mime_type, [ 'image/jpeg', 'image/png' ] ) ) {
+			return false;
+		}
+
+		$image_blob = ( new ImageCompressor() )->compress_image( $image_path, $mime_type );
+
+		// Upload file to WordPress uploads folder
+		$upload_dir = wp_upload_dir();
+		$upload_dir = $upload_dir['path'];
+		$upload_dir = $upload_dir . '/autoblue/';
+		if ( ! file_exists( $upload_dir ) ) {
+			mkdir( $upload_dir, 0755, true );
+		}
+
+		$upload_file = $upload_dir . basename( $image_path );
+		file_put_contents( $upload_file, $image_blob );
+
+		// die;
 
 		if ( ! $image_blob || ! $mime_type ) {
 			return false;

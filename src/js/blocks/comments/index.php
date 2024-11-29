@@ -43,7 +43,6 @@ if ( ! function_exists( 'autoblue_render_comment' ) ) {
 
 $url      = 'https://bsky.app/profile/burritostudio.bsky.social/post/3lb5mssowo22k';
 $comments = ( new Autoblue\Comments() )->get_comments( get_the_ID(), $url );
-	dump( $comments );
 
 if ( empty( $comments ) ) {
 	return;
