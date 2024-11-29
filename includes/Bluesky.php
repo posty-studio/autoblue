@@ -8,12 +8,15 @@ class Bluesky {
 	 *
 	 * @var Bluesky\API
 	 */
-	private $api_client;
+	private Bluesky\API $api_client;
 
 	public function __construct() {
 		$this->api_client = new Bluesky\API();
 	}
 
+	/**
+	 * @return array<string,mixed>|false The connection data or false if no connection is found.
+	 */
 	private function get_connection() {
 		$connections = ( new ConnectionsManager() )->get_all_connections();
 
@@ -24,7 +27,10 @@ class Bluesky {
 		return $connections[0];
 	}
 
-	private function upload_image( $image_id, $access_token ) {
+	/**
+	 * @return array<string,mixed>|false
+	 */
+	private function upload_image( int $image_id, string $access_token ) {
 		if ( ! $image_id || ! $access_token ) {
 			return false;
 		}
@@ -41,22 +47,10 @@ class Bluesky {
 			return false;
 		}
 
-		$image_blob = ( new ImageCompressor() )->compress_image( $image_path, $mime_type );
+		$image_compressor = new ImageCompressor( $image_path, $mime_type );
+		$image_blob       = $image_compressor->compress_image();
 
-		// Upload file to WordPress uploads folder
-		$upload_dir = wp_upload_dir();
-		$upload_dir = $upload_dir['path'];
-		$upload_dir = $upload_dir . '/autoblue/';
-		if ( ! file_exists( $upload_dir ) ) {
-			mkdir( $upload_dir, 0755, true );
-		}
-
-		$upload_file = $upload_dir . basename( $image_path );
-		file_put_contents( $upload_file, $image_blob );
-
-		// die;
-
-		if ( ! $image_blob || ! $mime_type ) {
+		if ( ! $image_blob ) {
 			return false;
 		}
 
@@ -69,7 +63,10 @@ class Bluesky {
 		return $blob;
 	}
 
-	public function share_to_bluesky( $post_id ) {
+	/**
+	 * @return array<string,mixed>|false
+	 */
+	public function share_to_bluesky( int $post_id ) {
 		$post = get_post( $post_id );
 
 		if ( ! $post ) {
@@ -100,7 +97,7 @@ class Bluesky {
 			'record'     => [
 				'$type'     => 'app.bsky.feed.post',
 				'text'      => $message,
-				'createdAt' => gmdate( 'c', strtotime( $post->post_date_gmt ) ),
+				'createdAt' => gmdate( 'c', strtotime( $post->post_date_gmt ) ?: time() ),
 				'embed'     => [
 					'$type'    => 'app.bsky.embed.external',
 					'external' => [
@@ -120,7 +117,7 @@ class Bluesky {
 
 		$image_blob = false;
 		if ( has_post_thumbnail( $post->ID ) ) {
-			$image_blob = $this->upload_image( get_post_thumbnail_id( $post->ID ), $connection['access_jwt'] );
+			$image_blob = $this->upload_image( get_post_thumbnail_id( $post->ID ), $connection['access_jwt'] ); // @phpstan-ignore argument.type
 		}
 
 		if ( ! empty( $image_blob ) ) {

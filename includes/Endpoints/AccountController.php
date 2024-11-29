@@ -11,7 +11,7 @@ class AccountController extends WP_REST_Controller {
 		$this->rest_base = 'account';
 	}
 
-	public function register_routes() {
+	public function register_routes(): void {
 		register_rest_route(
 			$this->namespace,
 			'/' . $this->rest_base,
@@ -26,49 +26,25 @@ class AccountController extends WP_REST_Controller {
 		);
 	}
 
-	/**
-	 * @return bool
-	 */
-	public function get_account_info_permissions_check() {
+	public function get_account_info_permissions_check(): bool {
 		return current_user_can( 'edit_posts' );
 	}
 
 	/**
 	 * GET `/autoblue/v1/account`
 	 *
-	 * @param WP_REST_Request $request The API request.
-	 * @return WP_REST_Response
+	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public function get_account_info( $request ) {
-		$url = add_query_arg(
-			[
-				'actor' => $request->get_param( 'did' ),
-			],
-			'https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile'
-		);
-
-		$response = wp_safe_remote_get(
-			$url,
-			[
-				'headers' => [
-					'Content-Type' => 'application/json',
-				],
-			]
-		);
-
-		$body = json_decode( wp_remote_retrieve_body( $response ) );
-
-		if ( is_wp_error( $response ) || wp_remote_retrieve_response_code( $response ) >= 300 ) {
-			return new \WP_Error( 'autoblue_profile_error', $body );
-		}
-
-		return rest_ensure_response( $body );
+	public function get_account_info( \WP_REST_Request $request ) {
+		$api     = new \Autoblue\Bluesky\API();
+		$profile = $api->get_profile( $request->get_param( 'did' ) );
+		return rest_ensure_response( $profile );
 	}
 
 	/**
 	 * Retrieves the endpoint schema, conforming to JSON Schema.
 	 *
-	 * @return array Schema data.
+	 * @return array<string,mixed> Schema data.
 	 */
 	public function get_item_schema() {
 		if ( $this->schema ) {

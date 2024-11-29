@@ -13,7 +13,7 @@ class ConnectionsController extends WP_REST_Controller {
 		$this->rest_base = 'connections';
 	}
 
-	public function register_routes() {
+	public function register_routes(): void {
 		register_rest_route(
 			$this->namespace,
 			'/' . $this->rest_base,
@@ -47,17 +47,14 @@ class ConnectionsController extends WP_REST_Controller {
 		);
 	}
 
-	/**
-	 * @return bool
-	 */
-	public function manage_connections_permissions_check() {
+	public function manage_connections_permissions_check(): bool {
 		return current_user_can( 'manage_options' );
 	}
 
 	/**
 	 * GET `/autoblue/v1/connections`
 	 *
-	 * @return WP_REST_Response
+	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function get_connections() {
 		$connections = new \Autoblue\ConnectionsManager();
@@ -68,10 +65,9 @@ class ConnectionsController extends WP_REST_Controller {
 	/**
 	 * POST `/autoblue/v1/connections`
 	 *
-	 * @param WP_REST_Request $request The API request.
-	 * @return WP_REST_Response
+	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public function add_connection( $request ) {
+	public function add_connection( \WP_REST_Request $request ) {
 		$connections  = new \Autoblue\ConnectionsManager();
 		$did          = $request->get_param( 'did' );
 		$app_password = $request->get_param( 'app_password' );
@@ -82,10 +78,9 @@ class ConnectionsController extends WP_REST_Controller {
 	/**
 	 * DELETE `/autoblue/v1/connections`
 	 *
-	 * @param WP_REST_Request $request The API request.
-	 * @return WP_REST_Response
+	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public function delete_connection( $request ) {
+	public function delete_connection( \WP_REST_Request $request ) {
 		$connections = new \Autoblue\ConnectionsManager();
 		$did         = $request->get_param( 'did' );
 
@@ -95,7 +90,7 @@ class ConnectionsController extends WP_REST_Controller {
 	/**
 	 * Retrieves the endpoint schema, conforming to JSON Schema.
 	 *
-	 * @return array Schema data.
+	 * @return array<string,mixed> Schema data.
 	 */
 	public function get_item_schema() {
 		if ( $this->schema ) {

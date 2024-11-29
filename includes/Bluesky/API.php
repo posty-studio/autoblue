@@ -6,15 +6,9 @@ class API {
 	private const BASE_URL        = 'https://bsky.social';
 	private const PUBLIC_BASE_URL = 'https://public.api.bsky.app';
 
-	/**
-	 * Get a Bluesky account DID from a handle.
-	 *
-	 * @param string $handle The handle of the account to search for.
-	 * @return string|false The DID of the account or false if the account is not found.
-	 */
-	public function get_did_for_handle( $handle ) {
+	public function get_did_for_handle( string $handle ): ?string {
 		if ( ! $handle ) {
-			return false;
+			return null;
 		}
 
 		$data = $this->send_request(
@@ -26,19 +20,17 @@ class API {
 		);
 
 		if ( is_wp_error( $data ) ) {
-			return false;
+			return null;
 		}
 
-		return $data['did'] ?? false;
+		return $data['did'] ?? null;
 	}
 
 	/**
-	 * Get profiles for a list of DIDs.
-	 *
-	 * @param array $dids An array of DIDs to retrieve profiles for.
-	 * @return array An array of profiles.
+	 * @param array<string> $dids
+	 * @return array<int,array<string,mixed>>
 	 */
-	public function get_profiles( $dids = [] ) {
+	public function get_profiles( array $dids = [] ): array {
 		if ( empty( $dids ) ) {
 			return [];
 		}
@@ -59,13 +51,54 @@ class API {
 	}
 
 	/**
-	 * Create a new session.
-	 *
-	 * @param string $did          The DID of the account.
-	 * @param string $app_password The app-specific password.
-	 * @return array|WP_Error The session data or WP_Error on failure.
+	 * @return array<string,mixed>|null
 	 */
-	public function create_session( $did, $app_password ) {
+	public function get_profile( string $did ): ?array {
+		if ( ! $did ) {
+			return null;
+		}
+
+		$data = $this->send_request(
+			[
+				'endpoint' => 'app.bsky.actor.getProfile',
+				'body'     => [ 'actor' => $did ],
+				'base_url' => self::PUBLIC_BASE_URL,
+			]
+		);
+
+		if ( is_wp_error( $data ) ) {
+			return null;
+		}
+
+		return $data;
+	}
+
+	/**
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function search_actors_typeahead( string $query ) {
+		if ( ! $query ) {
+			return [];
+		}
+
+		$data = $this->send_request(
+			[
+				'endpoint' => 'app.bsky.actor.searchActorsTypeahead',
+				'body'     => [
+					'q'     => sanitize_text_field( $query ),
+					'limit' => 8,
+				],
+				'base_url' => self::PUBLIC_BASE_URL,
+			]
+		);
+
+		return $data;
+	}
+
+	/**
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function create_session( string $did, string $app_password ) {
 		if ( ! $did || ! $app_password ) {
 			return new \WP_Error( 'autoblue_invalid_did_or_password', __( 'Invalid DID or password.', 'autoblue' ) );
 		}
@@ -84,12 +117,9 @@ class API {
 	}
 
 	/**
-	 * Refresh an existing session.
-	 *
-	 * @param string $refresh_jwt The refresh token JWT.
-	 * @return array|WP_Error The refreshed session data or WP_Error on failure.
+	 * @return array<string,mixed>|\WP_Error
 	 */
-	public function refresh_session( $refresh_jwt ) {
+	public function refresh_session( string $refresh_jwt ) {
 		if ( ! $refresh_jwt ) {
 			return new \WP_Error( 'autoblue_invalid_refresh_jwt', __( 'Invalid refresh JWT.', 'autoblue' ) );
 		}
@@ -108,13 +138,10 @@ class API {
 	}
 
 	/**
-	 * Create a new record.
-	 *
-	 * @param array  $record       The record data.
-	 * @param string $access_token The access token.
-	 * @return array|WP_Error The created record data or WP_Error on failure.
+	 * @param array<string, mixed> $record
+	 * @return array<string,mixed>|\WP_Error
 	 */
-	public function create_record( $record, $access_token ) {
+	public function create_record( array $record, string $access_token ) {
 		if ( ! $record || ! $access_token ) {
 			return new \WP_Error( 'autoblue_invalid_record_or_access_token', __( 'Invalid record or access token.', 'autoblue' ) );
 		}
@@ -133,14 +160,9 @@ class API {
 	}
 
 	/**
-	 * Upload a blob to the repository.
-	 *
-	 * @param string $blob         The blob data.
-	 * @param string $mime_type    The MIME type of the blob.
-	 * @param string $access_token The access token.
-	 * @return array|WP_Error The blob reference or WP_Error on failure.
+	 * @return array<string,mixed>|\WP_Error
 	 */
-	public function upload_blob( $blob, $mime_type, $access_token ) {
+	public function upload_blob( string $blob, string $mime_type, string $access_token ) {
 		if ( ! $blob || ! $mime_type ) {
 			return new \WP_Error( 'autoblue_invalid_blob_or_mime_type', __( 'Invalid blob or MIME type.', 'autoblue' ) );
 		}
@@ -170,10 +192,8 @@ class API {
 	}
 
 	/**
-	 * Send a request to the Bluesky API and handle the response.
-	 *
-	 * @param array<string, mixed> $args The request arguments.
-	 * @return array|WP_Error The decoded response data or WP_Error on failure.
+	 * @param array<string, mixed> $args
+	 * @return array<string,mixed>|\WP_Error
 	 */
 	private function send_request( $args = [] ) {
 		$response = $this->do_xrpc_call( $args );
@@ -195,10 +215,8 @@ class API {
 	}
 
 	/**
-	 * Perform an XRPC call to the Bluesky API.
-	 *
-	 * @param array<string, mixed> $args The request arguments.
-	 * @return array|WP_Error The response or WP_Error on failure.
+	 * @param array<string, mixed> $args
+	 * @return array<string,mixed>|\WP_Error
 	 */
 	private function do_xrpc_call( $args = [] ) {
 		$args = wp_parse_args(

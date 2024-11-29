@@ -3,11 +3,11 @@
 namespace Autoblue;
 
 class Meta {
-	public function register_hooks() {
+	public function register_hooks(): void {
 		add_action( 'init', [ $this, 'register_post_meta' ] );
 	}
 
-	public function register_post_meta() {
+	public function register_post_meta(): void {
 		// TODO: Add support for multiple post types.
 		register_post_meta(
 			'post',

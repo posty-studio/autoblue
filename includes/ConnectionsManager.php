@@ -18,18 +18,14 @@ class ConnectionsManager {
 		$this->api_client = new Bluesky\API();
 	}
 
-	public function register_hooks() {
+	public function register_hooks(): void {
 		add_action( self::REFRESH_CONNECTIONS_HOOK, [ $this, 'refresh_all_connections' ] );
 	}
 
 	/**
-	 * Add a new connection with DID and app password.
-	 *
-	 * @param string $did The DID of the connection.
-	 * @param string $app_password The app password for authentication.
-	 * @return array|\WP_Error The added connection with profile data or error object.
+	 * @return array<string,mixed>|\WP_Error The added connection with profile data or error object.
 	 */
-	public function add_connection( $did, $app_password ) {
+	public function add_connection( string $did, string $app_password ) {
 		if ( $this->connection_exists( $did ) ) {
 			return new \WP_Error( 'autoblue_connection_exists', __( 'Connection already exists.', 'autoblue' ) );
 		}
@@ -66,12 +62,9 @@ class ConnectionsManager {
 	}
 
 	/**
-	 * Delete a connection by DID.
-	 *
-	 * @param string $did The DID of the connection to delete.
-	 * @return bool|\WP_Error True on success, error otherwise.
+	 * @return bool|\WP_Error
 	 */
-	public function delete_connection( $did ) {
+	public function delete_connection( string $did ) {
 		if ( ! $did || ! $this->is_valid_did( $did ) ) {
 			return new \WP_Error( 'autoblue_invalid_did', __( 'Invalid DID.', 'autoblue' ) );
 		}
@@ -90,13 +83,9 @@ class ConnectionsManager {
 	}
 
 	/**
-	 * Get a connection by DID, with an option to force a profile refresh.
-	 *
-	 * @param string $did The DID of the connection.
-	 * @param bool   $force_refresh Force API call to refresh profile cache.
-	 * @return array|null The connection data or null if not found.
+	 * @return array<string,mixed>|null
 	 */
-	public function get_connection_by_did( $did, $force_refresh = false ) {
+	public function get_connection_by_did( string $did, bool $force_refresh = false ): ?array {
 		$connections = get_option( self::OPTION_KEY, [] );
 		$connection  = current( array_filter( $connections, fn( $c ) => $c['did'] === $did ) );
 
@@ -114,12 +103,9 @@ class ConnectionsManager {
 	}
 
 	/**
-	 * Get all connections, optionally forcing a profile refresh.
-	 *
-	 * @param bool $force_refresh Force API call for all profiles.
-	 * @return array List of connections with profile data.
+	 * @return array<int,array<string,mixed>>
 	 */
-	public function get_all_connections( $force_refresh = false ) {
+	public function get_all_connections( bool $force_refresh = false ): array {
 		$connections = get_option( self::OPTION_KEY, [] );
 
 		if ( empty( $connections ) ) {
@@ -139,12 +125,9 @@ class ConnectionsManager {
 	}
 
 	/**
-	 * Refresh a connection's access JWT using its refresh JWT.
-	 *
-	 * @param string $did The DID of the connection to refresh.
-	 * @return array|\WP_Error The refreshed connection data or error object.
+	 * @return array<string,mixed>|\WP_Error The refreshed connection data or error object.
 	 */
-	public function refresh_tokens( $did ) {
+	public function refresh_tokens( string $did ) {
 		$connection = $this->get_connection_by_did( $did );
 
 		if ( ! $connection ) {
@@ -169,13 +152,9 @@ class ConnectionsManager {
 	}
 
 	/**
-	 * Fetch profile data for a DID, with caching support.
-	 *
-	 * @param string $did The DID to fetch profile for.
-	 * @param bool   $force_refresh Force profile fetch from the API.
-	 * @return array|null Sanitized profile data or null if not found.
+	 * @return array<string,mixed>|null
 	 */
-	private function fetch_and_cache_profile( $did, $force_refresh = false ) {
+	private function fetch_and_cache_profile( string $did, bool $force_refresh = false ): ?array {
 		$transient_key  = $this->get_transient_key( $did );
 		$cached_profile = get_transient( $transient_key );
 
@@ -197,12 +176,9 @@ class ConnectionsManager {
 	}
 
 	/**
-	 * Store or update a connection in the database.
-	 *
-	 * @param array $connection The connection data.
-	 * @param bool  $update Whether to perform an update (otherwise add).
+	 * @param array<string,mixed> $connection
 	 */
-	private function store_connection( array $connection, $update = false ) {
+	private function store_connection( array $connection, bool $update = false ): void {
 		$connections = get_option( self::OPTION_KEY, [] );
 
 		if ( $update ) {
@@ -219,10 +195,7 @@ class ConnectionsManager {
 		update_option( self::OPTION_KEY, $connections );
 	}
 
-	/**
-	 * Refresh all connections.
-	 */
-	public function refresh_all_connections() {
+	public function refresh_all_connections(): void {
 		$connections = $this->get_all_connections( true );
 
 		if ( empty( $connections ) ) {
@@ -234,34 +207,20 @@ class ConnectionsManager {
 		}
 	}
 
-	/**
-	 * Check if a connection with the given DID already exists.
-	 *
-	 * @param string $did The DID to check.
-	 * @return bool True if the connection exists, false otherwise.
-	 */
-	private function connection_exists( $did ) {
+	private function connection_exists( string $did ): bool {
 		$connections = get_option( self::OPTION_KEY, [] );
 		return in_array( $did, array_column( $connections, 'did' ), true );
 	}
 
-	/**
-	 * Validate DID format.
-	 *
-	 * @param string $did The DID to validate.
-	 * @return bool True if the DID is valid, false otherwise.
-	 */
-	private function is_valid_did( $did ) {
-		return preg_match( '/^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$/', $did );
+	private function is_valid_did( string $did ): bool {
+		return preg_match( '/^did:[a-z]+:[a-zA-Z0-9._:%-]*[a-zA-Z0-9._-]$/', $did ) === 1;
 	}
 
 	/**
-	 * Sanitize profile data.
-	 *
-	 * @param array $profile The profile data to sanitize.
-	 * @return array The sanitized profile data.
+	 * @param array<string,mixed> $profile
+	 * @return array<string,mixed>
 	 */
-	private function sanitize_profile( $profile ) {
+	private function sanitize_profile( array $profile ): array {
 		return [
 			'handle' => sanitize_text_field( $profile['handle'] ?? '' ),
 			'name'   => sanitize_text_field( $profile['displayName'] ?? '' ),
@@ -269,13 +228,7 @@ class ConnectionsManager {
 		];
 	}
 
-	/**
-	 * Get the transient key for a specific DID.
-	 *
-	 * @param string $did The DID to generate the key for.
-	 * @return string The transient key.
-	 */
-	private function get_transient_key( $did ) {
+	private function get_transient_key( string $did ): string {
 		return self::TRANSIENT_PREFIX . md5( $did );
 	}
 }

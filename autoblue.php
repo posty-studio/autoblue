@@ -20,7 +20,16 @@ if ( ! defined( 'WPINC' ) ) {
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-( new Autoblue\Setup() )->init();
+define( 'AUTOBLUE_VERSION', '1.0.0' );
+define( 'AUTOBLUE_SLUG', 'autoblue' );
+define( 'AUTOBLUE_BASENAME', plugin_basename( __FILE__ ) );
+define( 'AUTOBLUE_PATH', plugin_dir_path( __FILE__ ) );
+define( 'AUTOBLUE_BLOCKS_PATH', AUTOBLUE_PATH . 'build/js/blocks/' );
+define( 'AUTOBLUE_ASSETS_PATH', AUTOBLUE_PATH . 'build/' );
+define( 'AUTOBLUE_URL', trailingslashit( plugins_url( plugin_basename( __DIR__ ) ) ) );
+define( 'AUTOBLUE_ASSETS_URL', AUTOBLUE_URL . 'build/' );
 
 register_activation_hook( __FILE__, [ 'Autoblue\Setup', 'activate' ] );
 register_deactivation_hook( __FILE__, [ 'Autoblue\Setup', 'deactivate' ] );
+
+( new Autoblue\Setup() )->init();

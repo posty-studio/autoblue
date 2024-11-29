@@ -5,157 +5,148 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-require_once ABSPATH . 'wp-admin/includes/file.php';
+require_once ABSPATH . 'wp-admin/includes/file.php'; // @phpstan-ignore requireOnce.fileNotFound
 
 class ImageCompressor {
+	private const MAX_WIDTH          = 1200;
+	private const MAX_QUALITY        = 100;
+	private const ALLOWED_MIME_TYPES = [ 'image/jpeg', 'image/png' ];
+
+	private \WP_Image_Editor $editor;
+	private string $path;
+	private string $mime_type;
+	private int $max_size;
+
+	public function __construct( string $path, string $mime_type, int $max_size = 1000000 ) {
+		$this->path      = $path;
+		$this->mime_type = $mime_type;
+		$this->max_size  = $max_size;
+	}
+
 	/**
 	 * Compress an image if it exceeds the maximum size.
 	 *
-	 * @param string $path     Path to the image file.
-	 * @param string $mime_type MIME type of the image.
-	 * @param int    $max_size Maximum size in bytes.
-	 *
-	 * @return bool|string Compressed image data or false on failure.
+	 * @return string|false The compressed image contents, or false on failure.
 	 */
-	public function compress_image( $path, $mime_type, $max_size = 500000 ) {
-		if ( ! file_exists( $path ) ) {
+	public function compress_image() {
+		if ( ! $this->is_valid_image_file() ) {
 			return false;
 		}
 
-		if ( ! $mime_type || ! in_array( $mime_type, [ 'image/jpeg', 'image/png' ] ) ) {
-			return false;
+		if ( filesize( $this->path ) <= $this->max_size ) {
+			return file_get_contents( $this->path );
 		}
 
-		$size = filesize( $path );
-
-		if ( $size <= $max_size ) {
-			return file_get_contents( $path );
-		}
-
-		$editor = wp_get_image_editor( $path );
-
+		$editor = wp_get_image_editor( $this->path );
 		if ( is_wp_error( $editor ) ) {
 			return false;
 		}
+		$this->editor = $editor;
 
-		$image_size      = $editor->get_size();
-		$original_width  = $image_size['width'];
-		$original_height = $image_size['height'];
-		$extension       = wp_get_default_extension_for_mime_type( $mime_type );
+		$this->initial_resize();
 
-		if ( $original_width > 1020 && $original_height > 534 ) {
-			$editor->resize( 1020, 534, true );
+		return $this->get_compressed_image();
+	}
 
-			$temp_file          = wp_tempnam();
-			$temp_file_with_ext = $temp_file . $extension;
-			rename( $temp_file, $temp_file_with_ext );
+	/**
+	 * Checks if the image file is valid.
+	 */
+	private function is_valid_image_file(): bool {
+		return file_exists( $this->path ) && in_array( $this->mime_type, self::ALLOWED_MIME_TYPES, true );
+	}
 
-			$result = $editor->save( $temp_file_with_ext, $mime_type );
+	/**
+	 * Performs initial resize if image is wider than MAX_WIDTH.
+	 */
+	private function initial_resize(): void {
+		$size = $this->editor->get_size();
 
-			if ( ! is_wp_error( $result ) ) {
-				$resized_size = filesize( $result['path'] );
-
-				// If the resized image is already small enough, return it
-				if ( $resized_size <= $max_size ) {
-					$contents = file_get_contents( $result['path'] );
-					unlink( $result['path'] );
-					return $contents;
-				}
-
-				unlink( $result['path'] );
-			}
-
-			// Update dimensions for further processing
-			$image_size      = $editor->get_size();
-			$original_width  = $image_size['width'];
-			$original_height = $image_size['height'];
+		if ( $size['width'] <= self::MAX_WIDTH ) {
+			return;
 		}
 
-		do {
-			// Use proper extension based on mime type
-			$extension = $mime_type === 'image/png' ? '.png' : '.jpg';
-			$temp_file = wp_tempnam( $extension );
+		$ratio      = self::MAX_WIDTH / $size['width'];
+		$new_height = (int) round( $size['height'] * $ratio );
+		$this->editor->resize( self::MAX_WIDTH, $new_height, true );
+	}
 
-			// Ensure temp file has correct extension
-			$temp_file_with_ext = $temp_file . $extension;
-			rename( $temp_file, $temp_file_with_ext );
+	/**
+	 * Gets a compressed version of the image that fits within max_size.
+	 *
+	 * @return string|false The compressed image contents, or false if compression failed.
+	 */
+	private function get_compressed_image() {
+		$contents = $this->save_compressed_contents( self::MAX_QUALITY );
+		if ( ! $contents ) {
+			return false;
+		}
 
-			$quality_level = $mime_type === 'image/png' ?
-				min( 9, max( 0, floor( ( 100 - $quality ) / 11.111111 ) ) ) :
-				$quality;
+		if ( strlen( $contents ) <= $this->max_size ) {
+			return $contents;
+		}
 
-			$editor->set_quality( $quality_level );
+		$initial_size = strlen( $contents );
+		$size_ratio   = $this->max_size / $initial_size;
 
-			// Save with explicit mime type and proper extension
-			$result = $editor->save( $temp_file_with_ext, $mime_type );
+		// Define quality steps based on size ratio. The smaller the ratio, the more aggressive the compression.
+		// This prevents us from trying quality levels that are unlikely to produce a small enough file.
+		if ( $size_ratio > 0.7 ) {
+			$quality_steps = [ 90, 80, 70, 60, 50, 40, 30, 20 ];
+		} elseif ( $size_ratio > 0.4 ) {
+			$quality_steps = [ 70, 50, 35, 20 ];
+		} else {
+			$quality_steps = [ 50, 35, 20 ];
+		}
 
-			if ( is_wp_error( $result ) ) {
-				if ( file_exists( $temp_file_with_ext ) ) {
-					unlink( $temp_file_with_ext );
-				}
-				return false;
+		foreach ( $quality_steps as $quality ) {
+			$contents = $this->save_compressed_contents( $quality );
+			if ( ! $contents ) {
+				continue;
 			}
 
-			$saved_path = $result['path'];
-
-			// Use binary safe reading
-			$current_contents = file_get_contents( $saved_path, false );
-			if ( $current_contents === false ) {
-				if ( file_exists( $saved_path ) ) {
-					unlink( $saved_path );
-				}
-				return false;
-			}
-
-			$current_size = strlen( $current_contents );
-
-			if ( file_exists( $saved_path ) ) {
-				unlink( $saved_path );
-			}
-
-			if ( $current_size <= $max_size ) {
-				$optimized_contents = $current_contents;
-				break;
-			}
-
-			$quality -= 5;
-
-			if ( $quality < 30 ) {
-				$quality    = 90;
-				$scale      = 0.9;
-				$new_width  = max( 1, floor( $original_width * $scale ) );
-				$new_height = max( 1, floor( $original_height * $scale ) );
-
-				$editor->resize( $new_width, $new_height, true );
-
-				$original_width  = $new_width;
-				$original_height = $new_height;
-
-				if ( $new_width < 200 || $new_height < 200 ) {
-					break;
-				}
-			}
-		} while ( $quality >= 30 || ( $original_width >= 200 && $original_height >= 200 ) );
-
-		// Final attempt with minimal quality
-		if ( ! $optimized_contents || strlen( $optimized_contents ) > $max_size ) {
-			$temp_file          = wp_tempnam( $extension );
-			$temp_file_with_ext = $temp_file . $extension;
-			rename( $temp_file, $temp_file_with_ext );
-
-			$editor->set_quality( $mime_type === 'image/png' ? 9 : 20 );
-			$editor->resize( 800, 800, false );
-			$result = $editor->save( $temp_file_with_ext, $mime_type );
-
-			if ( ! is_wp_error( $result ) ) {
-				$final_contents = file_get_contents( $result['path'] );
-				if ( $final_contents !== false && strlen( $final_contents ) <= $max_size ) {
-					$optimized_contents = $final_contents;
-				}
-				unlink( $result['path'] );
+			if ( strlen( $contents ) <= $this->max_size ) {
+				return $contents;
 			}
 		}
 
-		return $optimized_contents ?: false;
+		return false;
+	}
+
+	private function save_compressed_contents( int $quality ): ?string {
+		$temp_file     = wp_tempnam();
+		$quality_level = $this->get_quality_level( $quality );
+
+		$this->editor->set_quality( $quality_level );
+
+		$result = $this->editor->save( $temp_file, $this->mime_type );
+
+		if ( is_wp_error( $result ) ) {
+			$this->cleanup_file( $temp_file );
+			return null;
+		}
+
+		$contents = file_get_contents( $result['path'] );
+		$this->cleanup_file( $result['path'] );
+
+		if ( $contents === false ) {
+			return null;
+		}
+
+		return $contents;
+	}
+
+	private function get_quality_level( int $quality ): int {
+		switch ( $this->mime_type ) {
+			case 'image/png':
+				return (int) min( 9, max( 0, floor( ( 100 - $quality ) / 11.111111 ) ) );
+			default:
+				return $quality;
+		}
+	}
+
+	private function cleanup_file( string $path ): void {
+		if ( file_exists( $path ) ) {
+			unlink( $path );
+		}
 	}
 }

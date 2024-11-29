@@ -1,0 +1,10 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+parameters:
+    level: 8
+    phpVersion: 70400 # PHP 7.4
+    paths:
+      - ./autoblue.php
+      - ./includes
+    ignoreErrors:
+      - identifier: missingType.generics

@@ -11,7 +11,7 @@ class SearchController extends WP_REST_Controller {
 		$this->rest_base = 'search';
 	}
 
-	public function register_routes() {
+	public function register_routes(): void {
 		register_rest_route(
 			$this->namespace,
 			'/' . $this->rest_base,
@@ -29,43 +29,25 @@ class SearchController extends WP_REST_Controller {
 	/**
 	 * @return bool
 	 */
-	public function get_search_results_permissions_check() {
+	public function get_search_results_permissions_check(): bool {
 		return current_user_can( 'edit_posts' );
 	}
 
 	/**
 	 * GET `/autoblue/v1/search`
 	 *
-	 * @param WP_REST_Request $request The API request.
-	 * @return WP_REST_Response
+	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public function get_search_results( $request ) {
-		$url = add_query_arg(
-			[
-				'q'     => $request->get_param( 'q' ),
-				'limit' => 8,
-			],
-			'https://public.api.bsky.app/xrpc/app.bsky.actor.searchActorsTypeahead'
-		);
-
-		$response = wp_safe_remote_get(
-			$url,
-			[
-				'headers' => [
-					'Content-Type' => 'application/json',
-				],
-			]
-		);
-
-		$body = json_decode( wp_remote_retrieve_body( $response ) );
-
-		return rest_ensure_response( $body );
+	public function get_search_results( \WP_REST_Request $request ) {
+		$api     = new \Autoblue\Bluesky\API();
+		$results = $api->search_actors_typeahead( $request['q'] );
+		return rest_ensure_response( $results );
 	}
 
 	/**
 	 * Retrieves the endpoint schema, conforming to JSON Schema.
 	 *
-	 * @return array Schema data.
+	 * @return array<string,mixed> Schema data.
 	 */
 	public function get_item_schema() {
 		if ( $this->schema ) {

@@ -3,11 +3,20 @@
 namespace Autoblue;
 
 class PostHandler {
-	public function register_hooks() {
+	public function register_hooks(): void {
 		add_action( 'wp_after_insert_post', [ $this, 'maybe_schedule_bluesky_share' ], 10, 4 );
 		add_action( 'autoblue_share_to_bluesky', [ $this, 'process_scheduled_share' ], 10, 1 );
 	}
 
+	/**
+	 * Maybe schedule a post to be shared to Bluesky.
+	 *
+	 * @param int           $post_id The post ID.
+	 * @param \WP_Post      $post The post object.
+	 * @param bool          $update Whether this is an existing post being updated.
+	 * @param \WP_Post|null $post_before The post object before the update.
+	 * @return void
+	 */
 	public function maybe_schedule_bluesky_share( $post_id, $post, $update, $post_before ) {
 		if ( $post->post_status !== 'publish' ) {
 			return;
@@ -41,7 +50,10 @@ class PostHandler {
 		}
 	}
 
-	public function process_scheduled_share( $post_id ) {
+	/**
+	 * @param int $post_id The post ID.
+	 */
+	public function process_scheduled_share( $post_id ): void {
 		$bluesky = new Bluesky();
 		$bluesky->share_to_bluesky( $post_id );
 	}

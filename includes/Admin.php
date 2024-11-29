@@ -6,15 +6,15 @@ class Admin {
 	// TODO: Can we make this a bit better?
 	public const AUTOBLUE_ENABLED_BY_DEFAULT = false;
 
-	public function register_hooks() {
+	public function register_hooks(): void {
 		add_action( 'admin_menu', [ $this, 'register_admin_page' ] );
 		add_action( 'admin_menu', [ $this, 'register_admin_page' ] );
-		add_filter( 'plugin_action_links_' . AUTOBLUE_BASEFILE, [ $this, 'add_settings_link' ] );
+		add_filter( 'plugin_action_links_' . AUTOBLUE_BASENAME, [ $this, 'add_settings_link' ] );
 		add_action( 'init', [ $this, 'register_settings' ] );
 		add_action( 'rest_api_init', [ $this, 'register_settings' ] );
 	}
 
-	public function register_admin_page() {
+	public function register_admin_page(): void {
 		add_options_page(
 			'Autoblue',
 			'Autoblue',
@@ -26,13 +26,17 @@ class Admin {
 		);
 	}
 
+	/**
+	 * @param array<string> $links The existing links.
+	 * @return array<string> The modified links.
+	 */
 	public function add_settings_link( $links ) {
 		$settings_link = '<a href="options-general.php?page=autoblue">' . esc_html__( 'Settings', 'autoblue' ) . '</a>';
 		array_unshift( $links, $settings_link );
 		return $links;
 	}
 
-	public function register_settings() {
+	public function register_settings(): void {
 		register_setting(
 			'autoblue',
 			'autoblue_connections',

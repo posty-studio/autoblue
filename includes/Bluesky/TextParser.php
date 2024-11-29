@@ -31,24 +31,16 @@ class TextParser {
 	}
 
 	/**
-	 * Check if a handle is valid.
-	 *
 	 * @see https://atproto.com/specs/handle#handle-identifier-syntax
-	 *
-	 * @param string $handle The handle to check.
-	 * @return bool True if the handle is valid, false otherwise.
 	 */
-	private function is_valid_handle( $handle ) {
-		return preg_match( '/^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/', $handle );
+	private function is_valid_handle( string $handle ): bool {
+		return preg_match( '/^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/', $handle ) === 1;
 	}
 
 	/**
-	 * Parse mentions from text.
-	 *
-	 * @param string $text The text to parse mentions from.
-	 * @return array An array of facets representing mentions.
+	 * @return array<int,array<string,mixed>> An array of facets representing mentions.
 	 */
-	public function parse_mentions( $text ) {
+	public function parse_mentions( string $text ): array {
 		$spans = [];
 		preg_match_all( self::MENTION_REGEX, $text, $matches, PREG_OFFSET_CAPTURE );
 
@@ -74,12 +66,9 @@ class TextParser {
 	}
 
 	/**
-	 * Parse URLs from text.
-	 *
-	 * @param string $text The text to parse URLs from.
-	 * @return array An array of facets representing URLs.
+	 * @return array<int,array<string,mixed>> An array of facets representing URLs.
 	 */
-	public function parse_urls( $text ) {
+	public function parse_urls( string $text ): array {
 		$spans = [];
 		preg_match_all( self::URL_REGEX, $text, $matches, PREG_OFFSET_CAPTURE );
 
@@ -95,12 +84,9 @@ class TextParser {
 	}
 
 	/**
-	 * Parse hashtags from text.
-	 *
-	 * @param string $text The text to parse hashtags from.
-	 * @return array An array of facets representing hashtags.
+	 * @return array<int,array<string,mixed>> An array of facets representing tags.
 	 */
-	public function parse_tags( $text ) {
+	public function parse_tags( string $text ): array {
 		$spans = [];
 		preg_match_all( self::TAG_REGEX, $text, $matches, PREG_OFFSET_CAPTURE );
 
@@ -109,6 +95,10 @@ class TextParser {
 			// Clean up the tag.
 			$tag = trim( $tag );
 			$tag = preg_replace( '/\p{P}+$/u', '', $tag );
+
+			if ( empty( $tag ) ) {
+				continue;
+			}
 
 			// Skip if tag is too long (over 64 chars including #).
 			if ( mb_strlen( $tag ) > 66 ) {
@@ -126,12 +116,9 @@ class TextParser {
 	}
 
 	/**
-	 * Parse facets from text and resolve handles to DIDs
-	 *
-	 * @param string $text The text to parse facets from.
-	 * @return array An array of facets.
+	 * @return array<int,array<string,mixed>> An array of facets representing mentions, URLs, and tags.
 	 */
-	public function parse_facets( $text ) {
+	public function parse_facets( string $text ): array {
 		$facets = [];
 
 		foreach ( $this->parse_mentions( $text ) as $mention ) {
