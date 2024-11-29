@@ -5,7 +5,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-require_once ABSPATH . 'wp-admin/includes/file.php'; // @phpstan-ignore requireOnce.fileNotFound
+// @phpstan-ignore requireOnce.fileNotFound
+require_once ABSPATH . 'wp-admin/includes/file.php';
 
 class ImageCompressor {
 	private const MAX_WIDTH          = 1200;
@@ -34,7 +35,7 @@ class ImageCompressor {
 		}
 
 		if ( filesize( $this->path ) <= $this->max_size ) {
-			return file_get_contents( $this->path );
+			return file_get_contents( $this->path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		}
 
 		$editor = wp_get_image_editor( $this->path );
@@ -125,7 +126,7 @@ class ImageCompressor {
 			return null;
 		}
 
-		$contents = file_get_contents( $result['path'] );
+		$contents = file_get_contents( $result['path'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		$this->cleanup_file( $result['path'] );
 
 		if ( $contents === false ) {
@@ -146,7 +147,7 @@ class ImageCompressor {
 
 	private function cleanup_file( string $path ): void {
 		if ( file_exists( $path ) ) {
-			unlink( $path );
+			wp_delete_file( $path );
 		}
 	}
 }

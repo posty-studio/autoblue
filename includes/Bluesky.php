@@ -43,7 +43,7 @@ class Bluesky {
 
 		$mime_type = get_post_mime_type( $image_id );
 
-		if ( ! $mime_type || ! in_array( $mime_type, [ 'image/jpeg', 'image/png' ] ) ) {
+		if ( ! $mime_type || ! in_array( $mime_type, [ 'image/jpeg', 'image/png' ], true ) ) {
 			return false;
 		}
 
