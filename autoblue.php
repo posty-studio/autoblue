@@ -20,7 +20,7 @@ if ( ! defined( 'WPINC' ) ) {
 
 require_once __DIR__ . '/vendor/autoload.php';
 
-define( 'AUTOBLUE_VERSION', '1.0.0' );
+define( 'AUTOBLUE_VERSION', '0.0.1' );
 define( 'AUTOBLUE_SLUG', 'autoblue' );
 define( 'AUTOBLUE_BASENAME', plugin_basename( __FILE__ ) );
 define( 'AUTOBLUE_PATH', plugin_dir_path( __FILE__ ) );
