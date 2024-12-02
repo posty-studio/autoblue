@@ -34,9 +34,8 @@ const AdminPage = () => {
 					return (
 						<div className={ styles.container }>
 							<VStack spacing={ 5 } className={ styles.wrapper }>
-								{ /* Todo fix this */ }
-								{ tab.name === 'settings' && <Logs /> }
-								{ tab.name === 'logs' && <Settings /> }
+								{ tab.name === 'settings' && <Settings /> }
+								{ tab.name === 'logs' && <Logs /> }
 							</VStack>
 						</div>
 					);
