@@ -10,9 +10,13 @@
 	<arg name="basepath" value="."/>
 	<arg name="extensions" value="php"/>
 	<arg name="parallel" value="8"/>
+	<arg value="ps"/>
+	<arg name="colors"/>
 
 	<config name="testVersion" value="7.4-"/>
 	<config name="minimum_supported_wp_version" value="6.6"/>
+
+	<rule ref="PHPCompatibilityWP"/>
 
 	<rule ref="WordPress.WP.I18n">
 		<properties>
@@ -22,21 +26,15 @@
 		</properties>
 	</rule>
 
-	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
-		<properties>
-			<property name="prefixes" type="array">
-				<element value="autoblue"/>
-			</property>
-		</properties>
-	</rule>
-
-	<rule ref="PHPCompatibilityWP"/>
 
 	<rule ref="WordPress-Extra">
+		<!-- No need for Yoda conditions -->
 		<exclude name="WordPress.PHP.YodaConditions.NotYoda"/>
-		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound"/>
+		<!-- <exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound"/> -->
+		<!-- Enforce short arrays -->
 		<exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
 		<exclude name="Universal.Operators.DisallowShortTernary.Found"/>
+		<!-- Allow ExampleClass.php instead of class-example-class.php -->
 		<exclude name="WordPress.Files.FileName"/>
 	</rule>
 
@@ -44,10 +42,11 @@
 	<rule ref="Generic.Arrays.DisallowLongArraySyntax"/>
 
 	<rule ref="WordPress-Docs">
+		<!-- Remove strict comment rules -->
 		<exclude name="Squiz.Commenting.FileComment"/>
-		<exclude name="Squiz.Commenting.ClassComment.Missing"/>
+		<exclude name="Squiz.Commenting.ClassComment"/>
 		<exclude name="Squiz.Commenting.FunctionComment"/>
 		<exclude name="Squiz.Commenting.VariableComment"/>
-		<exclude name="Generic.Commenting.DocComment.MissingShort"/>
+		<exclude name="Generic.Commenting.DocComment"/>
 	</rule>
 </ruleset>

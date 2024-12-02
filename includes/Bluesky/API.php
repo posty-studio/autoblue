@@ -207,8 +207,9 @@ class API {
 		$data = json_decode( $body, true );
 
 		if ( 200 !== $code ) {
-			$error_message = $data['error'] ?? __( 'Unknown error.', 'autoblue' );
-			return new \WP_Error( 'autoblue_api_error', $error_message );
+			$error   = $data['error'] ?? __( 'Unknown error.', 'autoblue' );
+			$message = $data['message'] ?? __( 'No message', 'autoblue' );
+			return new \WP_Error( 'autoblue_api_error', $error . ': ' . $message );
 		}
 
 		return $data;

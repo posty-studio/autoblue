@@ -24,6 +24,18 @@ class ImageCompressor {
 		$this->max_size  = $max_size;
 	}
 
+	private function get_contents( string $path ): string {
+		global $wp_filesystem;
+
+		WP_Filesystem();
+
+		if ( ! $wp_filesystem->exists( $path ) ) {
+			return false;
+		}
+
+		return $wp_filesystem->get_contents( $path );
+	}
+
 	/**
 	 * Compress an image if it exceeds the maximum size.
 	 *
@@ -35,7 +47,7 @@ class ImageCompressor {
 		}
 
 		if ( filesize( $this->path ) <= $this->max_size ) {
-			return file_get_contents( $this->path ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+			return $this->get_contents( $this->path );
 		}
 
 		$editor = wp_get_image_editor( $this->path );
@@ -126,7 +138,7 @@ class ImageCompressor {
 			return null;
 		}
 
-		$contents = file_get_contents( $result['path'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
+		$contents = $this->get_contents( $result['path'] );
 		$this->cleanup_file( $result['path'] );
 
 		if ( $contents === false ) {

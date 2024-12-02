@@ -99,6 +99,10 @@ class Assets {
 			'settings' => [
 				'enabled' => get_option( 'autoblue_enabled', false ),
 			],
+			'logs'     => [
+				'enabled' => get_option( 'autoblue_logs_enabled', true ), // TODO: Add option
+				'items'   => ( new Logging\LogRepository() )->get_logs(),
+			],
 		];
 	}
 }

@@ -10,8 +10,18 @@ class Bluesky {
 	 */
 	private Bluesky\API $api_client;
 
+	/** @var Logging\Log */
+	private Logging\Log $log;
+
 	public function __construct() {
 		$this->api_client = new Bluesky\API();
+		$this->log        = new Logging\Log();
+	}
+
+	private function convert_at_uri_to_bluesky_url( string $did, string $at_uri ): string {
+		$rkey = end( explode( '/', $at_uri ) );
+
+		return "https://bsky.app/profile/{$did}/post/{$rkey}";
 	}
 
 	/**
@@ -38,12 +48,14 @@ class Bluesky {
 		$image_path = get_attached_file( $image_id );
 
 		if ( ! $image_path || ! file_exists( $image_path ) ) {
+			$this->log->error( sprintf( __( 'Failed to find image with ID `%1$d`.', 'autoblue' ), $image_id ) );
 			return false;
 		}
 
 		$mime_type = get_post_mime_type( $image_id );
 
 		if ( ! $mime_type || ! in_array( $mime_type, [ 'image/jpeg', 'image/png' ], true ) ) {
+			$this->log->error( sprintf( __( 'Failed to find valid mime type for image with ID `%1$d`.', 'autoblue' ), $image_id ) );
 			return false;
 		}
 
@@ -51,14 +63,24 @@ class Bluesky {
 		$image_blob       = $image_compressor->compress_image();
 
 		if ( ! $image_blob ) {
+			$this->log->error( sprintf( __( 'Failed to compress image with ID `%1$d`.', 'autoblue' ), $image_id ) );
 			return false;
 		}
 
 		$blob = $this->api_client->upload_blob( $image_blob, $mime_type, $access_token );
 
 		if ( is_wp_error( $blob ) ) {
+			$this->log->error( sprintf( __( 'Failed to upload image with ID `%1$d` to Bluesky:', 'autoblue' ), $image_id ) . ' ' . $blob->get_error_message() );
 			return false;
 		}
+
+		$this->log->debug(
+			sprintf( __( 'Uploaded image with ID `%1$d` to Bluesky.', 'autoblue' ), $image_id ),
+			[
+				'image_id' => $image_id,
+				'blob'     => $blob,
+			]
+		);
 
 		return $blob;
 	}
@@ -70,12 +92,14 @@ class Bluesky {
 		$post = get_post( $post_id );
 
 		if ( ! $post ) {
+			$this->log->error( sprintf( __( 'Share failed: Post with ID `%1$d` not found.', 'autoblue' ), $post_id ), [ 'post_id' => $post_id ] );
 			return false;
 		}
 
 		$connection = $this->get_connection();
 
 		if ( ! $connection ) {
+			$this->log->error( sprintf( __( 'Share failed: No Bluesky connection found.' ) ), [ 'post_id' => $post_id ] );
 			return false;
 		}
 
@@ -83,6 +107,7 @@ class Bluesky {
 		$connection          = $connections_manager->refresh_tokens( $connection['did'] );
 
 		if ( is_wp_error( $connection ) ) {
+			$this->log->error( __( 'Failed to refresh Bluesky connection tokens before sharing:', 'autoblue' ) . ' ' . $connection->get_error_message(), [ 'post_id' => $post_id ] );
 			return false;
 		}
 
@@ -127,6 +152,14 @@ class Bluesky {
 		$response = $this->api_client->create_record( $body, $connection['access_jwt'] );
 
 		if ( is_wp_error( $response ) ) {
+			$this->log->error(
+				sprintf( __( 'Failed to share post with ID `%1$d` to Bluesky:', 'autoblue' ), $post_id ) . ' ' . $response->get_error_message(),
+				[
+					'post_id'  => $post_id,
+					'body'     => $body,
+					'response' => $response,
+				]
+			);
 			return false;
 		}
 
@@ -141,6 +174,18 @@ class Bluesky {
 		$shares   = ! empty( $shares ) ? $shares : [];
 		$shares[] = $share;
 		update_post_meta( $post_id, 'autoblue_shares', $shares );
+
+		$bluesky_url = $this->convert_at_uri_to_bluesky_url( $connection['did'], $response['uri'] );
+
+		$this->log->info(
+			sprintf( __( 'Shared post `%1$s` with ID `%2$d` to Bluesky: %3$s', 'autoblue' ), $post->post_title, $post_id, $bluesky_url ),
+			[
+				'post_id'     => $post_id,
+				'bluesky_url' => $this->convert_at_uri_to_bluesky_url( $connection['did'], $response['uri'] ),
+				'body'        => $body,
+				'response'    => $response,
+			]
+		);
 
 		return $share;
 	}

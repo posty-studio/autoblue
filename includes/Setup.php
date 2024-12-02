@@ -10,7 +10,9 @@ class Setup {
 		( new Assets() )->register_hooks();
 		( new PostHandler() )->register_hooks();
 		( new ConnectionsManager() )->register_hooks();
+		( new Logging\Setup() )->register_hooks();
 
+		add_action( 'rest_api_init', [ new Endpoints\LogsController(), 'register_routes' ] );
 		add_action( 'rest_api_init', [ new Endpoints\SearchController(), 'register_routes' ] );
 		add_action( 'rest_api_init', [ new Endpoints\AccountController(), 'register_routes' ] );
 		add_action( 'rest_api_init', [ new Endpoints\ConnectionsController(), 'register_routes' ] );

@@ -2,7 +2,7 @@ import { useSelect, useDispatch } from '@wordpress/data';
 import { STORE_NAME } from '../store';
 
 const useAccounts = () => {
-	const { accounts } = useSelect(
+	const { accounts, isLoading, error } = useSelect(
 		( select ) => ( {
 			accounts: select( STORE_NAME ).getAccounts(),
 		} ),

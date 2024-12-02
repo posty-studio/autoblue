@@ -7,5 +7,6 @@ module.exports = {
 	},
 	globals: {
 		wp: true,
+		autoblue: true,
 	},
 };

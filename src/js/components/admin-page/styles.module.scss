@@ -1,3 +1,49 @@
+.header {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	background-color: #fff;
+	padding: 20px 20px 0;
+
+	// TODO: Remove padding from #wpcontent instead.
+	margin-left: -20px;
+	@media screen and (max-width: 782px) {
+		margin-left: -10px;
+		padding: 20px 10px 0;
+	}
+
+	svg {
+		width: auto;
+		height: 24px;
+	}
+}
+
+.version {
+	padding: 4px 8px;
+	border-radius: 4px;
+	background-color: #e1f0ff;
+	font-weight: 700;
+	color: #000;
+}
+
+.tabs {
+	:global .components-tab-panel__tabs {
+		background-color: #fff;
+		box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 0px 0px;
+		padding: 0;
+		margin-bottom: 20px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+
+		// TODO: Remove padding from #wpcontent instead.
+		margin-left: -20px;
+		@media screen and (max-width: 782px) {
+			margin-left: -10px;
+		}
+	}
+}
+
 .container {
 	padding-right: 20px;
 
@@ -12,10 +58,6 @@
 }
 
 .wrapper {
-	max-width: 600px;
+	max-width: 800px;
 	margin: 0 auto;
-}
-
-.card.card {
-	padding: 20px;
 }

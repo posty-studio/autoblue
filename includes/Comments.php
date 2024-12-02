@@ -46,7 +46,7 @@ class Comments {
 			]
 		);
 
-		if ( is_wp_error( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+		if ( is_wp_error( $response ) ) {
 			Utils::error_log( 'Failed to get profile from Bluesky: ' . $response->get_error_message() );
 			return false;
 		}
