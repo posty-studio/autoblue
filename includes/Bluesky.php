@@ -48,37 +48,44 @@ class Bluesky {
 		$image_path = get_attached_file( $image_id );
 
 		if ( ! $image_path || ! file_exists( $image_path ) ) {
-			$this->log->error( sprintf( __( 'Failed to find image with ID `%1$d`.', 'autoblue' ), $image_id ) );
+			$this->log->error( __( 'Skipping image: Failed to find image with ID `{attachment_id}`.', 'autoblue' ), [ 'attachment_id' => $image_id ] );
 			return false;
 		}
 
-		$mime_type = get_post_mime_type( $image_id );
+		$mime_type     = get_post_mime_type( $image_id );
+		$allowed_types = [ 'image/jpeg', 'image/png' ];
 
-		if ( ! $mime_type || ! in_array( $mime_type, [ 'image/jpeg', 'image/png' ], true ) ) {
-			$this->log->error( sprintf( __( 'Failed to find valid mime type for image with ID `%1$d`.', 'autoblue' ), $image_id ) );
-			return false;
-		}
+		// if ( ! $mime_type || ! in_array( $mime_type, $allowed_types, true ) ) {
+		// $this->log->error(
+		// __( 'Skipping image: Invalid mime type for image with ID `{attachment_id}`. Allowed types are `{allowed_types}`, but got `{mime_type}`.', 'autoblue' ),
+		// [
+		// 'attachment_id' => $image_id,
+		// 'allowed_types' => $allowed_types,
+		// 'mime_type'     => $mime_type,
+		// ]
+		// );
+		// return false;
+		// }
 
 		$image_compressor = new ImageCompressor( $image_path, $mime_type );
 		$image_blob       = $image_compressor->compress_image();
 
 		if ( ! $image_blob ) {
-			$this->log->error( sprintf( __( 'Failed to compress image with ID `%1$d`.', 'autoblue' ), $image_id ) );
+			$this->log->error( __( 'Skipping image: Compression failed for image with ID `{attachment_id}`.', 'autoblue' ), [ 'attachment_id' => $image_id ] );
 			return false;
 		}
 
 		$blob = $this->api_client->upload_blob( $image_blob, $mime_type, $access_token );
 
 		if ( is_wp_error( $blob ) ) {
-			$this->log->error( sprintf( __( 'Failed to upload image with ID `%1$d` to Bluesky:', 'autoblue' ), $image_id ) . ' ' . $blob->get_error_message() );
+			$this->log->error( __( 'Skipping image: Failed to upload image with ID `{attachment_id}` to Bluesky:', 'autoblue' ) . ' ' . $blob->get_error_message(), [ 'attachment_id' => $image_id ] );
 			return false;
 		}
 
 		$this->log->debug(
-			sprintf( __( 'Uploaded image with ID `%1$d` to Bluesky.', 'autoblue' ), $image_id ),
+			__( 'Uploaded image with ID `{attachment_id}` to Bluesky.', 'autoblue' ),
 			[
-				'image_id' => $image_id,
-				'blob'     => $blob,
+				'attachment_id' => $image_id,
 			]
 		);
 
@@ -177,7 +184,7 @@ class Bluesky {
 
 		$bluesky_url = $this->convert_at_uri_to_bluesky_url( $connection['did'], $response['uri'] );
 
-		$this->log->info(
+		$this->log->success(
 			sprintf( __( 'Shared post `%1$s` with ID `%2$d` to Bluesky: %3$s', 'autoblue' ), $post->post_title, $post_id, $bluesky_url ),
 			[
 				'post_id'     => $post_id,

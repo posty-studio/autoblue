@@ -58,6 +58,13 @@
 }
 
 .wrapper {
-	max-width: 800px;
 	margin: 0 auto;
+
+	&.settings {
+		max-width: 600px;
+	}
+
+	&.logs {
+		max-width: 900px;
+	}
 }

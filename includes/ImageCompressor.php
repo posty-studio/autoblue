@@ -11,7 +11,7 @@ require_once ABSPATH . 'wp-admin/includes/file.php';
 class ImageCompressor {
 	private const MAX_WIDTH          = 1200;
 	private const MAX_QUALITY        = 100;
-	private const ALLOWED_MIME_TYPES = [ 'image/jpeg', 'image/png' ];
+	private const ALLOWED_MIME_TYPES = [ 'image/jpeg', 'image/png', 'image/webp' ];
 
 	private \WP_Image_Editor $editor;
 	private string $path;

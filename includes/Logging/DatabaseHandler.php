@@ -3,8 +3,12 @@
 namespace Autoblue\Logging;
 
 use Monolog\Handler\AbstractProcessingHandler;
-use Monolog\LogRecord;
 
+/**
+ * Writes log records to the database.
+ *
+ * Inspired by: https://felipe.lavin.blog/2023/04/19/integrating-monolog-with-wordpress/
+ */
 class DatabaseHandler extends AbstractProcessingHandler {
 	public const TABLE_NAME      = 'autoblue_logs';
 	private const MAX_ROWS       = 100;
@@ -16,11 +20,12 @@ class DatabaseHandler extends AbstractProcessingHandler {
 		$this->wpdb = $wpdb;
 	}
 
-	protected function write( LogRecord $record ): void {
+	protected function write( array $record ): void {
 		$data = [
-			'level'   => strtolower( $record->level->name ),
-			'message' => $record->message,
-			'context' => $record->context ? wp_json_encode( $record->context ) : null,
+			'level'   => strtolower( $record['level_name'] ),
+			'message' => sanitize_text_field( $record['message'] ),
+			'context' => ! empty( $record['context'] ) ? wp_json_encode( $record['context'] ) : null,
+			'extra'   => ! empty( $record['extra'] ) ? wp_json_encode( $record['extra'] ) : null,
 		];
 
 		$table_name = $this->wpdb->prefix . self::TABLE_NAME;
@@ -43,12 +48,12 @@ class DatabaseHandler extends AbstractProcessingHandler {
 			$this->wpdb->query(
 				$this->wpdb->prepare(
 					"DELETE FROM $table_name WHERE id <= (
-						SELECT id FROM (
-							SELECT id FROM $table_name
-							ORDER BY created_at DESC
-							LIMIT 1 OFFSET %d
-						) tmp
-					)",
+                        SELECT id FROM (
+                            SELECT id FROM $table_name
+                            ORDER BY created_at DESC
+                            LIMIT 1 OFFSET %d
+                        ) tmp
+                    )",
 					$offset
 				)
 			);

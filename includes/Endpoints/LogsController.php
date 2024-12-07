@@ -19,7 +19,20 @@ class LogsController extends WP_REST_Controller {
 				[
 					'methods'             => WP_REST_Server::READABLE,
 					'callback'            => [ $this, 'get_logs' ],
-					'permission_callback' => [ $this, 'get_logs_permissions_check' ],
+					'permission_callback' => [ $this, 'manage_logs_permissions_check' ],
+				],
+				'schema' => [ $this, 'get_public_item_schema' ],
+			]
+		);
+
+		register_rest_route(
+			$this->namespace,
+			'/' . $this->rest_base,
+			[
+				[
+					'methods'             => WP_REST_Server::DELETABLE,
+					'callback'            => [ $this, 'clear_logs' ],
+					'permission_callback' => [ $this, 'manage_logs_permissions_check' ],
 				],
 				'schema' => [ $this, 'get_public_item_schema' ],
 			]
@@ -29,7 +42,7 @@ class LogsController extends WP_REST_Controller {
 	/**
 	 * @return bool
 	 */
-	public function get_logs_permissions_check(): bool {
+	public function manage_logs_permissions_check(): bool {
 		return current_user_can( 'edit_posts' );
 	}
 
@@ -38,10 +51,21 @@ class LogsController extends WP_REST_Controller {
 	 *
 	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public function get_logs( \WP_REST_Request $request ) {
+	public function get_logs() {
 		$logger = new \Autoblue\Logging\LogRepository();
 		$logs   = $logger->get_logs();
 		return rest_ensure_response( $logs );
+	}
+
+	/**
+	 * DELETE `/autoblue/v1/logs`
+	 *
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function clear_logs() {
+		$logger  = new \Autoblue\Logging\LogRepository();
+		$success = $logger->clear_logs();
+		return rest_ensure_response( $success );
 	}
 
 	/**

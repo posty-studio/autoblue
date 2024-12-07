@@ -4,6 +4,7 @@ namespace Autoblue\Logging;
 
 use Monolog\Logger;
 use Monolog\Handler\HandlerInterface;
+use Monolog\Processor\PsrLogMessageProcessor;
 
 class Log {
 	private Logger $logger;
@@ -12,6 +13,8 @@ class Log {
 		global $wpdb;
 
 		$this->logger = new Logger( 'autoblue' );
+		$this->logger->pushProcessor( new PsrLogMessageProcessor() );
+		$this->logger->pushProcessor( new WPProcessor() );
 		$this->logger->pushHandler(
 			$handler ?? new DatabaseHandler( $wpdb )
 		);
@@ -31,5 +34,14 @@ class Log {
 
 	public function debug( string $message, array $context = [] ): void {
 		$this->logger->debug( $message, $context );
+	}
+
+	/**
+	 * Not a part of PSR-3, but useful for logging successful operations.
+	 *
+	 * Behind the scenes it's just an info log, with a success notice.
+	 */
+	public function success( string $message, array $context = [] ): void {
+		$this->logger->info( __( '[Success] ', 'autoblue' ) . $message, $context );
 	}
 }

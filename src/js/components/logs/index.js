@@ -10,8 +10,12 @@ import {
 	Icon,
 	Modal,
 	Button,
+	ButtonGroup,
+	Spinner,
+	__experimentalConfirmDialog as ConfirmDialog,
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
+	__experimentalHStack as HStack,
 } from '@wordpress/components';
 import useLogs from './../../hooks/use-logs';
 import styles from './styles.module.scss';
@@ -20,11 +24,17 @@ import {
 	warning,
 	code,
 	cancelCircleFilled,
+	check,
 	page,
+	trash,
+	cog,
 } from '@wordpress/icons';
+import { RefreshIcon } from '../../icons';
 
 const getIconFromLevel = ( level ) => {
 	switch ( level ) {
+		case 'success':
+			return check;
 		case 'info':
 			return info;
 		case 'warning':
@@ -38,12 +48,54 @@ const getIconFromLevel = ( level ) => {
 	}
 };
 
-const convertBackticks = ( str ) => {
-	return str
-		.split( '`' )
-		.map( ( part, index ) =>
-			index % 2 === 0 ? part : <code key={ index }>{ part }</code>
+const processUrls = ( str ) => {
+	const parts = str.split( /(https:\/\/bsky\.app\/profile\/[^\s]+)/g );
+	return parts.map( ( part, index ) => {
+		const isBskyProfileUrl = /^https:\/\/bsky\.app\/profile\/[^\s]+$/.test(
+			part
 		);
+		return isBskyProfileUrl ? (
+			<a
+				key={ `url-${ index }` }
+				href={ part }
+				target="_blank"
+				rel="noreferrer"
+			>
+				{ part }
+			</a>
+		) : (
+			part
+		);
+	} );
+};
+
+const convertBackticks = ( content ) => {
+	if ( typeof content === 'string' ) {
+		const parts = content.split( '`' );
+		return parts.map( ( part, index ) =>
+			index % 2 === 0 ? (
+				part
+			) : (
+				<code key={ `code-${ index }` }>{ part }</code>
+			)
+		);
+	}
+	return content;
+};
+
+const parseMessage = ( message ) => {
+	// First split and process for URLs
+	const urlProcessed = processUrls( message );
+
+	// Then process each part for backticks
+	return urlProcessed
+		.map( ( part, index ) => {
+			if ( typeof part === 'string' ) {
+				return convertBackticks( part );
+			}
+			return part;
+		} )
+		.flat();
 };
 
 const LogLevel = ( { level, showText = false } ) => {
@@ -58,22 +110,43 @@ const LogLevel = ( { level, showText = false } ) => {
 	);
 };
 const Logs = () => {
-	const { logs } = useLogs();
+	const { logs, refreshLogs, clearLogs, isRefreshingLogs, isClearingLogs } =
+		useLogs();
 	const [ selectedLogContext, setSelectedLogContext ] = useState( null );
 	const { formats } = getSettings();
+	const [ isClearLogsConfirmDialogOpen, setIsClearLogsConfirmDialogOpen ] =
+		useState( false );
 
 	const handleContextView = ( log ) => {
 		setSelectedLogContext( log );
 	};
 
+	const handleConfirmClearLogs = () => {
+		if ( isClearingLogs || isRefreshingLogs ) {
+			return;
+		}
+
+		clearLogs();
+		setIsClearLogsConfirmDialogOpen( false );
+	};
+
+	const handleRefreshLogs = () => {
+		if ( isRefreshingLogs || isClearingLogs ) {
+			return;
+		}
+
+		refreshLogs();
+	};
+
 	const LogItem = ( log ) => {
 		const { level, context, message, created_at: createdAt } = log;
+
 		return (
 			<tr className={ clsx( styles.item, styles[ level ] ) }>
 				<td>
 					<LogLevel level={ level } />
 				</td>
-				<td>{ convertBackticks( message ) }</td>
+				<td>{ parseMessage( message ) }</td>
 				<td>
 					<Tooltip text={ dateI18n( 'c', createdAt ) }>
 						<Text variant="muted">
@@ -90,14 +163,12 @@ const Logs = () => {
 					</Tooltip>
 				</td>
 				<td>
-					{ context && Object.keys( context ).length && (
-						<Button
-							onClick={ () => handleContextView( log ) }
-							variant="secondary"
-							icon={ page }
-							label={ __( 'View Context', 'autoblue' ) }
-						/>
-					) }
+					<Button
+						onClick={ () => handleContextView( log ) }
+						variant="secondary"
+						icon={ page }
+						label={ __( 'View Context', 'autoblue' ) }
+					/>
 				</td>
 			</tr>
 		);
@@ -126,7 +197,7 @@ const Logs = () => {
 								<tr>
 									<th>{ __( 'Message', 'autoblue' ) }</th>
 									<td>
-										{ convertBackticks(
+										{ parseMessage(
 											selectedLogContext.message
 										) }
 									</td>
@@ -150,9 +221,10 @@ const Logs = () => {
 										</VStack>
 									</td>
 								</tr>
-								{ Object.entries(
-									selectedLogContext.context
-								).map( ( [ key, value ] ) => (
+								{ Object.entries( {
+									...selectedLogContext.context,
+									...selectedLogContext.extra,
+								} ).map( ( [ key, value ] ) => (
 									<tr key={ key }>
 										<th>{ key }</th>
 										<td>
@@ -174,44 +246,85 @@ const Logs = () => {
 				</Modal>
 			) }
 
+			<ConfirmDialog
+				isOpen={ isClearLogsConfirmDialogOpen }
+				onConfirm={ handleConfirmClearLogs }
+				onCancel={ () => setIsClearLogsConfirmDialogOpen( false ) }
+				confirmButtonText={ __( 'Clear Logs', 'autoblue' ) }
+			>
+				{ __( 'Are you sure you want to clear all logs?', 'autoblue' ) }
+			</ConfirmDialog>
+
 			<BaseControl
 				__nextHasNoMarginBottom
-				label={ __( 'Logs', 'autoblue' ) }
 				id="autoblue-logs"
+				label={
+					<div className={ styles.label }>
+						<span>
+							{ __( 'Logs', 'autoblue' ) }
+							&nbsp;
+						</span>
+						<HStack alignment="right">
+							{ ( isRefreshingLogs || isClearingLogs ) && (
+								<Spinner style={ { marginTop: 0 } } />
+							) }
+							<Button
+								variant="secondary"
+								icon={ cog }
+								size="compact"
+							>
+								{ __( 'Settings', 'autoblue' ) }
+							</Button>
+							<ButtonGroup>
+								<Button
+									onClick={ handleRefreshLogs }
+									variant="secondary"
+									icon={ RefreshIcon }
+									size="compact"
+								>
+									{ __( 'Refresh', 'autoblue' ) }
+								</Button>
+								<Button
+									onClick={ () =>
+										setIsClearLogsConfirmDialogOpen( true )
+									}
+									variant="secondary"
+									isDestructive
+									icon={ trash }
+									size="compact"
+								>
+									{ __( 'Clear', 'autoblue' ) }
+								</Button>
+							</ButtonGroup>
+						</HStack>
+					</div>
+				}
 			>
 				<Card>
 					<CardBody className={ styles.card }>
 						<VStack spacing={ 2 }>
-							{ logs.length ? (
-								<table className={ styles.table }>
-									<thead>
-										<tr>
-											<th>
-												{ __( 'Level', 'autoblue' ) }
-											</th>
-											<th>
-												{ __( 'Message', 'autoblue' ) }
-											</th>
-											<th>
-												{ __( 'Time', 'autoblue' ) }
-											</th>
-											<th>
-												{ __( 'Context', 'autoblue' ) }
-											</th>
-										</tr>
-									</thead>
-									<tbody>
-										{ logs.map( ( log ) => (
+							<table className={ styles.table }>
+								<thead>
+									<tr>
+										<th>{ __( 'Level', 'autoblue' ) }</th>
+										<th>{ __( 'Message', 'autoblue' ) }</th>
+										<th>{ __( 'Time', 'autoblue' ) }</th>
+										<th>{ __( 'Context', 'autoblue' ) }</th>
+									</tr>
+								</thead>
+								<tbody>
+									{ logs.length > 0 &&
+										logs.map( ( log ) => (
 											<LogItem
 												key={ log.id }
 												{ ...log }
 											/>
 										) ) }
-									</tbody>
-								</table>
-							) : (
-								<div>
-									{ __( 'No logs found.', 'autoblue' ) }
+								</tbody>
+							</table>
+							{ ! logs.length && (
+								<div className={ styles.empty }>
+									{ __( 'No logs (yet).', 'autoblue' ) }
 								</div>
 							) }
 						</VStack>

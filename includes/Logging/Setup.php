@@ -3,7 +3,7 @@
 namespace Autoblue\Logging;
 
 class Setup {
-	private const DB_VERSION = '20241201';
+	private const DB_VERSION = '20241202';
 
 	public function register_hooks(): void {
 		add_action( 'admin_init', [ $this, 'maybe_create_table' ] );
@@ -26,7 +26,8 @@ class Setup {
 				created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 				level varchar(20) NOT NULL,
 				message text NOT NULL,
-				context text DEFAULT NULL,
+				context JSON,
+				extra JSON,
 				PRIMARY KEY  (id),
 				KEY created_at (created_at),
 				KEY level (level)

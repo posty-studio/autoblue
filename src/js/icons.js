@@ -34,3 +34,13 @@ export const BlueskyIcon = (
 		/>
 	</svg>
 );
+
+export const RefreshIcon = (
+	<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+		<path
+			fillRule="evenodd"
+			d="M6 12c0-3.328 2.64-6 5.866-6 2.164 0 4.063 1.201 5.08 3H15v1.5h4.5V6H18v1.848C16.683 5.834 14.431 4.5 11.866 4.5 7.783 4.5 4.5 7.872 4.5 12H6ZM18 12c0 3.328-2.64 6-5.865 6-2.165 0-4.064-1.201-5.081-3H9v-1.5H4.5V18H6v-1.848c1.317 2.014 3.569 3.348 6.135 3.348 4.082 0 7.365-3.372 7.365-7.5H18Z"
+			clipRule="evenodd"
+		/>
+	</svg>
+);
