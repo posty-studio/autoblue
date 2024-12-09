@@ -44,3 +44,21 @@ export const RefreshIcon = (
 		/>
 	</svg>
 );
+
+export const CheckIcon = (
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+		<path d="M20.285 2 9 13.567 3.714 8.556 0 12.272 9 21 24 5.715z" />
+	</svg>
+);
+
+export const WarningIcon = (
+	<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M13.13 13.38L13.48 6.92004H10.52L10.87 13.38H13.13ZM13.04 16.74C13.28 16.51 13.41 16.19 13.41 15.78C13.41 15.36 13.29 15.04 13.05 14.81C12.81 14.58 12.46 14.46 11.99 14.46C11.52 14.46 11.17 14.58 10.92 14.81C10.67 15.04 10.55 15.36 10.55 15.78C10.55 16.19 10.68 16.51 10.93 16.74C11.19 16.97 11.54 17.08 11.99 17.08C12.44 17.08 12.79 16.97 13.04 16.74Z" />
+	</svg>
+);
+
+export const InfoIcon = (
+	<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+		<path d="M11 17h2v-6h-2v6Zm0-8h2V7h-2v2Z" />
+	</svg>
+);

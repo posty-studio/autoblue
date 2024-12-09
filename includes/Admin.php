@@ -5,6 +5,7 @@ namespace Autoblue;
 class Admin {
 	// TODO: Can we make this a bit better?
 	public const AUTOBLUE_ENABLED_BY_DEFAULT = false;
+	public const AUTOBLUE_DEFAULT_LOG_LEVEL  = 'info';
 
 	public function register_hooks(): void {
 		add_action( 'admin_menu', [ $this, 'register_admin_page' ] );
@@ -77,6 +78,22 @@ class Admin {
 				'description'  => __( 'True is sharing is enabled by default for new posts.', 'autoblue' ),
 				'show_in_rest' => true,
 				'default'      => self::AUTOBLUE_ENABLED_BY_DEFAULT,
+			],
+		);
+
+		register_setting(
+			'autoblue',
+			'autoblue_log_level',
+			[
+				'type'         => 'string',
+				'description'  => __( 'The log level for Autoblue.', 'autoblue' ),
+				'show_in_rest' => [
+					'schema' => [
+						'type' => 'string',
+						'enum' => [ 'debug', 'info', 'error', 'off' ],
+					],
+				],
+				'default'      => self::AUTOBLUE_DEFAULT_LOG_LEVEL,
 			],
 		);
 	}

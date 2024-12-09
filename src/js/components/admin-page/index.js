@@ -2,15 +2,36 @@ import clsx from 'clsx';
 import { __ } from '@wordpress/i18n';
 import {
 	TabPanel,
+	SnackbarList,
 	__experimentalVStack as VStack, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 } from '@wordpress/components';
 import { useState } from '@wordpress/element';
+import { useSelect, useDispatch } from '@wordpress/data';
+import { store as noticesStore } from '@wordpress/notices';
 import { Logo } from './../../icons';
 import Settings from './../settings';
 import Logs from './../logs';
 import styles from './styles.module.scss';
 
 const TABS = [ 'settings', 'logs' ];
+
+const Notices = () => {
+	const { removeNotice } = useDispatch( noticesStore );
+	const notices = useSelect( ( select ) =>
+		select( noticesStore ).getNotices()
+	);
+	const snackbarNotices = notices.filter(
+		( { type } ) => type === 'snackbar'
+	);
+
+	return (
+		<SnackbarList
+			className={ styles.notices }
+			notices={ snackbarNotices }
+			onRemove={ removeNotice }
+		/>
+	);
+};
 
 const AdminPage = () => {
 	const getInitialTab = () => {
@@ -65,6 +86,8 @@ const AdminPage = () => {
 					);
 				} }
 			</TabPanel>
+
+			<Notices />
 		</>
 	);
 };

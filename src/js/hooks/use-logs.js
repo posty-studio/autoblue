@@ -1,5 +1,8 @@
+import { __, sprintf } from '@wordpress/i18n';
 import { useSelect, useDispatch } from '@wordpress/data';
+import { useEntityProp } from '@wordpress/core-data';
 import { STORE_NAME } from '../store';
+import { store as noticesStore } from '@wordpress/notices';
 
 const DEFAULT_PER_PAGE = 10;
 
@@ -17,6 +20,8 @@ const useLogs = ( { perPage = DEFAULT_PER_PAGE } = {} ) => {
 		},
 		[]
 	);
+
+	const { createSuccessNotice, removeNotice } = useDispatch( noticesStore );
 
 	const { refreshLogs, clearLogs } = useDispatch( STORE_NAME );
 
@@ -44,8 +49,45 @@ const useLogs = ( { perPage = DEFAULT_PER_PAGE } = {} ) => {
 		}
 	};
 
+	const [ logLevel, setLogLevelFn ] = useEntityProp(
+		'root',
+		'site',
+		'autoblue_log_level'
+	);
+	const { saveEditedEntityRecord } = useDispatch( 'core' );
+
+	const isSaving = useSelect( ( select ) =>
+		select( 'core' ).isSavingEntityRecord( 'root', 'site' )
+	);
+
+	const setLogLevel = async ( value ) => {
+		if ( isSaving ) {
+			return;
+		}
+		try {
+			setLogLevelFn( value );
+			await saveEditedEntityRecord( 'root', 'site' );
+			const notice = await createSuccessNotice(
+				sprintf(
+					// translators: %s is the log level
+					__( 'Log level updated to "%s".', 'autoblue' ),
+					value
+				),
+				{
+					type: 'snackbar',
+				}
+			);
+
+			setTimeout( () => {
+				removeNotice( notice.notice.id );
+			}, 2000 );
+		} catch ( error ) {}
+	};
+
 	return {
 		logs,
+		level: logLevel,
+		setLevel: setLogLevel,
 		page,
 		totalPages,
 		totalItems,

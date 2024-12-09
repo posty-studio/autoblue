@@ -7,23 +7,54 @@
 	gap: 8px;
 
 	&.info {
+		--container-color: rgba(56, 88, 233, 0.1);
 		--icon-color: #3858e9;
 	}
 
 	&.debug {
-		--icon-color: rgba(0, 0, 0, 0.3);
+		--container-color: rgba(0, 0, 0, 0.05);
+		--icon-color: rgba(0, 0, 0, 0.4);
+
+		svg {
+			width: 20px;
+		}
 	}
 
 	&.warning {
-		--icon-color: #f0b849;
+		--container-color: rgba(255, 169, 0, 0.1);
+		--icon-color: #ffa900;
 	}
 
 	&.error {
+		--container-color: rgba(220, 53, 69, 0.1);
 		--icon-color: #dc3545;
 	}
 
 	&.success {
 		--icon-color: #4ab866;
+		--container-color: rgba(74, 184, 102, 0.1);
+
+		svg {
+			width: 14px;
+		}
+	}
+}
+
+.container {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	background-color: var(--container-color);
+	height: 24px;
+	width: 24px;
+
+	&.pill {
+		height: auto;
+		width: auto;
+		border-radius: 9999px;
+		padding: 2px 8px;
+		gap: 4px;
 	}
 }
 

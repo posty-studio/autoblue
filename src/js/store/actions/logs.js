@@ -1,13 +1,18 @@
+import { __ } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
 import { REFRESH_LOGS, CLEAR_LOGS, SET_LOGS_STATUS } from './../constants';
 import { addQueryArgs } from '@wordpress/url';
+import { store as noticesStore } from '@wordpress/notices';
 
 const DEFAULT_PAGE = 1;
 const DEFAULT_PER_PAGE = 10;
 
 export const refreshLogs =
 	( { page = DEFAULT_PAGE, perPage = DEFAULT_PER_PAGE } = {} ) =>
-	async ( { select, dispatch } ) => {
+	async ( { select, dispatch, registry } ) => {
+		const { createSuccessNotice, createErrorNotice, removeNotice } =
+			registry.dispatch( noticesStore );
+
 		try {
 			const currentPage = select.getLogsCurrentPage();
 			const isRefreshing = page === currentPage;
@@ -42,20 +47,36 @@ export const refreshLogs =
 
 			dispatch( { type: SET_LOGS_STATUS, status: 'success' } );
 
-			setTimeout( () => {
-				dispatch( { type: SET_LOGS_STATUS, status: 'idle' } );
-			}, 1000 );
+			if ( isRefreshing ) {
+				const notice = await createSuccessNotice(
+					__( 'Logs refreshed.', 'autoblue' ),
+					{
+						type: 'snackbar',
+					}
+				);
+
+				setTimeout( () => {
+					dispatch( { type: SET_LOGS_STATUS, status: 'idle' } );
+					removeNotice( notice.notice.id );
+				}, 2000 );
+			}
 
 			return logs;
 		} catch ( error ) {
-			dispatch( { type: SET_LOGS_STATUS, status: 'error' } );
+			createErrorNotice( __( 'Failed to refresh logs.', 'autoblue' ), {
+				id: 'autoblue/logs/refresh-error',
+				type: 'snackbar',
+			} );
 			throw error;
 		}
 	};
 
 export const clearLogs =
 	() =>
-	async ( { dispatch } ) => {
+	async ( { dispatch, registry } ) => {
+		const { createSuccessNotice, createErrorNotice, removeNotice } =
+			registry.dispatch( noticesStore );
+
 		try {
 			dispatch( { type: SET_LOGS_STATUS, status: 'clearing' } );
 
@@ -77,14 +98,26 @@ export const clearLogs =
 
 				dispatch( { type: SET_LOGS_STATUS, status: 'success' } );
 
+				const notice = await createSuccessNotice(
+					__( 'Logs cleared.', 'autoblue' ),
+					{
+						type: 'snackbar',
+					}
+				);
+
 				setTimeout( () => {
 					dispatch( { type: SET_LOGS_STATUS, status: 'idle' } );
+					removeNotice( notice.notice.id );
 				}, 2000 );
 			}
 
 			return success;
 		} catch ( error ) {
 			dispatch( { type: SET_LOGS_STATUS, status: 'error' } );
+			createErrorNotice( __( 'Failed to clear logs.', 'autoblue' ), {
+				id: 'autoblue/logs/clear-error',
+				type: 'snackbar',
+			} );
 			throw error;
 		}
 	};

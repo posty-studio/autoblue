@@ -20,7 +20,7 @@ class DatabaseHandler extends AbstractProcessingHandler {
 		$this->wpdb = $wpdb;
 	}
 
-	protected function write( array $record ): void {
+	public function write( array $record ): void {
 		$data = [
 			'level'   => strtolower( $record['level_name'] ),
 			'message' => sanitize_text_field( $record['message'] ),
@@ -48,12 +48,12 @@ class DatabaseHandler extends AbstractProcessingHandler {
 			$this->wpdb->query(
 				$this->wpdb->prepare(
 					"DELETE FROM $table_name WHERE id <= (
-                        SELECT id FROM (
-                            SELECT id FROM $table_name
-                            ORDER BY created_at DESC
-                            LIMIT 1 OFFSET %d
-                        ) tmp
-                    )",
+						SELECT id FROM (
+							SELECT id FROM $table_name
+							ORDER BY created_at DESC
+							LIMIT 1 OFFSET %d
+						) tmp
+					)",
 					$offset
 				)
 			);

@@ -27,6 +27,7 @@ const Pagination = () => {
 			<Button
 				label={ __( 'Previous page', 'autoblue' ) }
 				onClick={ handlePreviousPage }
+				accessibleWhenDisabled
 				size="compact"
 				disabled={ page === 1 }
 				icon={ previous }
@@ -34,15 +35,16 @@ const Pagination = () => {
 			<Button
 				label={ __( 'Next page', 'autoblue' ) }
 				onClick={ handleNextPage }
+				accessibleWhenDisabled
 				size="compact"
-				disabled={ page === totalPages }
+				disabled={ page === totalPages || totalPages === 0 }
 				icon={ next }
 			/>
 			<span>
 				{ sprintf(
 					// translators: %1$d is the first item number, %2$d is the last item number, %3$d is the total number of items)
 					__( 'Showing %1$d-%2$d of %3$d logs', 'autoblue' ),
-					( page - 1 ) * 10 + 1,
+					totalItems === 0 ? 0 : ( page - 1 ) * 10 + 1,
 					Math.min( page * 10, totalItems ),
 					totalItems
 				) }

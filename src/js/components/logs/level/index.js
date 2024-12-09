@@ -6,11 +6,17 @@ import styles from './styles.module.scss';
 const Level = ( { level, showText = false } ) => {
 	return (
 		<div className={ clsx( styles.level, styles[ level ] ) }>
-			<Icon
-				icon={ getIconFromLevel( level ) }
-				className={ styles.icon }
-			/>
-			{ showText && level }
+			<div
+				className={ clsx( styles.container, {
+					[ styles.pill ]: showText,
+				} ) }
+			>
+				<Icon
+					icon={ getIconFromLevel( level ) }
+					className={ styles.icon }
+				/>
+				{ showText && level }
+			</div>
 		</div>
 	);
 };

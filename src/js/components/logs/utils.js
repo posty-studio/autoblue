@@ -1,25 +1,20 @@
-import {
-	info,
-	warning,
-	code,
-	cancelCircleFilled,
-	check,
-} from '@wordpress/icons';
+import { code, closeSmall } from '@wordpress/icons';
+import { CheckIcon, InfoIcon, WarningIcon } from './../../icons';
 
 export const getIconFromLevel = ( level ) => {
 	switch ( level ) {
 		case 'success':
-			return check;
+			return CheckIcon;
 		case 'info':
-			return info;
+			return InfoIcon;
 		case 'warning':
-			return warning;
+			return WarningIcon;
 		case 'error':
-			return cancelCircleFilled;
+			return closeSmall;
 		case 'debug':
 			return code;
 		default:
-			return info;
+			return InfoIcon;
 	}
 };
 

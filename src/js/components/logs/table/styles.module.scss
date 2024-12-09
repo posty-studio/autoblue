@@ -25,6 +25,10 @@
 	th,
 	td {
 		padding: 12px 16px;
+
+		&:nth-child(4) {
+			text-align: right;
+		}
 	}
 }
 
