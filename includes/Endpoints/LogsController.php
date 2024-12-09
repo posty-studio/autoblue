@@ -20,6 +20,7 @@ class LogsController extends WP_REST_Controller {
 					'methods'             => WP_REST_Server::READABLE,
 					'callback'            => [ $this, 'get_logs' ],
 					'permission_callback' => [ $this, 'manage_logs_permissions_check' ],
+					'args'                => $this->get_collection_params(),
 				],
 				'schema' => [ $this, 'get_public_item_schema' ],
 			]
@@ -49,11 +50,12 @@ class LogsController extends WP_REST_Controller {
 	/**
 	 * GET `/autoblue/v1/logs`
 	 *
+	 * @param WP_REST_Request $request
 	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public function get_logs() {
+	public function get_logs( $request ) {
 		$logger = new \Autoblue\Logging\LogRepository();
-		$logs   = $logger->get_logs();
+		$logs   = $logger->get_logs( $request['per_page'], $request['page'] );
 		return rest_ensure_response( $logs );
 	}
 

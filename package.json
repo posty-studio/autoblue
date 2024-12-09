@@ -22,6 +22,7 @@
 		"replace-in-file": "^8.2.0"
 	},
 	"dependencies": {
-		"@wordpress/components": "^28.12.0"
+		"@wordpress/components": "^28.12.0",
+		"clsx": "^2.1.1"
 	}
 }

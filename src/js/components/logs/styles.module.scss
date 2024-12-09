@@ -1,3 +1,7 @@
+.header {
+	padding: 0 16px;
+}
+
 .card.card {
 	padding: 0;
 
@@ -6,94 +10,9 @@
 	}
 }
 
-.table {
-	text-align: left;
-	border-collapse: collapse;
-
-	thead {
-		background-color: rgba(94.1%, 94.1%, 94.5%, 0.5);
-		padding: 10px;
-	}
-
-	tr {
-		border-bottom: 1px solid #f0f0f0;
-	}
-
-	tbody tr:nth-child(even) {
-		background-color: rgba(94.1%, 94.1%, 94.5%, 0.5);
-	}
-
-	th,
-	td {
-		padding: 12px 16px;
-	}
-}
-
-:global(.components-modal__content) .table th,
-:global(.components-modal__content) .table td {
-	vertical-align: top;
-}
-
 .label {
 	display: flex;
 	align-items: end;
-}
-
-.level {
-	font-size: 12px;
-	font-weight: 700;
-	text-transform: uppercase;
-	display: flex;
-	align-items: center;
-	gap: 8px;
-
-	&.info {
-		--icon-color: #3858e9;
-	}
-
-	&.debug {
-		--icon-color: rgba(0, 0, 0, 0.3);
-	}
-
-	&.warning {
-		--icon-color: #f0b849;
-	}
-
-	&.error {
-		--icon-color: #dc3545;
-	}
-
-	&.success {
-		--icon-color: #4ab866;
-	}
-}
-
-.icon {
-	fill: var(--icon-color);
-}
-
-.time {
-	white-space: nowrap;
-}
-
-.modal {
-	:global .components-modal__header {
-		border-bottom: 1px solid #f0f0f0;
-	}
-
-	:global .components-modal__content {
-		max-width: 800px;
-		padding: 0;
-	}
-
-	pre {
-		white-space: pre-wrap;
-		word-wrap: break-word;
-		overflow-wrap: break-word;
-		word-break: break-word;
-		line-height: 1.2;
-		margin: 0;
-	}
 }
 
 .empty {

@@ -91,6 +91,7 @@ class Assets {
 		$current_page     = get_current_screen();
 		$refresh_accounts = $current_page && $current_page->id === 'settings_page_autoblue';
 		$connections      = ( new ConnectionsManager() )->get_all_connections( $refresh_accounts );
+		$logs             = ( new Logging\LogRepository() )->get_logs();
 
 		return [
 			'accounts' => [
@@ -100,8 +101,14 @@ class Assets {
 				'enabled' => get_option( 'autoblue_enabled', false ),
 			],
 			'logs'     => [
-				'enabled' => get_option( 'autoblue_logs_enabled', true ), // TODO: Add option
-				'items'   => ( new Logging\LogRepository() )->get_logs(),
+				'enabled'    => get_option( 'autoblue_logs_enabled', true ), // TODO: Add option
+				'items'      => $logs['data'],
+				'pagination' => [
+					'page'       => $logs['pagination']['page'],
+					'perPage'    => $logs['pagination']['per_page'],
+					'totalItems' => $logs['pagination']['total_items'],
+					'totalPages' => $logs['pagination']['total_pages'],
+				],
 			],
 		];
 	}

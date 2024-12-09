@@ -1,0 +1,32 @@
+.level {
+	font-size: 12px;
+	font-weight: 700;
+	text-transform: uppercase;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+
+	&.info {
+		--icon-color: #3858e9;
+	}
+
+	&.debug {
+		--icon-color: rgba(0, 0, 0, 0.3);
+	}
+
+	&.warning {
+		--icon-color: #f0b849;
+	}
+
+	&.error {
+		--icon-color: #dc3545;
+	}
+
+	&.success {
+		--icon-color: #4ab866;
+	}
+}
+
+.icon {
+	fill: var(--icon-color);
+}

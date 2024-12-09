@@ -1,0 +1,19 @@
+.modal {
+	:global .components-modal__header {
+		border-bottom: 1px solid #f0f0f0;
+	}
+
+	:global .components-modal__content {
+		max-width: 800px;
+		padding: 0;
+	}
+
+	pre {
+		white-space: pre-wrap;
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+		word-break: break-word;
+		line-height: 1.2;
+		margin: 0;
+	}
+}

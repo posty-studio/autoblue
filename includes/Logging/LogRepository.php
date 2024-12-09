@@ -10,7 +10,7 @@ class LogRepository {
 		$this->wpdb = $wpdb;
 	}
 
-	public function get_logs( int $per_page = 100, int $page = 1 ): array {
+	public function get_logs( int $per_page = 10, int $page = 1 ): array {
 		$page   = max( 1, $page );
 		$offset = ( $page - 1 ) * $per_page;
 
@@ -21,9 +21,13 @@ class LogRepository {
 			$offset
 		);
 
-		$logs = $this->wpdb->get_results( $query, ARRAY_A );
+		$logs        = $this->wpdb->get_results( $query, ARRAY_A );
+		$total       = (int) $this->wpdb->get_var(
+			"SELECT COUNT(*) FROM {$this->wpdb->prefix}" . DatabaseHandler::TABLE_NAME
+		);
+		$total_pages = ceil( $total / $per_page );
 
-		return array_map(
+		$logs = array_map(
 			function ( $log ) {
 				$is_success     = strpos( $log['message'], '[Success]' ) === 0;
 				$log['id']      = (int) $log['id'];
@@ -36,6 +40,16 @@ class LogRepository {
 			},
 			$logs
 		);
+
+		return [
+			'data'       => $logs,
+			'pagination' => [
+				'page'        => $page,
+				'per_page'    => $per_page,
+				'total_items' => $total,
+				'total_pages' => $total_pages,
+			],
+		];
 	}
 
 	public function clear_logs(): bool {

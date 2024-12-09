@@ -1,49 +1,61 @@
 import { useSelect, useDispatch } from '@wordpress/data';
-import { useState } from '@wordpress/element'; // or 'react'
 import { STORE_NAME } from '../store';
 
-const useLogs = () => {
-	const [ isRefreshingLogs, setIsRefreshingLogs ] = useState( false );
-	const [ isClearingLogs, setIsClearingLogs ] = useState( false );
+const DEFAULT_PER_PAGE = 10;
 
-	const { logs } = useSelect(
-		( select ) => ( {
-			logs: select( STORE_NAME ).getLogs(),
-		} ),
+const useLogs = ( { perPage = DEFAULT_PER_PAGE } = {} ) => {
+	const { logs, status, page, totalPages, totalItems } = useSelect(
+		( select ) => {
+			const store = select( STORE_NAME );
+			return {
+				logs: store.getLogs(),
+				status: store.getLogsStatus(),
+				page: store.getLogsCurrentPage(),
+				totalPages: store.getLogsTotalPages(),
+				totalItems: store.getLogsTotalItems(),
+			};
+		},
 		[]
 	);
 
-	const { refreshLogs: refresh, clearLogs: clear } =
-		useDispatch( STORE_NAME );
+	const { refreshLogs, clearLogs } = useDispatch( STORE_NAME );
 
-	const refreshLogs = async () => {
+	const handleRefreshLogs = async () => {
 		try {
-			setIsRefreshingLogs( true );
-			await refresh();
+			await refreshLogs( { page, perPage } );
 		} catch ( error ) {
 			console.error( 'Failed to refresh logs:', error );
-		} finally {
-			setIsRefreshingLogs( false );
 		}
 	};
 
-	const clearLogs = async () => {
+	const handleClearLogs = async () => {
 		try {
-			setIsClearingLogs( true );
-			await clear();
+			await clearLogs();
 		} catch ( error ) {
 			console.error( 'Failed to clear logs:', error );
-		} finally {
-			setIsClearingLogs( false );
+		}
+	};
+
+	const handlePageChange = async ( newPage ) => {
+		try {
+			await refreshLogs( { page: newPage, perPage } );
+		} catch ( error ) {
+			console.error( 'Failed to change page:', error );
 		}
 	};
 
 	return {
 		logs,
-		refreshLogs,
-		clearLogs,
-		isRefreshingLogs,
-		isClearingLogs,
+		page,
+		totalPages,
+		totalItems,
+		refreshLogs: handleRefreshLogs,
+		clearLogs: handleClearLogs,
+		setPage: handlePageChange,
+		isRefreshingLogs: status === 'refreshing',
+		isClearingLogs: status === 'clearing',
+		isSuccess: status === 'success',
+		isError: status === 'error',
 	};
 };
 
