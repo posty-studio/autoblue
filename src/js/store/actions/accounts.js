@@ -80,8 +80,6 @@ export function deleteAccount( did ) {
 				type: 'snackbar',
 			} );
 
-			console.log( response );
-
 			return response;
 		} catch ( error ) {
 			createErrorNotice(

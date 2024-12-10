@@ -14,8 +14,12 @@ class ConnectionsManager {
 	 */
 	private $api_client;
 
+	/** @var Logging\Log */
+	private $log;
+
 	public function __construct() {
 		$this->api_client = new Bluesky\API();
+		$this->log        = new Logging\Log();
 	}
 
 	public function register_hooks(): void {
@@ -27,20 +31,24 @@ class ConnectionsManager {
 	 */
 	public function add_connection( string $did, string $app_password ) {
 		if ( $this->connection_exists( $did ) ) {
+			$this->log->warning( __( 'Connection not added: Connection with DID `{did}` already exists.', 'autoblue' ), [ 'did' => $did ] );
 			return new \WP_Error( 'autoblue_connection_exists', __( 'Connection already exists.', 'autoblue' ) );
 		}
 
 		if ( ! $this->is_valid_did( $did ) ) {
+			$this->log->warning( __( 'Connection not added: Invalid DID: `{did}`', 'autoblue' ), [ 'did' => $did ] );
 			return new \WP_Error( 'autoblue_invalid_did', __( 'Invalid DID.', 'autoblue' ) );
 		}
 
 		if ( ! $app_password ) {
-			return new \WP_Error( 'autoblue_invalid_password', __( 'Invalid app password.', 'autoblue' ) );
+			$this->log->warning( __( 'Connection not added: Invalid app password.', 'autoblue' ) );
+			return new \WP_Error( 'autoblue_invalid_password', __( 'Invalid app password.', 'autoblue' ), [ 'did' => $did ] );
 		}
 
 		$auth_response = $this->api_client->create_session( $did, $app_password );
 
 		if ( is_wp_error( $auth_response ) ) {
+			$this->log->error( __( 'Connection not added: Failed to authenticate with Bluesky.', 'autoblue' ) . ' ' . $auth_response->get_error_message(), [ 'did' => $did ] );
 			return $auth_response;
 		}
 
@@ -58,6 +66,8 @@ class ConnectionsManager {
 			$new_connection['meta'] = $profile_data;
 		}
 
+		$this->log->success( __( 'Connection added.', 'autoblue' ), [ 'did' => $did ] );
+
 		return $new_connection;
 	}
 
@@ -66,6 +76,7 @@ class ConnectionsManager {
 	 */
 	public function delete_connection( string $did ) {
 		if ( ! $did || ! $this->is_valid_did( $did ) ) {
+			$this->log->warning( __( 'Connection not deleted: Invalid DID: `{did}`', 'autoblue' ), [ 'did' => $did ] );
 			return new \WP_Error( 'autoblue_invalid_did', __( 'Invalid DID.', 'autoblue' ) );
 		}
 
@@ -73,11 +84,14 @@ class ConnectionsManager {
 		$filtered_connections = array_filter( $connections, fn( $connection ) => $connection['did'] !== $did );
 
 		if ( count( $connections ) === count( $filtered_connections ) ) {
+			$this->log->warning( __( 'Connection not deleted: Connection not found.', 'autoblue' ), [ 'did' => $did ] );
 			return new \WP_Error( 'autoblue_connection_not_found', __( 'Connection not found.', 'autoblue' ) );
 		}
 
 		update_option( self::OPTION_KEY, $filtered_connections );
 		delete_transient( $this->get_transient_key( $did ) );
+
+		$this->log->success( __( 'Connection deleted.', 'autoblue' ), [ 'did' => $did ] );
 
 		return true;
 	}

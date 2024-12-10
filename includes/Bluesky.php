@@ -53,19 +53,19 @@ class Bluesky {
 		}
 
 		$mime_type     = get_post_mime_type( $image_id );
-		$allowed_types = [ 'image/jpeg', 'image/png' ];
+		$allowed_types = [ 'image/jpeg', 'image/png', 'image/webp' ];
 
-		// if ( ! $mime_type || ! in_array( $mime_type, $allowed_types, true ) ) {
-		// $this->log->error(
-		// __( 'Skipping image: Invalid mime type for image with ID `{attachment_id}`. Allowed types are `{allowed_types}`, but got `{mime_type}`.', 'autoblue' ),
-		// [
-		// 'attachment_id' => $image_id,
-		// 'allowed_types' => $allowed_types,
-		// 'mime_type'     => $mime_type,
-		// ]
-		// );
-		// return false;
-		// }
+		if ( ! $mime_type || ! in_array( $mime_type, $allowed_types, true ) ) {
+			$this->log->error(
+				__( 'Skipping image: Invalid mime type for image with ID `{attachment_id}`. Allowed types are `{allowed_types}`, but got `{mime_type}`.', 'autoblue' ),
+				[
+					'attachment_id' => $image_id,
+					'allowed_types' => $allowed_types,
+					'mime_type'     => $mime_type,
+				]
+			);
+			return false;
+		}
 
 		$image_compressor = new ImageCompressor( $image_path, $mime_type );
 		$image_blob       = $image_compressor->compress_image();

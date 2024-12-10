@@ -3,6 +3,7 @@
 namespace Autoblue\Logging;
 
 use Monolog\Handler\AbstractProcessingHandler;
+use Monolog\Logger;
 
 /**
  * Writes log records to the database.
@@ -11,13 +12,33 @@ use Monolog\Handler\AbstractProcessingHandler;
  */
 class DatabaseHandler extends AbstractProcessingHandler {
 	public const TABLE_NAME      = 'autoblue_logs';
-	private const MAX_ROWS       = 100;
+	private const MAX_ROWS       = 500;
 	private const TRUNCATE_BATCH = 10;
 	private $wpdb;
 
 	public function __construct( $wpdb ) {
 		parent::__construct();
 		$this->wpdb = $wpdb;
+		$this->setLevelFromOption();
+	}
+
+	private function setLevelFromOption(): void {
+		$level = get_option( 'autoblue_log_level' );
+
+		switch ( $level ) {
+			case 'debug':
+				$this->setLevel( Logger::DEBUG );
+				break;
+			case 'info':
+				$this->setLevel( Logger::INFO );
+				break;
+			case 'error':
+				$this->setLevel( Logger::ERROR );
+				break;
+			case 'off':
+				$this->setLevel( Logger::EMERGENCY );
+				break;
+		}
 	}
 
 	public function write( array $record ): void {
