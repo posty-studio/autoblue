@@ -134,7 +134,7 @@ class Bluesky {
 					'$type'    => 'app.bsky.embed.external',
 					'external' => [
 						'uri'         => get_permalink( $post->ID ),
-						'title'       => get_the_title( $post->ID ),
+						'title'       => html_entity_decode( get_the_title( $post->ID ), ENT_QUOTES, 'UTF-8' ),
 						'description' => $excerpt,
 					],
 				],

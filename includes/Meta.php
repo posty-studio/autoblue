@@ -29,7 +29,7 @@ class Meta {
 				'description'       => __( 'An optional custom message to include with the post.', 'autoblue' ),
 				'single'            => true,
 				'show_in_rest'      => true,
-				'sanitize_callback' => 'sanitize_text_field',
+				'sanitize_callback' => 'sanitize_textarea_field',
 			]
 		);
 
