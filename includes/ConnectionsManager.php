@@ -64,9 +64,16 @@ class ConnectionsManager {
 
 		if ( $profile_data ) {
 			$new_connection['meta'] = $profile_data;
+			$this->log->success(
+				__( 'Connection with handle `{handle}` added.', 'autoblue' ),
+				[
+					'did'    => $did,
+					'handle' => $profile_data['handle'],
+				]
+			);
+		} else {
+			$this->log->success( __( 'Connection added.', 'autoblue' ), [ 'did' => $did ] );
 		}
-
-		$this->log->success( __( 'Connection added.', 'autoblue' ), [ 'did' => $did ] );
 
 		return $new_connection;
 	}
@@ -91,7 +98,7 @@ class ConnectionsManager {
 		update_option( self::OPTION_KEY, $filtered_connections );
 		delete_transient( $this->get_transient_key( $did ) );
 
-		$this->log->success( __( 'Connection deleted.', 'autoblue' ), [ 'did' => $did ] );
+		$this->log->info( __( 'Connection with DID `{did}` deleted.', 'autoblue' ), [ 'did' => $did ] );
 
 		return true;
 	}

@@ -6,6 +6,35 @@ import { store as noticesStore } from '@wordpress/notices';
 
 const DEFAULT_PER_PAGE = 10;
 
+export const LOG_LEVELS = [
+	{
+		value: 'debug',
+		label: __( 'Debug', 'autoblue' ),
+		description: __(
+			'Everything will be logged. Useful for debugging.',
+			'autoblue'
+		),
+	},
+	{
+		value: 'info',
+		label: __( 'Info', 'autoblue' ),
+		description: __(
+			'Errors, warnings and info messages will be logged.',
+			'autoblue'
+		),
+	},
+	{
+		value: 'error',
+		label: __( 'Error', 'autoblue' ),
+		description: __( 'Only critical errors will be logged.', 'autoblue' ),
+	},
+	{
+		value: 'off',
+		label: __( 'Off', 'autoblue' ),
+		description: __( 'Nothing will be logged.', 'autoblue' ),
+	},
+];
+
 const useLogs = ( { perPage = DEFAULT_PER_PAGE } = {} ) => {
 	const { logs, status, page, totalPages, totalItems } = useSelect(
 		( select ) => {
@@ -67,11 +96,15 @@ const useLogs = ( { perPage = DEFAULT_PER_PAGE } = {} ) => {
 		try {
 			setLogLevelFn( value );
 			await saveEditedEntityRecord( 'root', 'site' );
+
+			const newLogLevel = LOG_LEVELS.find(
+				( level ) => level.value === value
+			);
 			const notice = await createSuccessNotice(
 				sprintf(
 					// translators: %s is the log level
 					__( 'Log level updated to "%s".', 'autoblue' ),
-					value
+					newLogLevel.label
 				),
 				{
 					type: 'snackbar',
