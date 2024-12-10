@@ -29,9 +29,10 @@ class PostHandler {
 			return;
 		}
 
-		// Don't run this when saving already published posts.
-		if ( $post_before && $post_before->post_status === 'publish' ) {
-			$this->log->debug( sprintf( __( 'Skipping share for post `%1$s` with ID `%2$d` because the post is already published.', 'autoblue' ), $post->post_title, $post_id ), [ 'post_id' => $post_id ] );
+		$enabled = get_post_meta( $post_id, 'autoblue_enabled', true );
+
+		if ( ! $enabled ) {
+			$this->log->debug( sprintf( __( 'Skipping share for post `%1$s` with ID `%2$d` because it is not enabled.', 'autoblue' ), $post->post_title, $post_id, [ 'post_id' => $post_id ] ) );
 			return;
 		}
 
@@ -50,10 +51,9 @@ class PostHandler {
 			return;
 		}
 
-		$enabled = get_post_meta( $post_id, 'autoblue_enabled', true );
-
-		if ( ! $enabled ) {
-			$this->log->debug( sprintf( __( 'Skipping share for post `%1$s` with ID `%2$d` because it is not enabled.', 'autoblue' ), $post->post_title, $post_id, [ 'post_id' => $post_id ] ) );
+		// Don't run this when saving already published posts.
+		if ( $post_before && $post_before->post_status === 'publish' ) {
+			$this->log->debug( sprintf( __( 'Skipping share for post `%1$s` with ID `%2$d` because the post is already published.', 'autoblue' ), $post->post_title, $post_id ), [ 'post_id' => $post_id ] );
 			return;
 		}
 
