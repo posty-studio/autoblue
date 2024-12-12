@@ -3,6 +3,17 @@
 namespace Autoblue;
 
 class Comments {
+	/**
+	 * The Bluesky API client.
+	 *
+	 * @var Bluesky\API
+	 */
+	private Bluesky\API $api_client;
+
+	public function __construct() {
+		$this->api_client = new Bluesky\API();
+	}
+
 	private function convert_bsky_url_to_at_uri( $url ) {
 		if ( ! $url ) {
 			return false;
@@ -38,26 +49,11 @@ class Comments {
 			return $transient;
 		}
 
-		$request_url = add_query_arg( [ 'actor' => $handle ], 'https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile' );
-		$response    = wp_safe_remote_get(
-			$request_url,
-			[
-				'headers' => [ 'Content-Type' => 'application/json' ],
-			]
-		);
+		$did = $this->api_client->get_did_for_handle( $handle );
 
-		if ( is_wp_error( $response ) ) {
-			Utils::error_log( 'Failed to get profile from Bluesky: ' . $response->get_error_message() );
+		if ( ! $did ) {
 			return false;
 		}
-
-		$response = json_decode( wp_remote_retrieve_body( $response ), true );
-
-		if ( ! isset( $response['did'] ) ) {
-			return false;
-		}
-
-		$did = $response['did'];
 
 		$uri = 'at://' . $did . '/app.bsky.feed.post/' . $rkey;
 
@@ -86,17 +82,33 @@ class Comments {
 		return end( $shares );
 	}
 
+	private function get_comments_url( $post_id ) {
+		$meta = get_post_meta( $post_id, 'autoblue_post_url', true );
+
+		if ( $meta ) {
+			return $meta;
+		}
+
+		$share = $this->get_share( $post_id );
+
+		if ( ! $share ) {
+			return false;
+		}
+
+		$rkey = explode( '/', $share['uri'] );
+		$rkey = end( $rkey );
+
+		if ( ! $rkey ) {
+			return false;
+		}
+
+		return 'https://bsky.app/profile/' . $share['did'] . '/post/' . $rkey;
+	}
+
 	public function get_comments( $post_id, $url = '' ) {
 		// Short-circuit the post check if a URL is provided.
-		if ( ! empty( $url ) ) {
-			$uri = $this->convert_bsky_url_to_at_uri( $url );
-		} else {
-			$share     = $this->get_share( $post_id );
-			$uri       = $share['uri'];
-			$rkey      = explode( '/', $uri );
-			$rkey      = end( $rkey );
-			$share_url = 'https://bsky.app/profile/' . $share['did'] . '/post/' . $rkey;
-		}
+		$url = $url ? $url : $this->get_comments_url( $post_id );
+		$uri = $this->convert_bsky_url_to_at_uri( $url );
 
 		if ( ! $uri ) {
 			return false;
@@ -108,22 +120,19 @@ class Comments {
 			return $transient;
 		}
 
-		$comments = wp_remote_get( 'https://public.api.bsky.app/xrpc/app.bsky.feed.getPostThread?uri=' . $uri );
+		$comments = $this->api_client->get_post_thread( $uri );
 
-		if ( is_wp_error( $comments ) || 200 !== wp_remote_retrieve_response_code( $comments ) ) {
-			Utils::error_log( 'Failed to get comments from Bluesky: ' . $comments->get_error_message() );
+		if ( ! $comments ) {
 			return false;
 		}
 
-		$comments = json_decode( wp_remote_retrieve_body( $comments ), true );
-
 		$return = [
 			'comments' => $comments['thread'],
-			'url'      => $url ? $url : $share_url,
+			'url'      => $url,
 		];
 
 		// TODO: Strip the relevant parts from the comments and only cache that.
-		set_transient( 'autoblue_comments_' . $uri, $return, MINUTE_IN_SECONDS );
+		set_transient( 'autoblue_comments_' . $uri, $return, 5 * MINUTE_IN_SECONDS );
 
 		return $return;
 	}

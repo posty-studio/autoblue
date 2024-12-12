@@ -71,5 +71,17 @@ class Meta {
 				],
 			]
 		);
+
+		register_post_meta(
+			'post',
+			'autoblue_post_url',
+			[
+				'type'              => 'string',
+				'description'       => __( 'A Bluesky post URL to show likes and replies from.', 'autoblue' ),
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'esc_url_raw',
+			]
+		);
 	}
 }

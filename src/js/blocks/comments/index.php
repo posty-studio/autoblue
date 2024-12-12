@@ -41,8 +41,7 @@ if ( ! function_exists( 'autoblue_render_comment' ) ) {
 	}
 }
 
-$url      = 'https://bsky.app/profile/burritostudio.bsky.social/post/3lb5mssowo22k';
-$comments = ( new Autoblue\Comments() )->get_comments( get_the_ID(), $url );
+$comments = ( new Autoblue\Comments() )->get_comments( get_the_ID() );
 
 if ( empty( $comments ) ) {
 	return;
@@ -52,10 +51,10 @@ if ( empty( $comments ) ) {
 <div
 	<?php echo get_block_wrapper_attributes(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 >
-	<h3 class="wp-block-autoblue-comments-title has-large-font-size">
+	<h3 class="wp-block-autoblue-comments-title">
 		<?php esc_html_e( 'Comments', 'autoblue' ); ?>
 	</h3>
-	<p><a href=<?php echo esc_url( $comments['url'] ); ?>><?php esc_html_e( 'Join the conversation on Bluesky', 'autoblue' ); ?></a></p>
+	<p><a class="wp-block-autoblue-comments-link" href=<?php echo esc_url( $comments['url'] ); ?>><?php esc_html_e( 'Join the conversation on Bluesky', 'autoblue' ); ?></a></p>
 
 	<ol class="wp-block-autoblue-comment-template">
 		<?php

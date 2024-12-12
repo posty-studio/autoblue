@@ -5,11 +5,6 @@
 	"title": "Autoblue Comments",
 	"description": "Display Bluesky comments on your site.",
 	"category": "embed",
-	"attributes": {
-		"url": {
-			"type": "string"
-		}
-	},
 	"supports": {
 		"html": false,
 		"anchor": true,

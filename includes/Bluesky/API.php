@@ -95,6 +95,26 @@ class API {
 		return $data;
 	}
 
+	public function get_post_thread( string $uri ): ?array {
+		if ( ! $uri ) {
+			return null;
+		}
+
+		$data = $this->send_request(
+			[
+				'endpoint' => 'app.bsky.feed.getPostThread',
+				'body'     => [ 'uri' => $uri ],
+				'base_url' => self::PUBLIC_BASE_URL,
+			]
+		);
+
+		if ( is_wp_error( $data ) ) {
+			return null;
+		}
+
+		return $data;
+	}
+
 	/**
 	 * @return array<string,mixed>|\WP_Error
 	 */

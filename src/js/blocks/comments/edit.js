@@ -11,7 +11,7 @@ import { useSelect } from '@wordpress/data';
 const Edit = ( { attributes: { url }, setAttributes } ) => {
 	const blockProps = useBlockProps();
 
-	return <div { ...blockProps }>HI</div>;
+	return <div { ...blockProps }>Bluesky comments will appear here.</div>;
 };
 
 export default Edit;
