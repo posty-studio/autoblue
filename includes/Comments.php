@@ -43,6 +43,11 @@ class Comments {
 			return false;
 		}
 
+		// TODO: Improve
+		if ( strpos( $handle, 'did:' ) === 0 ) {
+			return 'at://' . $handle . '/app.bsky.feed.post/' . $rkey;
+		}
+
 		$transient = get_transient( 'autoblue_at_uri_' . $rkey );
 
 		if ( $transient ) {
