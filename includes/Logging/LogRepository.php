@@ -10,6 +10,32 @@ class LogRepository {
 		$this->wpdb = $wpdb;
 	}
 
+	private function process_log( array $log ): array {
+		$is_success     = strpos( $log['message'], '[Success]' ) === 0;
+		$log['id']      = (int) $log['id'];
+		$log['context'] = $log['context'] ? json_decode( $log['context'], true ) : null;
+		$log['extra']   = $log['extra'] ? json_decode( $log['extra'], true ) : null;
+		$log['level']   = $is_success ? 'success' : $log['level'];
+		$log['message'] = $is_success ? substr( $log['message'], 10 ) : $log['message'];
+
+		return $log;
+	}
+
+	public function get_log_by_id( int $id ): ?array {
+		$query = $this->wpdb->prepare(
+			"SELECT * FROM {$this->wpdb->prefix}" . DatabaseHandler::TABLE_NAME . ' WHERE ID = %d',
+			$id
+		);
+
+		$log = $this->wpdb->get_row( $query, ARRAY_A );
+
+		if ( ! $log ) {
+			return null;
+		}
+
+		return $this->process_log( $log );
+	}
+
 	public function get_logs( int $per_page = 10, int $page = 1 ): array {
 		$page   = max( 1, $page );
 		$offset = ( $page - 1 ) * $per_page;
@@ -27,19 +53,7 @@ class LogRepository {
 		);
 		$total_pages = ceil( $total / $per_page );
 
-		$logs = array_map(
-			function ( $log ) {
-				$is_success     = strpos( $log['message'], '[Success]' ) === 0;
-				$log['id']      = (int) $log['id'];
-				$log['context'] = $log['context'] ? json_decode( $log['context'], true ) : null;
-				$log['extra']   = $log['extra'] ? json_decode( $log['extra'], true ) : null;
-				$log['level']   = $is_success ? 'success' : $log['level'];
-				$log['message'] = $is_success ? substr( $log['message'], 10 ) : $log['message'];
-
-				return $log;
-			},
-			$logs
-		);
+		$logs = array_map( [ $this, 'process_log' ], $logs );
 
 		return [
 			'data'       => $logs,

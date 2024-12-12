@@ -11,6 +11,7 @@ class Setup {
 		( new PostHandler() )->register_hooks();
 		( new ConnectionsManager() )->register_hooks();
 		( new Logging\Setup() )->register_hooks();
+		( new CLI\Commands() )->register_commands();
 
 		add_action( 'rest_api_init', [ new Endpoints\LogsController(), 'register_routes' ] );
 		add_action( 'rest_api_init', [ new Endpoints\SearchController(), 'register_routes' ] );
