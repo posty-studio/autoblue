@@ -50,7 +50,7 @@ class LogsController extends WP_REST_Controller {
 	/**
 	 * GET `/autoblue/v1/logs`
 	 *
-	 * @param WP_REST_Request $request
+	 * @param \WP_REST_Request $request
 	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function get_logs( $request ) {

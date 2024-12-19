@@ -4,7 +4,14 @@ parameters:
     level: 8
     phpVersion: 70400 # PHP 7.4
     paths:
-      - ./includes
       - ./autoblue.php
+      - ./includes
     ignoreErrors:
       - identifier: missingType.generics
+      - '#Constant AUTOBLUE_BASENAME not found\.#'
+      - '#Path in require_once\(\) .* is not a file or it does not exist\.#'
+    scanFiles:
+      - %rootDir%/../../php-stubs/wp-cli-stubs/wp-cli-stubs.php
+      - %rootDir%/../../php-stubs/wp-cli-stubs/wp-cli-commands-stubs.php
+      - %rootDir%/../../php-stubs/wp-cli-stubs/wp-cli-i18n-stubs.php
+      - %rootDir%/../../php-stubs/wp-cli-stubs/wp-cli-tools-stubs.php

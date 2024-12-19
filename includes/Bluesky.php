@@ -19,7 +19,8 @@ class Bluesky {
 	}
 
 	private function convert_at_uri_to_bluesky_url( string $did, string $at_uri ): string {
-		$rkey = end( explode( '/', $at_uri ) );
+		$rkey = explode( '/', $at_uri );
+		$rkey = end( $rkey );
 
 		return "https://bsky.app/profile/{$did}/post/{$rkey}";
 	}

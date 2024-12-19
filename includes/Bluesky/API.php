@@ -95,6 +95,9 @@ class API {
 		return $data;
 	}
 
+	/**
+	 * @return array<string,mixed>|null
+	 */
 	public function get_post_thread( string $uri ): ?array {
 		if ( ! $uri ) {
 			return null;

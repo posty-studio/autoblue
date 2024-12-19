@@ -3,6 +3,11 @@
 namespace Autoblue\CLI;
 
 class Logs {
+	/**
+	 * Default fields to display for a log.
+	 *
+	 * @var array<string>
+	 */
 	protected $default_fields = [ 'id', 'created_at', 'level', 'message' ];
 
 	/**
@@ -48,8 +53,11 @@ class Logs {
 	 *
 	 *     # Save the log context to a file.
 	 *     $ wp autoblue logs get 123 --field=context > file.json
+	 *
+	 * @param array<mixed> $args
+	 * @param array<mixed> $assoc_args
 	 */
-	public function get( $args, $assoc_args ) {
+	public function get( $args, $assoc_args ): void {
 		$log_id = (int) $args[0];
 		$log    = ( new \Autoblue\Logging\LogRepository() )->get_log_by_id( $log_id );
 
@@ -100,6 +108,10 @@ class Logs {
 	 * * extra
 	 *
 	 * @subcommand list
+	 *
+	 * @param array<mixed> $args
+	 * @param array<mixed> $assoc_args
+	 * @return mixed
 	 */
 	public function list( $args, $assoc_args ) {
 		$format = $assoc_args['format'];
@@ -118,7 +130,8 @@ class Logs {
 		$logs = $logs['data'];
 
 		if ( $format === 'ids' ) {
-			echo implode( ' ', absint( wp_list_pluck( $logs, 'id' ) ) );
+			$ids = array_map( 'absint', wp_list_pluck( $logs, 'id' ) );
+			echo implode( ' ', $ids ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			return;
 		}
 
@@ -129,7 +142,7 @@ class Logs {
 	/**
 	 * Get Formatter object based on supplied parameters.
 	 *
-	 * @param array $assoc_args Parameters passed to command. Determines formatting.
+	 * @param array<mixed> $assoc_args Parameters passed to command. Determines formatting.
 	 * @return \WP_CLI\Formatter
 	 */
 	protected function get_formatter( &$assoc_args ) {

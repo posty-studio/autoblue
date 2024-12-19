@@ -18,18 +18,34 @@ class Log {
 		);
 	}
 
+	/**
+	 * @param string $message
+	 * @param array<string, mixed> $context
+	 */
 	public function error( string $message, array $context = [] ): void {
 		$this->logger->error( $message, $context );
 	}
 
+	/**
+	 * @param string $message
+	 * @param array<string, mixed> $context
+	 */
 	public function warning( string $message, array $context = [] ): void {
 		$this->logger->warning( $message, $context );
 	}
 
+	/**
+	 * @param string $message
+	 * @param array<string, mixed> $context
+	 */
 	public function info( string $message, array $context = [] ): void {
 		$this->logger->info( $message, $context );
 	}
 
+	/**
+	 * @param string $message
+	 * @param array<string, mixed> $context
+	 */
 	public function debug( string $message, array $context = [] ): void {
 		$this->logger->debug( $message, $context );
 	}
@@ -38,6 +54,9 @@ class Log {
 	 * Not a part of PSR-3, but useful for logging successful operations.
 	 *
 	 * Behind the scenes it's just an info log, with a success notice.
+	 *
+	 * @param string $message
+	 * @param array<string, mixed> $context
 	 */
 	public function success( string $message, array $context = [] ): void {
 		$this->logger->info( __( '[Success] ', 'autoblue' ) . $message, $context );

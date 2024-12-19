@@ -3,6 +3,12 @@
 namespace Autoblue\Logging;
 
 class LogRepository {
+	/**
+	 * Process a log record before returning it.
+	 *
+	 * @param array<string, mixed> $log
+	 * @return array<string, mixed>
+	 */
 	private function process_log( array $log ): array {
 		$is_success     = strpos( $log['message'], '[Success]' ) === 0;
 		$log['id']      = (int) $log['id'];
@@ -14,6 +20,12 @@ class LogRepository {
 		return $log;
 	}
 
+	/**
+	 * Get a single log by ID.
+	 *
+	 * @param int $id
+	 * @return array<string, mixed>|null
+	 */
 	public function get_log_by_id( int $id ): ?array {
 		global $wpdb;
 
@@ -33,6 +45,13 @@ class LogRepository {
 		return $this->process_log( $log );
 	}
 
+	/**
+	 * Get logs.
+	 *
+	 * @param int $per_page
+	 * @param int $page
+	 * @return array<string, mixed>
+	 */
 	public function get_logs( int $per_page = 10, int $page = 1 ): array {
 		global $wpdb;
 
@@ -75,6 +94,11 @@ class LogRepository {
 	}
 
 
+	/**
+	 * Clear all logs.
+	 *
+	 * @return bool True if logs were cleared, false otherwise.
+	 */
 	public function clear_logs(): bool {
 		global $wpdb;
 

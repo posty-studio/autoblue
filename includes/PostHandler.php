@@ -108,6 +108,14 @@ class PostHandler {
 	public function process_scheduled_share( $post_id ): void {
 		$post = get_post( $post_id );
 
+		if ( ! $post ) {
+			$this->log->error(
+				__( 'Share failed: Post with ID {post_id} not found.', 'autoblue' ),
+				[ 'post_id' => $post_id ]
+			);
+			return;
+		}
+
 		$this->log->debug(
 			__( 'Processing share for post `{post_title}` with ID `{post_id}`.', 'autoblue' ),
 			[

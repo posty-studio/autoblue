@@ -14,11 +14,13 @@ class Comments {
 		$this->api_client = new Bluesky\API();
 	}
 
-	private function convert_bsky_url_to_at_uri( $url ) {
-		if ( ! $url ) {
-			return false;
-		}
-
+	/**
+	 * Convert a Bluesky URL to an AT URI.
+	 *
+	 * @param string $url The Bluesky URL.
+	 * @return string|false The AT URI or false if the URL is invalid.
+	 */
+	private function convert_bsky_url_to_at_uri( string $url ) {
 		if ( strpos( $url, 'bsky.app/profile/' ) === false ) {
 			return false;
 		}
@@ -67,8 +69,14 @@ class Comments {
 		return $uri;
 	}
 
-	private function get_share( $post_id ) {
-		if ( ! $post_id || ! is_numeric( $post_id ) ) {
+	/**
+	 * Get the share data for a post.
+	 *
+	 * @param int $post_id The post ID.
+	 * @return array<string,mixed>|false The share data or false if the post is invalid.
+	 */
+	private function get_share( int $post_id ) {
+		if ( ! $post_id ) {
 			return false;
 		}
 
@@ -87,7 +95,13 @@ class Comments {
 		return end( $shares );
 	}
 
-	private function get_comments_url( $post_id ) {
+	/**
+	 * Get the comments URL for a post.
+	 *
+	 * @param int $post_id The post ID.
+	 * @return string|false The comments URL or false if the post is invalid.
+	 */
+	private function get_comments_url( int $post_id ) {
 		$meta = get_post_meta( $post_id, 'autoblue_post_url', true );
 
 		if ( $meta ) {
@@ -110,9 +124,21 @@ class Comments {
 		return 'https://bsky.app/profile/' . $share['did'] . '/post/' . $rkey;
 	}
 
-	public function get_comments( $post_id, $url = '' ) {
+	/**
+	 * Get the comments for a post.
+	 *
+	 * @param int    $post_id The post ID.
+	 * @param string $url The comments URL.
+	 * @return array<string,mixed>|false The comments or false if the post is invalid.
+	 */
+	public function get_comments( int $post_id, string $url = '' ) {
 		// Short-circuit the post check if a URL is provided.
 		$url = $url ? $url : $this->get_comments_url( $post_id );
+
+		if ( ! $url ) {
+			return false;
+		}
+
 		$uri = $this->convert_bsky_url_to_at_uri( $url );
 
 		if ( ! $uri ) {

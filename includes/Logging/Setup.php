@@ -22,15 +22,15 @@ class Setup {
 		$table_name      = $wpdb->prefix . DatabaseHandler::TABLE_NAME;
 
 		$sql = "CREATE TABLE $table_name (
-				id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
-				created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-				level varchar(20) NOT NULL,
-				message text NOT NULL,
-				context JSON,
-				extra JSON,
-				PRIMARY KEY  (id),
-				KEY created_at (created_at),
-				KEY level (level)
+			id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			level varchar(20) NOT NULL,
+			message text NOT NULL,
+			context JSON,
+			extra JSON,
+			PRIMARY KEY  (id),
+			KEY created_at (created_at),
+			KEY level (level)
 		) $charset_collate;";
 
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';

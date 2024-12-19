@@ -15,7 +15,8 @@
 		"phpcompatibility/php-compatibility": "^9.3",
 		"phpcompatibility/phpcompatibility-wp": "*",
 		"szepeviktor/phpstan-wordpress": "^2.0",
-		"phpstan/phpstan": "^2.0"
+		"phpstan/phpstan": "^2.0",
+		"php-stubs/wp-cli-stubs": "^2.11"
 	},
 	"config": {
 		"allow-plugins": {

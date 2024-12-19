@@ -24,7 +24,13 @@ class ImageCompressor {
 		$this->max_size  = $max_size;
 	}
 
-	private function get_contents( string $path ): string {
+	/**
+	 * Get the contents of a file.
+	 *
+	 * @param string $path The path to the file.
+	 * @return string|false The contents of the file, or false on failure.
+	 */
+	private function get_contents( string $path ) {
 		global $wp_filesystem;
 
 		WP_Filesystem();
