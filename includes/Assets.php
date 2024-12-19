@@ -101,7 +101,6 @@ class Assets {
 				'enabled' => get_option( 'autoblue_enabled', false ),
 			],
 			'logs'     => [
-				'enabled'    => get_option( 'autoblue_logs_enabled', true ), // TODO: Add option
 				'items'      => $logs['data'],
 				'pagination' => [
 					'page'       => $logs['pagination']['page'],

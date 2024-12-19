@@ -14,11 +14,9 @@ class DatabaseHandler extends AbstractProcessingHandler {
 	public const TABLE_NAME      = 'autoblue_logs';
 	private const MAX_ROWS       = 500;
 	private const TRUNCATE_BATCH = 10;
-	private $wpdb;
 
-	public function __construct( $wpdb ) {
+	public function __construct() {
 		parent::__construct();
-		$this->wpdb = $wpdb;
 		$this->set_level_from_option();
 	}
 
@@ -42,6 +40,8 @@ class DatabaseHandler extends AbstractProcessingHandler {
 	}
 
 	public function write( array $record ): void {
+		global $wpdb;
+
 		$data = [
 			'level'   => strtolower( $record['level_name'] ),
 			'message' => sanitize_text_field( $record['message'] ),
@@ -49,10 +49,10 @@ class DatabaseHandler extends AbstractProcessingHandler {
 			'extra'   => ! empty( $record['extra'] ) ? wp_json_encode( $record['extra'] ) : null,
 		];
 
-		$table_name = $this->wpdb->prefix . self::TABLE_NAME;
+		$table_name = $wpdb->prefix . self::TABLE_NAME;
 
-		if ( ! $this->wpdb->insert( $table_name, $data, [ '%s', '%s', '%s', '%s' ] ) ) {
-			error_log( 'Autoblue Logger Error: Failed to write log record: ' . $this->wpdb->last_error ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+		if ( ! $wpdb->insert( $table_name, $data, [ '%s', '%s', '%s', '%s' ] ) ) {
+			error_log( 'Autoblue Logger Error: Failed to write log record: ' . $wpdb->last_error ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			return;
 		}
 
@@ -60,21 +60,31 @@ class DatabaseHandler extends AbstractProcessingHandler {
 	}
 
 	private function maybe_truncate(): void {
-		$table_name = $this->wpdb->prefix . self::TABLE_NAME;
-		$count      = $this->wpdb->get_var( "SELECT COUNT(*) FROM $table_name" );
+		global $wpdb;
+
+		$table_name = $wpdb->prefix . self::TABLE_NAME;
+
+		$count = $wpdb->get_var(
+			$wpdb->prepare(
+				'SELECT COUNT(*) FROM %i',
+				$table_name
+			)
+		);
 
 		if ( is_numeric( $count ) && self::MAX_ROWS <= (int) $count ) {
 			$offset = self::MAX_ROWS - self::TRUNCATE_BATCH;
 
-			$this->wpdb->query(
-				$this->wpdb->prepare(
-					"DELETE FROM $table_name WHERE id <= (
+			$wpdb->query(
+				$wpdb->prepare(
+					'DELETE FROM %i WHERE id <= (
 						SELECT id FROM (
-							SELECT id FROM $table_name
+							SELECT id FROM %i
 							ORDER BY created_at DESC
 							LIMIT 1 OFFSET %d
 						) tmp
-					)",
+					)',
+					$table_name,
+					$table_name,
 					$offset
 				)
 			);

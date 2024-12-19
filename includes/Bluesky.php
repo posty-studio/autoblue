@@ -99,14 +99,14 @@ class Bluesky {
 		$post = get_post( $post_id );
 
 		if ( ! $post ) {
-			$this->log->error( sprintf( __( 'Share failed: Post with ID `%1$d` not found.', 'autoblue' ), $post_id ), [ 'post_id' => $post_id ] );
+			$this->log->error( __( 'Share failed: Post with ID {post_id} not found.', 'autoblue' ), [ 'post_id' => $post_id ] );
 			return false;
 		}
 
 		$connection = $this->get_connection();
 
 		if ( ! $connection ) {
-			$this->log->error( sprintf( __( 'Share failed: No Bluesky connection found.' ) ), [ 'post_id' => $post_id ] );
+			$this->log->error( __( 'Share failed: No Bluesky connection found.', 'autoblue' ), [ 'post_id' => $post_id ] );
 			return false;
 		}
 
@@ -160,7 +160,7 @@ class Bluesky {
 
 		if ( is_wp_error( $response ) ) {
 			$this->log->error(
-				sprintf( __( 'Failed to share post with ID `%1$d` to Bluesky:', 'autoblue' ), $post_id ) . ' ' . $response->get_error_message(),
+				__( 'Failed to share post with ID {post_id} to Bluesky:', 'autoblue' ) . ' ' . $response->get_error_message(),
 				[
 					'post_id'  => $post_id,
 					'body'     => $body,
@@ -182,12 +182,11 @@ class Bluesky {
 		$shares[] = $share;
 		update_post_meta( $post_id, 'autoblue_shares', $shares );
 
-		$bluesky_url = $this->convert_at_uri_to_bluesky_url( $connection['did'], $response['uri'] );
-
 		$this->log->success(
-			sprintf( __( 'Shared post `%1$s` with ID `%2$d` to Bluesky: %3$s', 'autoblue' ), $post->post_title, $post_id, $bluesky_url ),
+			__( 'Shared post {post_title} with ID {post_id} to Bluesky: {bluesky_url}', 'autoblue' ),
 			[
 				'post_id'     => $post_id,
+				'post_title'  => $post->post_title,
 				'bluesky_url' => $this->convert_at_uri_to_bluesky_url( $connection['did'], $response['uri'] ),
 				'body'        => $body,
 				'response'    => $response,

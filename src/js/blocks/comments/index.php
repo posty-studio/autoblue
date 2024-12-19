@@ -41,9 +41,9 @@ if ( ! function_exists( 'autoblue_render_comment' ) ) {
 	}
 }
 
-$comments = ( new Autoblue\Comments() )->get_comments( get_the_ID() );
+$comments_list = ( new Autoblue\Comments() )->get_comments( get_the_ID() );
 
-if ( empty( $comments ) ) {
+if ( empty( $comments_list ) ) {
 	return;
 }
 ?>
@@ -54,12 +54,12 @@ if ( empty( $comments ) ) {
 	<h3 class="wp-block-autoblue-comments-title">
 		<?php esc_html_e( 'Comments', 'autoblue' ); ?>
 	</h3>
-	<p><a class="wp-block-autoblue-comments-link" href=<?php echo esc_url( $comments['url'] ); ?>><?php esc_html_e( 'Join the conversation on Bluesky', 'autoblue' ); ?></a></p>
+	<p><a class="wp-block-autoblue-comments-link" href=<?php echo esc_url( $comments_list['url'] ); ?>><?php esc_html_e( 'Join the conversation on Bluesky', 'autoblue' ); ?></a></p>
 
 	<ol class="wp-block-autoblue-comment-template">
 		<?php
-		foreach ( $comments['comments']['replies'] as $comment ) {
-			autoblue_render_comment( $comment );
+		foreach ( $comments_list['comments']['replies'] as $comment_item ) {
+			autoblue_render_comment( $comment_item );
 		}
 		?>
 	</ol>

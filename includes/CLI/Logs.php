@@ -118,7 +118,7 @@ class Logs {
 		$logs = $logs['data'];
 
 		if ( $format === 'ids' ) {
-			echo implode( ' ', wp_list_pluck( $logs, 'id' ) );
+			echo implode( ' ', absint( wp_list_pluck( $logs, 'id' ) ) );
 			return;
 		}
 

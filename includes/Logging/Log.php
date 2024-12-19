@@ -10,13 +10,11 @@ class Log {
 	private Logger $logger;
 
 	public function __construct( ?HandlerInterface $handler = null ) {
-		global $wpdb;
-
 		$this->logger = new Logger( 'autoblue' );
 		$this->logger->pushProcessor( new PsrLogMessageProcessor() );
 		$this->logger->pushProcessor( new WPProcessor() );
 		$this->logger->pushHandler(
-			$handler ?? new DatabaseHandler( $wpdb )
+			$handler ?? new DatabaseHandler()
 		);
 	}
 

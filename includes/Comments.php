@@ -43,7 +43,7 @@ class Comments {
 			return false;
 		}
 
-		// TODO: Improve
+		// TODO: Improve.
 		if ( strpos( $handle, 'did:' ) === 0 ) {
 			return 'at://' . $handle . '/app.bsky.feed.post/' . $rkey;
 		}

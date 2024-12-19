@@ -3,13 +3,6 @@
 namespace Autoblue\Logging;
 
 class LogRepository {
-	private $wpdb;
-
-	public function __construct() {
-		global $wpdb;
-		$this->wpdb = $wpdb;
-	}
-
 	private function process_log( array $log ): array {
 		$is_success     = strpos( $log['message'], '[Success]' ) === 0;
 		$log['id']      = (int) $log['id'];
@@ -22,12 +15,16 @@ class LogRepository {
 	}
 
 	public function get_log_by_id( int $id ): ?array {
-		$query = $this->wpdb->prepare(
-			"SELECT * FROM {$this->wpdb->prefix}" . DatabaseHandler::TABLE_NAME . ' WHERE ID = %d',
-			$id
-		);
+		global $wpdb;
 
-		$log = $this->wpdb->get_row( $query, ARRAY_A );
+		$log = $wpdb->get_row(
+			$wpdb->prepare(
+				'SELECT * FROM %i WHERE ID = %d',
+				$wpdb->prefix . DatabaseHandler::TABLE_NAME,
+				$id
+			),
+			ARRAY_A
+		);
 
 		if ( ! $log ) {
 			return null;
@@ -37,20 +34,31 @@ class LogRepository {
 	}
 
 	public function get_logs( int $per_page = 10, int $page = 1 ): array {
+		global $wpdb;
+
 		$page   = max( 1, $page );
 		$offset = ( $page - 1 ) * $per_page;
+		$table  = $wpdb->prefix . DatabaseHandler::TABLE_NAME;
 
-		$query = $this->wpdb->prepare(
-			"SELECT * FROM {$this->wpdb->prefix}" . DatabaseHandler::TABLE_NAME .
-			' ORDER BY created_at DESC, ID DESC LIMIT %d OFFSET %d',
-			$per_page,
-			$offset
+		$logs = $wpdb->get_results(
+			$wpdb->prepare(
+				'SELECT * FROM %i
+				ORDER BY created_at DESC, ID DESC
+				LIMIT %d OFFSET %d',
+				$table,
+				$per_page,
+				$offset
+			),
+			ARRAY_A
 		);
 
-		$logs        = $this->wpdb->get_results( $query, ARRAY_A );
-		$total       = (int) $this->wpdb->get_var(
-			"SELECT COUNT(*) FROM {$this->wpdb->prefix}" . DatabaseHandler::TABLE_NAME
+		$total = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				'SELECT COUNT(*) FROM %i',
+				$table
+			)
 		);
+
 		$total_pages = ceil( $total / $per_page );
 
 		$logs = array_map( [ $this, 'process_log' ], $logs );
@@ -66,9 +74,17 @@ class LogRepository {
 		];
 	}
 
+
 	public function clear_logs(): bool {
-		return $this->wpdb->query(
-			"TRUNCATE TABLE {$this->wpdb->prefix}" . DatabaseHandler::TABLE_NAME
-		) !== false;
+		global $wpdb;
+
+		$truncated = $wpdb->query(
+			$wpdb->prepare(
+				'TRUNCATE TABLE %i',
+				$wpdb->prefix . DatabaseHandler::TABLE_NAME
+			)
+		);
+
+		return $truncated !== false;
 	}
 }
