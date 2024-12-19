@@ -14,6 +14,11 @@ With Autoblue, you can automatically share new posts to Bluesky from your WordPr
 
 With Autoblue, you can share your WordPress posts to Bluesky automatically and effortlessly. It uses your featured image to make your posts stand out, and you can add a custom message to truly make each post your own.
 
+=== Stay connected ===
+
+* [View on GitHub](https://github.com/posty-studio/autoblue)
+* [Follow on Bluesky](https://https://bsky.app/profile/danielpost.com/)
+
 == Frequently Asked Questions ==
 
 = Is Autoblue free? =
