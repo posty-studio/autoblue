@@ -51,7 +51,7 @@ class DatabaseHandler extends AbstractProcessingHandler {
 
 		$table_name = $wpdb->prefix . self::TABLE_NAME;
 
-		if ( ! $wpdb->insert( $table_name, $data, [ '%s', '%s', '%s', '%s' ] ) ) {
+		if ( ! $wpdb->insert( $table_name, $data, [ '%s', '%s', '%s', '%s' ] ) ) { // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
 			error_log( 'Autoblue Logger Error: Failed to write log record: ' . $wpdb->last_error ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			return;
 		}
@@ -64,7 +64,7 @@ class DatabaseHandler extends AbstractProcessingHandler {
 
 		$table_name = $wpdb->prefix . self::TABLE_NAME;
 
-		$count = $wpdb->get_var(
+		$count = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->prepare(
 				'SELECT COUNT(*) FROM %i',
 				$table_name
@@ -74,7 +74,7 @@ class DatabaseHandler extends AbstractProcessingHandler {
 		if ( is_numeric( $count ) && self::MAX_ROWS <= (int) $count ) {
 			$offset = self::MAX_ROWS - self::TRUNCATE_BATCH;
 
-			$wpdb->query(
+			$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 				$wpdb->prepare(
 					'DELETE FROM %i WHERE id <= (
 						SELECT id FROM (

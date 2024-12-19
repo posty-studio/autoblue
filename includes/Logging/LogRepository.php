@@ -29,7 +29,7 @@ class LogRepository {
 	public function get_log_by_id( int $id ): ?array {
 		global $wpdb;
 
-		$log = $wpdb->get_row(
+		$log = $wpdb->get_row( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->prepare(
 				'SELECT * FROM %i WHERE ID = %d',
 				$wpdb->prefix . DatabaseHandler::TABLE_NAME,
@@ -59,7 +59,7 @@ class LogRepository {
 		$offset = ( $page - 1 ) * $per_page;
 		$table  = $wpdb->prefix . DatabaseHandler::TABLE_NAME;
 
-		$logs = $wpdb->get_results(
+		$logs = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->prepare(
 				'SELECT * FROM %i
 				ORDER BY created_at DESC, ID DESC
@@ -71,7 +71,7 @@ class LogRepository {
 			ARRAY_A
 		);
 
-		$total = (int) $wpdb->get_var(
+		$total = (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->prepare(
 				'SELECT COUNT(*) FROM %i',
 				$table
