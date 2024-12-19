@@ -20,14 +20,14 @@ class WPProcessor implements ProcessorInterface {
 				'doing_cron'         => defined( 'DOING_CRON' ) ? (bool) DOING_CRON : null,
 				'doing_ajax'         => defined( 'DOING_AJAX' ) ? (bool) DOING_AJAX : null,
 				'doing_autosave'     => defined( 'DOING_AUTOSAVE' ) ? (bool) DOING_AUTOSAVE : null,
-				'is_admin'           => is_admin(),
+				'is_admin'           => is_callable( 'is_admin' ) ? is_admin() : null, // @phpstan-ignore function.alreadyNarrowedType
 				'doing_rest'         => defined( 'REST_REQUEST' ) ? (bool) REST_REQUEST : null,
-				'user_id'            => wp_get_current_user()->ID,
-				'ms_switched'        => ms_is_switched(),
-				'current_blog_id'    => get_current_blog_id(),
-				'current_network_id' => get_current_network_id(),
-				'is_ssl'             => is_ssl(),
-				'environment'        => wp_get_environment_type(),
+				'user_id'            => is_callable( 'wp_get_current_user' ) ? wp_get_current_user()->ID : null, // @phpstan-ignore function.alreadyNarrowedType
+				'ms_switched'        => is_callable( 'ms_is_switched' ) ? ms_is_switched() : null, // @phpstan-ignore function.alreadyNarrowedType
+				'current_blog_id'    => is_callable( 'get_current_blog_id' ) ? get_current_blog_id() : null, // @phpstan-ignore function.alreadyNarrowedType
+				'current_network_id' => is_callable( 'get_current_network_id' ) ? get_current_network_id() : null, // @phpstan-ignore function.alreadyNarrowedType
+				'is_ssl'             => is_callable( 'is_ssl' ) ? is_ssl() : null, // @phpstan-ignore function.alreadyNarrowedType
+				'environment'        => is_callable( 'wp_get_environment_type' ) ? wp_get_environment_type() : null, // @phpstan-ignore function.alreadyNarrowedType
 			]
 		);
 
