@@ -19,10 +19,10 @@ class DatabaseHandler extends AbstractProcessingHandler {
 	public function __construct( $wpdb ) {
 		parent::__construct();
 		$this->wpdb = $wpdb;
-		$this->setLevelFromOption();
+		$this->set_level_from_option();
 	}
 
-	private function setLevelFromOption(): void {
+	private function set_level_from_option(): void {
 		$level = get_option( 'autoblue_log_level' );
 
 		switch ( $level ) {
