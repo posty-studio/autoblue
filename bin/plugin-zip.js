@@ -19,6 +19,7 @@ const files = glob(
 		'public/**',
 		'vendor/**',
 		`${ slug }.php`,
+		'composer.json',
 		'uninstall.php',
 		'block.json',
 		'changelog.*',
