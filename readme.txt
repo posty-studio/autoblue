@@ -44,5 +44,5 @@ Currently, Autoblue only works in the block editor. It uses a lot of modern Word
 
 == Changelog ==
 
-= 1.0.0 =
+= 0.0.1 =
 * Initial release.
