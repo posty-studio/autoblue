@@ -1,7 +1,6 @@
 {
 	"name": "autoblue",
 	"description": "Add Bluesky to your WordPress website. Automatically share new posts to Bluesky and integrate Bluesky replies with the comments on your website.",
-	"version": "0.0.1",
 	"scripts": {
 		"build": "wp-scripts build",
 		"start": "wp-scripts start",
