@@ -31,13 +31,14 @@ All development needs to happen in the `develop` branch. The `main` branch is re
 
 To release a new version, follow these steps:
 
-1. Merge the changes from `develop` into `main`.
+1. Switch to the `develop` branch.
 2. Update the version number in the `autoblue.php` file (twice)
 3. Add a changelog entry with the changes and new version to `readme.txt`
 4. Update the `Stable tag` in `readme.txt` to the new version number.
-5. Commit the changes and push them to the repository.
-6. Create a new release on GitHub with the new version number and the changelog entry.
-7. The GitHub Action will automatically deploy the new version to the WordPress.org plugin repository.
+5. Create a new commit in `develop` with the version number change and the changelog entry.
+6. Merge all changes from `develop` into `main`.
+7. Create a new release on GitHub with the new version number and the changelog entry.
+8. The GitHub Action will automatically deploy the new version to the WordPress.org plugin repository.
 
 ### Updating assets or readme without creating a new release
 
