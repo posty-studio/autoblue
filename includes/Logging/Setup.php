@@ -3,7 +3,7 @@
 namespace Autoblue\Logging;
 
 class Setup {
-	private const DB_VERSION = '20241202';
+	private const DB_VERSION = '20241202'; // YYYYMMDD
 
 	public function register_hooks(): void {
 		add_action( 'admin_init', [ $this, 'maybe_create_table' ] );

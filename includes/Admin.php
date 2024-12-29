@@ -109,5 +109,17 @@ class Admin {
 				},
 			],
 		);
+
+		register_setting(
+			'autoblue',
+			'autoblue_db_version',
+			[
+				'type'              => 'string',
+				'description'       => __( 'The current database version.', 'autoblue' ),
+				'show_in_rest'      => true,
+				'default'           => '0',
+				'sanitize_callback' => 'sanitize_text_field',
+			],
+		);
 	}
 }
