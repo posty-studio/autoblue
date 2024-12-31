@@ -1,10 +1,10 @@
 <?php
 /**
  * Plugin Name: Autoblue
- * Plugin URI: https://autoblue.cc
+ * Plugin URI: https://autoblue.co
  * Description: Automatically share new posts to Bluesky.
  * Author: Daniel Post
- * Author URI: https://danielpost.com
+ * Author URI: https://autoblue.co
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Version: 0.0.3
