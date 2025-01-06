@@ -26,7 +26,7 @@ This service is provided by "Bluesky PBC": [terms of use](https://bsky.social/ab
 
 * [Visit Autoblue website](https://autoblue.co)
 * [View on GitHub](https://github.com/posty-studio/autoblue)
-* [Follow on Bluesky](https://https://bsky.app/profile/danielpost.com/)
+* [Follow on Bluesky](https://bsky.app/profile/danielpost.com/)
 
 == Frequently Asked Questions ==
 
