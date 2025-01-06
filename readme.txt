@@ -12,7 +12,7 @@ With Autoblue, you can automatically share new posts to Bluesky from your WordPr
 
 == Description ==
 
-With Autoblue, you can share your WordPress posts to Bluesky automatically and effortlessly. It uses your featured image to make your posts stand out, and you can add a custom message to truly make each post your own.
+With Autoblue, you can share your WordPress posts to Bluesky automatically and effortlessly. It uses your featured image to make your posts stand out, and you can add a custom message to truly make each post your own. In addition, you can display replies to your Bluesky posts on your website.
 
 == External services ==
 
