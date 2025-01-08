@@ -22,6 +22,7 @@
 	},
 	"dependencies": {
 		"@wordpress/components": "^28.12.0",
-		"clsx": "^2.1.1"
+		"clsx": "^2.1.1",
+		"graphemer": "^1.4.0"
 	}
 }
