@@ -184,7 +184,7 @@ class Bluesky {
 		update_post_meta( $post_id, 'autoblue_shares', $shares );
 
 		$this->log->success(
-			__( 'Shared post {post_title} with ID {post_id} to Bluesky: {bluesky_url}', 'autoblue' ),
+			__( 'Shared post `{post_title}` with ID `{post_id}` to Bluesky: {bluesky_url}', 'autoblue' ),
 			[
 				'post_id'     => $post_id,
 				'post_title'  => $post->post_title,
