@@ -56,7 +56,7 @@ class Meta {
 									'required' => true,
 								],
 								'uri'      => [
-									'type'     => 'uri',
+									'type'     => 'string',
 									'required' => true,
 								],
 								'at_uri'   => [
