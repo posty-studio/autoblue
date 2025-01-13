@@ -52,6 +52,8 @@ class Assets {
 			true
 		);
 
+		wp_set_script_translations( "autoblue-{$name}-plugin-script", 'autoblue' );
+
 		if ( ! empty( $params ) && ! $autoblue_defined ) {
 			wp_add_inline_script( "autoblue-{$name}-plugin-script", 'const autoblue = ' . wp_json_encode( $params ), 'before' );
 			$autoblue_defined = true;
