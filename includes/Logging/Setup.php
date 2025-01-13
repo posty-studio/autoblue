@@ -26,8 +26,8 @@ class Setup {
 			created_at datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 			level varchar(20) NOT NULL,
 			message text NOT NULL,
-			context JSON,
-			extra JSON,
+			context LONGTEXT,
+			extra LONGTEXT,
 			PRIMARY KEY  (id),
 			KEY created_at (created_at),
 			KEY level (level)
