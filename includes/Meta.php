@@ -57,10 +57,12 @@ class Meta {
 								],
 								'uri'      => [
 									'type'     => 'string',
+									'format'   => 'uri',
 									'required' => true,
 								],
 								'at_uri'   => [
-									'type' => 'uri',
+									'type'   => 'string',
+									'format' => 'uri',
 								],
 								'response' => [
 									'type' => 'string',
