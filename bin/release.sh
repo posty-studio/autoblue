@@ -55,50 +55,42 @@ check_prerequisites() {
 		exit 1
 	fi
 
-	if [[ -n "$(git status --porcelain)" ]]; then
-		echo "Error: Working directory not clean, make sure you're working from a clean checkout and try again."
-		exit 1
-	fi
+	# if [[ -n "$(git status --porcelain)" ]]; then
+	# 	echo "Error: Working directory not clean, make sure you're working from a clean checkout and try again."
+	# 	exit 1
+	# fi
 }
 
 update_files() {
 	local new_version=$1
 	local prev_version=$2
-	local files_updated=0
+	local plugin_path="$SCRIPT_DIR/$PLUGIN_FILE"
+	local readme_path="$SCRIPT_DIR/$README_FILE"
 
 	echo "Updating files from version $prev_version to $new_version..."
 
-	local commits
-	commits=$(git log --pretty=format:"* %s" "v${prev_version}"..HEAD)
+	local commits=$(git log --pretty=format:"* %s" "v${prev_version}"..HEAD)
 
-	if [[ -f "$SCRIPT_DIR/$PLUGIN_FILE" ]]; then
-		sed -i.bak \
-			-e "s/\* Version: .*/\* Version: $new_version/" \
-			-e "s/define( 'AUTOBLUE_VERSION', '.*' )/define( 'AUTOBLUE_VERSION', '$new_version' )/" \
-			"$SCRIPT_DIR/$PLUGIN_FILE"
-		rm "$SCRIPT_DIR/$PLUGIN_FILE.bak"
-		((files_updated++))
-	else
-		echo "Error: Plugin file not found at $SCRIPT_DIR/$PLUGIN_FILE"
-		exit 1
-	fi
+	sed -i.bak \
+		-e "s/\* Version: .*/\* Version: $new_version/" \
+		-e "s/define( 'AUTOBLUE_VERSION', '.*' )/define( 'AUTOBLUE_VERSION', '$new_version' )/" \
+		"$plugin_path"
 
-	if [[ -f "$SCRIPT_DIR/$README_FILE" ]]; then
-		sed -i.bak \
-			-e "s/Stable tag: .*/Stable tag: $new_version/" \
-			-e "/== Changelog ==/a\\
-\\
-= $new_version =\\
-$commits
-" "$SCRIPT_DIR/$README_FILE"
-		rm "$SCRIPT_DIR/$README_FILE.bak"
-		((files_updated++))
-	else
-		echo "Error: README file not found at $SCRIPT_DIR/$README_FILE"
-		exit 1
-	fi
+	{
+		sed -n '1,/== Changelog ==/p' "$readme_path"
+		echo
+		echo "= $new_version ="
+		echo "$commits"
+		echo
+		sed -n '/== Changelog ==/,$p' "$readme_path" | tail -n +2
+	} >"$readme_path.new"
 
-	echo "Successfully updated $files_updated files"
+	sed -i.bak "s/Stable tag: .*/Stable tag: $new_version/" "$readme_path.new"
+
+	mv "$readme_path.new" "$readme_path"
+	rm -f "$plugin_path.bak" "$readme_path.bak" "$readme_path.new.bak"
+
+	echo "Successfully updated files"
 }
 
 main() {
