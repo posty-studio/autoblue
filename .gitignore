@@ -5,3 +5,4 @@ vendor
 autoblue.zip
 .wp-env.json
 .rgignore
+tests/_wordpress
