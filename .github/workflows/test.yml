@@ -1,0 +1,37 @@
+name: WordPress Tests
+
+on:
+    pull_request:
+        branches:
+            - main
+
+jobs:
+    tests:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v3
+            - name: Setup PHP
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.3'
+                  extensions: mbstring, intl, pdo_sqlite, sqlite3
+                  tools: composer, wp
+            - name: Install Dependencies
+              run: composer install
+            - name: Install WordPress
+              run: |
+                  mkdir -p tests/_wordpress
+                  wp core download --allow-root --version=6.7 --skip-content --path=tests/_wordpress
+            # - name: Prepare SQLite
+            #   run: |
+            #       mkdir -p tests/_data
+            #       touch tests/_data/test.sqlite
+            # - name: Read .env.testing
+            #   uses: c-py/action-dotenv-to-setenv@v2
+            #   with:
+            #       env-file: tests/.env
+            - name: Setup tests
+              run: vendor/bin/codecept build
+            - name: Run Tests
+              run: vendor/bin/codecept run
