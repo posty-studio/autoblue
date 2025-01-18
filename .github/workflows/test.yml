@@ -17,9 +17,26 @@ jobs:
                   php-version: '8.3'
                   extensions: mbstring, intl, pdo_sqlite, sqlite3
                   tools: composer, wp
-            - name: Install Dependencies
-              run: composer install
+            - name: Get Composer cache directory
+              id: composer-cache
+              run: |
+                  echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+            - uses: actions/cache@v4
+              with:
+                  path: ${{ steps.composer-cache.outputs.dir }}
+                  key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+                  restore-keys: |
+                      ${{ runner.os }}-composer-
+            - name: Install Composer dependencies
+              run: composer install --prefer-dist --no-progress
+            - name: Cache WordPress
+              id: cache-wordpress
+              uses: actions/cache@v4
+              with:
+                  path: tests/_wordpress
+                  key: wordpress-6.7
             - name: Install WordPress
+              if: steps.cache-wordpress.outputs.cache-hit != 'true'
               run: |
                   mkdir -p tests/_wordpress
                   wp core download --allow-root --version=6.7 --path=tests/_wordpress
