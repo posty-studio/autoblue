@@ -16,4 +16,4 @@ modules:
             wpDebug: true
             title: 'autoblue'
             plugins: ['./autoblue.php']
-            theme: ''
+            theme: 'twentytwentythree'
