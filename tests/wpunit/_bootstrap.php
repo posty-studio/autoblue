@@ -11,4 +11,4 @@
  * the "modules.config.WPLoader.dump" setting.
  */
 
-// ( new Autoblue\Logging\Setup() )->create_table();
+( new Autoblue\Logging\Setup() )->create_table();
