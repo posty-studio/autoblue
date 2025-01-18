@@ -101,9 +101,9 @@ class TextParser {
 		while ( preg_match( self::URL_REGEX, $text, $match, PREG_OFFSET_CAPTURE, $offset ) ) {
 			$uri = $match[1][0];
 
-			// If it doesn't start with http, ensure it's a valid domain and add https://
+			// If it doesn't start with http, ensure it's a valid domain and add https://.
 			if ( strpos( $uri, 'http' ) !== 0 ) {
-				// Extract domain from URI
+				// Extract domain from URI.
 				if ( preg_match( '/^(?:www\.)?([^\/]+)/', $uri, $domain_match ) ) {
 					$domain = $domain_match[1];
 					if ( ! $this->is_valid_domain( $domain ) ) {
@@ -120,13 +120,13 @@ class TextParser {
 			$start = $match[1][1];
 			$end   = $start + strlen( $match[1][0] );
 
-			// Strip ending punctuation
+			// Strip ending punctuation.
 			if ( preg_match( '/[.,;:!?]$/', $uri ) ) {
 				$uri = substr( $uri, 0, -1 );
 				--$end;
 			}
 
-			// Handle closing parenthesis
+			// Handle closing parenthesis.
 			if ( substr( $uri, -1 ) === ')' && strpos( $uri, '(' ) === false ) {
 				$uri = substr( $uri, 0, -1 );
 				--$end;
@@ -152,8 +152,8 @@ class TextParser {
 		$offset = 0;
 
 		while ( preg_match( self::TAG_REGEX, $text, $match, PREG_OFFSET_CAPTURE, $offset ) ) {
-			$leading = $match[1][0]; // The space or start of string
-			$tag     = $match[2][0] ?? ''; // The tag content without #
+			$leading = $match[1][0]; // The space or start of string.
+			$tag     = $match[2][0] ?? ''; // The tag content without #.
 
 			if ( empty( $tag ) ) {
 				$offset = $match[0][1] + 1;
@@ -164,12 +164,12 @@ class TextParser {
 			$tag = trim( $tag );
 			$tag = preg_replace( '/[.,!?:;]*$/', '', $tag );
 
-			if ( strlen( $tag ) === 0 || strlen( $tag ) > 64 ) {
+			if ( is_null( $tag ) || strlen( $tag ) === 0 || strlen( $tag ) > 64 ) {
 				$offset = $match[0][1] + 1;
 				continue;
 			}
 
-			$index = $match[0][1] + strlen( $leading ); // Match index + leading space length
+			$index = $match[0][1] + strlen( $leading ); // Match index + leading space length.
 
 			$facets[] = [
 				'start' => mb_strlen( substr( $text, 0, $index ), '8bit' ),
@@ -177,7 +177,7 @@ class TextParser {
 				'tag'   => $tag,
 			];
 
-			$offset = $match[0][1] + 1; // Move past current match
+			$offset = $match[0][1] + 1; // Move past current match.
 		}
 
 		return $facets;
