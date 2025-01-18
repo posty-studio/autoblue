@@ -11,7 +11,9 @@ modules:
     config:
         WPLoader:
             wpRootFolder: '%WORDPRESS_ROOT_DIR%'
-            tablePrefix: '%TEST_TABLE_PREFIX%'
             dbUrl: '%WORDPRESS_DB_URL%'
+            tablePrefix: '%TEST_TABLE_PREFIX%'
+            wpDebug: true
             title: 'autoblue'
             plugins: ['./autoblue.php']
+            theme: ''

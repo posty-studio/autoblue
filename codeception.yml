@@ -3,7 +3,6 @@ paths:
     output: tests/_output
     data: tests/_data
     support: tests/_support
-    envs: tests/_envs
 actor_suffix: Tester
 extensions:
     enabled:
@@ -17,4 +16,4 @@ extensions:
         - Codeception\Command\GenerateWPCanonical
         - Codeception\Command\GenerateWPXMLRPC
 params:
-    - .env.testing
+    - tests/.env
