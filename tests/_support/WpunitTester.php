@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-namespace Tests\Support;
 
 /**
  * Inherited Methods
@@ -19,9 +18,9 @@ namespace Tests\Support;
  *
  * @SuppressWarnings(PHPMD)
 */
-class EndToEndTester extends \Codeception\Actor
+class WpunitTester extends \Codeception\Actor
 {
-    use _generated\EndToEndTesterActions;
+    use _generated\WpunitTesterActions;
 
     /**
      * Define custom actions here

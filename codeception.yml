@@ -1,46 +1,19 @@
-namespace: Tests
-support_namespace: Support
 paths:
     tests: tests
     output: tests/_output
-    data: tests/Support/Data
-    support: tests/Support
-    envs: tests/_envs
+    data: tests/_data
+    support: tests/_support
 actor_suffix: Tester
-params:
-    - tests/.env
 extensions:
     enabled:
         - Codeception\Extension\RunFailed
-        - lucatume\WPBrowser\Extension\ChromeDriverController
-        - lucatume\WPBrowser\Extension\BuiltInServerController
-        - lucatume\WPBrowser\Extension\Symlinker
-    config:
-        lucatume\WPBrowser\Extension\ChromeDriverController:
-            port: '%CHROMEDRIVER_PORT%'
-        lucatume\WPBrowser\Extension\BuiltInServerController:
-            workers: 5
-            port: '%BUILTIN_SERVER_PORT%'
-            docroot: '%WORDPRESS_ROOT_DIR%'
-            env:
-                DATABASE_TYPE: sqlite
-                DB_ENGINE: sqlite
-                DB_DIR: '%codecept_root_dir%/tests/Support/Data'
-                DB_FILE: db.sqlite
-        lucatume\WPBrowser\Extension\Symlinker:
-            wpRootFolder: '%WORDPRESS_ROOT_DIR%'
-            plugins:
-                - .
     commands:
-        - lucatume\WPBrowser\Command\RunOriginal
-        - lucatume\WPBrowser\Command\RunAll
-        - lucatume\WPBrowser\Command\GenerateWPUnit
-        - lucatume\WPBrowser\Command\DbExport
-        - lucatume\WPBrowser\Command\DbImport
-        - lucatume\WPBrowser\Command\MonkeyCachePath
-        - lucatume\WPBrowser\Command\MonkeyCacheClear
-        - lucatume\WPBrowser\Command\DevStart
-        - lucatume\WPBrowser\Command\DevStop
-        - lucatume\WPBrowser\Command\DevInfo
-        - lucatume\WPBrowser\Command\DevRestart
-        - lucatume\WPBrowser\Command\ChromedriverUpdate
+        - Codeception\Command\GenerateWPUnit
+        - Codeception\Command\GenerateWPRestApi
+        - Codeception\Command\GenerateWPRestController
+        - Codeception\Command\GenerateWPRestPostTypeController
+        - Codeception\Command\GenerateWPAjax
+        - Codeception\Command\GenerateWPCanonical
+        - Codeception\Command\GenerateWPXMLRPC
+params:
+    - tests/.env
