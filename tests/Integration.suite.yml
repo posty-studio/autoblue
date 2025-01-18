@@ -19,5 +19,5 @@ modules:
             plugins: ['./autoblue.php']
             theme: ''
         lucatume\WPBrowser\Module\AirplaneMode:
-            muPluginsDir: 'var/wordpress/wp-content/mu-plugins'
+            muPluginsDir: '%WORDPRESS_MU_PLUGIN_DIR%'
             symlink: false
