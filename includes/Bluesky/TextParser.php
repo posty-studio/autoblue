@@ -17,7 +17,7 @@ class TextParser {
 	// - Start with # and aren't followed by a number.
 	// - Can contain letters, numbers, underscores.
 	// - Excludes trailing punctuation.
-	public const TAG_REGEX = '/(?:^|\s)(#[^\d\s]\S*?)(?:\s|$|[!.,;?])/u';
+	public const TAG_REGEX = '/(^|\s)[#＃]((?!\x{fe0f})[^\s\x{00AD}\x{2060}\x{200A}\x{200B}\x{200C}\x{200D}\x{20e2}]*[^\d\s\p{P}\x{00AD}\x{2060}\x{200A}\x{200B}\x{200C}\x{200D}\x{20e2}]+[^\s\x{00AD}\x{2060}\x{200A}\x{200B}\x{200C}\x{200D}\x{20e2}]*)?/u';
 
 	/**
 	 * The Bluesky API client.
@@ -26,8 +26,11 @@ class TextParser {
 	 */
 	public $api_client;
 
-	public function __construct() {
-		$this->api_client = new API();
+	/**
+	 * @param API|null $api_client The Bluesky API client.
+	 */
+	public function __construct( $api_client = null ) {
+		$this->api_client = $api_client ?? new API();
 	}
 
 	/**
@@ -35,6 +38,24 @@ class TextParser {
 	 */
 	private function is_valid_handle( string $handle ): bool {
 		return preg_match( '/^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$/', $handle ) === 1;
+	}
+
+	private function is_valid_domain( string $str ): bool {
+		$tlds = \Autoblue\Utils\TLD::get_valid_tlds();
+
+		foreach ( $tlds as $tld ) {
+			$i = strrpos( $str, $tld );
+
+			if ( $i === false ) {
+				continue;
+			}
+
+			if ( $str[ $i - 1 ] === '.' && $i === strlen( $str ) - strlen( $tld ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**
@@ -49,6 +70,11 @@ class TextParser {
 
 			// Skip if handle doesn't match ATProto spec.
 			if ( ! $this->is_valid_handle( $handle ) ) {
+				continue;
+			}
+
+			// Probably not a domain.
+			if ( ! $this->is_valid_domain( $handle ) && substr( $handle, -5 ) !== '.test' ) {
 				continue;
 			}
 
@@ -69,15 +95,50 @@ class TextParser {
 	 * @return array<int,array<string,mixed>> An array of facets representing URLs.
 	 */
 	public function parse_urls( string $text ): array {
-		$spans = [];
-		preg_match_all( self::URL_REGEX, $text, $matches, PREG_OFFSET_CAPTURE );
+		$spans  = [];
+		$offset = 0;
 
-		foreach ( $matches[1] as $match ) {
+		while ( preg_match( self::URL_REGEX, $text, $match, PREG_OFFSET_CAPTURE, $offset ) ) {
+			$uri = $match[1][0];
+
+			// If it doesn't start with http, ensure it's a valid domain and add https://
+			if ( strpos( $uri, 'http' ) !== 0 ) {
+				// Extract domain from URI
+				if ( preg_match( '/^(?:www\.)?([^\/]+)/', $uri, $domain_match ) ) {
+					$domain = $domain_match[1];
+					if ( ! $this->is_valid_domain( $domain ) ) {
+						$offset = $match[0][1] + 1;
+						continue;
+					}
+					$uri = 'https://' . $uri;
+				} else {
+					$offset = $match[0][1] + 1;
+					continue;
+				}
+			}
+
+			$start = $match[1][1];
+			$end   = $start + strlen( $match[1][0] );
+
+			// Strip ending punctuation
+			if ( preg_match( '/[.,;:!?]$/', $uri ) ) {
+				$uri = substr( $uri, 0, -1 );
+				--$end;
+			}
+
+			// Handle closing parenthesis
+			if ( substr( $uri, -1 ) === ')' && strpos( $uri, '(' ) === false ) {
+				$uri = substr( $uri, 0, -1 );
+				--$end;
+			}
+
 			$spans[] = [
-				'start' => mb_strlen( substr( $text, 0, $match[1] ), '8bit' ),
-				'end'   => mb_strlen( substr( $text, 0, $match[1] + strlen( $match[0] ) ), '8bit' ),
-				'url'   => $match[0],
+				'start' => mb_strlen( substr( $text, 0, $start ), '8bit' ),
+				'end'   => mb_strlen( substr( $text, 0, $end ), '8bit' ),
+				'url'   => $uri,
 			];
+
+			$offset = $match[0][1] + 1;
 		}
 
 		return $spans;
@@ -87,32 +148,39 @@ class TextParser {
 	 * @return array<int,array<string,mixed>> An array of facets representing tags.
 	 */
 	public function parse_tags( string $text ): array {
-		$spans = [];
-		preg_match_all( self::TAG_REGEX, $text, $matches, PREG_OFFSET_CAPTURE );
+		$facets = [];
+		$offset = 0;
 
-		foreach ( $matches[1] as $match ) {
-			$tag = $match[0];
-			// Clean up the tag.
-			$tag = trim( $tag );
-			$tag = preg_replace( '/\p{P}+$/u', '', $tag );
+		while ( preg_match( self::TAG_REGEX, $text, $match, PREG_OFFSET_CAPTURE, $offset ) ) {
+			$leading = $match[1][0]; // The space or start of string
+			$tag     = $match[2][0] ?? ''; // The tag content without #
 
 			if ( empty( $tag ) ) {
+				$offset = $match[0][1] + 1;
 				continue;
 			}
 
-			// Skip if tag is too long (over 64 chars including #).
-			if ( mb_strlen( $tag ) > 66 ) {
+			// Strip ending punctuation and spaces.
+			$tag = trim( $tag );
+			$tag = preg_replace( '/[.,!?:;]*$/', '', $tag );
+
+			if ( strlen( $tag ) === 0 || strlen( $tag ) > 64 ) {
+				$offset = $match[0][1] + 1;
 				continue;
 			}
 
-			$spans[] = [
-				'start' => mb_strlen( substr( $text, 0, $match[1] ), '8bit' ),
-				'end'   => mb_strlen( substr( $text, 0, $match[1] + strlen( $tag ) ), '8bit' ),
-				'tag'   => ltrim( $tag, '#' ),
+			$index = $match[0][1] + strlen( $leading ); // Match index + leading space length
+
+			$facets[] = [
+				'start' => mb_strlen( substr( $text, 0, $index ), '8bit' ),
+				'end'   => mb_strlen( substr( $text, 0, $index + strlen( $tag ) + 1 ), '8bit' ), // +1 for #
+				'tag'   => $tag,
 			];
+
+			$offset = $match[0][1] + 1; // Move past current match
 		}
 
-		return $spans;
+		return $facets;
 	}
 
 	/**

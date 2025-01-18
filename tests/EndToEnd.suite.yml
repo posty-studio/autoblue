@@ -22,14 +22,14 @@ modules:
             path: '/'
             window_size: 1200x1000
             capabilities:
-              "goog:chromeOptions":
-                args:
-                  - "--headless"
-                  - "--disable-gpu"
-                  - "--disable-dev-shm-usage"
-                  - "--proxy-server='direct://'"
-                  - "--proxy-bypass-list=*"
-                  - "--no-sandbox"
+                'goog:chromeOptions':
+                    args:
+                        - '--headless'
+                        - '--disable-gpu'
+                        - '--disable-dev-shm-usage'
+                        - "--proxy-server='direct://'"
+                        - '--proxy-bypass-list=*'
+                        - '--no-sandbox'
         lucatume\WPBrowser\Module\WPDb:
             dbUrl: '%WORDPRESS_DB_URL%'
             dump: 'tests/Support/Data/dump.sql'
@@ -46,4 +46,6 @@ modules:
             wpRootFolder: '%WORDPRESS_ROOT_DIR%'
             dbUrl: '%WORDPRESS_DB_URL%'
             domain: '%WORDPRESS_DOMAIN%'
- 
+            bootstrapActions:
+                - test_create_tables
+

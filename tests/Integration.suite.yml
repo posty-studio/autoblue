@@ -9,12 +9,15 @@ modules:
         - lucatume\WPBrowser\Module\WPLoader
     config:
         lucatume\WPBrowser\Module\WPLoader:
-           wpRootFolder: "%WORDPRESS_ROOT_DIR%" 
-           dbUrl: '%WORDPRESS_DB_URL%'
-           wpDebug: true
-           tablePrefix: '%TEST_TABLE_PREFIX%'
-           domain: '%WORDPRESS_DOMAIN%'
-           adminEmail: 'admin@%WORDPRESS_DOMAIN%'
-           title: 'Integration Tests'
-           plugins: ['./autoblue.php']
-           theme: ''
+            wpRootFolder: '%WORDPRESS_ROOT_DIR%'
+            dbUrl: '%WORDPRESS_DB_URL%'
+            wpDebug: true
+            tablePrefix: '%TEST_TABLE_PREFIX%'
+            domain: '%WORDPRESS_DOMAIN%'
+            adminEmail: 'admin@%WORDPRESS_DOMAIN%'
+            title: 'Integration Tests'
+            plugins: ['./autoblue.php']
+            theme: ''
+        lucatume\WPBrowser\Module\AirplaneMode:
+            muPluginsDir: 'var/wordpress/wp-content/mu-plugins'
+            symlink: false

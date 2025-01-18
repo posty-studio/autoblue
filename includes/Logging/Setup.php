@@ -15,7 +15,7 @@ class Setup {
 		}
 	}
 
-	private function create_table(): void {
+	public function create_table(): void {
 		global $wpdb;
 
 		$charset_collate = $wpdb->get_charset_collate();
