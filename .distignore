@@ -12,6 +12,7 @@
 .phpcs.xml
 .prettierrc.js
 README.md
+codeception.yml
 composer.lock
 package-lock.json
 package.json
