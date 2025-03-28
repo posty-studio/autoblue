@@ -122,6 +122,7 @@ class Bluesky {
 		$message = get_post_meta( $post_id, 'autoblue_custom_message', true );
 		$excerpt = html_entity_decode( get_the_excerpt( $post->ID ) );
 		$message = ! empty( $message ) ? wp_strip_all_tags( html_entity_decode( $message ) ) : $excerpt;
+		$message = ( new Utils\Text() )->trim_text( $message, 300 );
 
 		$body = [
 			'collection' => 'app.bsky.feed.post',
