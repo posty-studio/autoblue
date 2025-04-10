@@ -18,7 +18,12 @@ class Text {
 		}
 
 		$trimmed_string = grapheme_substr( $text, 0, $max_graphemes );
-		$last_space     = strrpos( $trimmed_string, ' ' );
+
+		if ( $trimmed_string === false ) {
+			return '';
+		}
+
+		$last_space = strrpos( $trimmed_string, ' ' );
 
 		if ( $last_space !== false ) {
 			$trimmed_string = grapheme_substr( $trimmed_string, 0, $last_space );
