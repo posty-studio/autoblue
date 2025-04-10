@@ -13,9 +13,9 @@ class Bluesky {
 	/** @var Logging\Log */
 	private Logging\Log $log;
 
-	public function __construct() {
-		$this->api_client = new Bluesky\API();
-		$this->log        = new Logging\Log();
+	public function __construct( Bluesky\API $api_client = null, Logging\Log $log = null ) {
+		$this->api_client = $api_client ?: new Bluesky\API();
+		$this->log        = $log ?: new Logging\Log();
 	}
 
 	private function convert_at_uri_to_bluesky_url( string $did, string $at_uri ): string {
@@ -28,7 +28,7 @@ class Bluesky {
 	/**
 	 * @return array<string,mixed>|false The connection data or false if no connection is found.
 	 */
-	private function get_connection() {
+	public function get_connection() {
 		$connections = ( new ConnectionsManager() )->get_all_connections();
 
 		if ( empty( $connections ) ) {
@@ -36,6 +36,19 @@ class Bluesky {
 		}
 
 		return $connections[0];
+	}
+
+	/**
+	 * Refresh the connection tokens for a given DID.
+	 *
+	 * @param string $did The DID to refresh the connection for.
+	 * @return array<string,mixed>|\WP_Error The refreshed connection data or error object.
+	 */
+	public function refresh_connection( string $did ) {
+		$connections_manager = new ConnectionsManager();
+		$connection          = $connections_manager->refresh_tokens( $did );
+
+		return $connection;
 	}
 
 	/**
@@ -111,8 +124,7 @@ class Bluesky {
 			return false;
 		}
 
-		$connections_manager = new ConnectionsManager();
-		$connection          = $connections_manager->refresh_tokens( $connection['did'] );
+		$connection = $this->refresh_connection( $connection['did'] );
 
 		if ( is_wp_error( $connection ) ) {
 			$this->log->error( __( 'Failed to refresh Bluesky connection tokens before sharing:', 'autoblue' ) . ' ' . $connection->get_error_message(), [ 'post_id' => $post_id ] );
@@ -120,8 +132,18 @@ class Bluesky {
 		}
 
 		$message = get_post_meta( $post_id, 'autoblue_custom_message', true );
-		$excerpt = html_entity_decode( get_the_excerpt( $post->ID ) );
-		$message = ! empty( $message ) ? wp_strip_all_tags( html_entity_decode( $message ) ) : $excerpt;
+		$excerpt = get_the_excerpt( $post->ID );
+		$message = ! empty( $message ) ? $message : $excerpt;
+
+		/**
+		 * Filters the message to be shared on Bluesky.
+		 *
+		 * @param string $message The message to be shared.
+		 * @param int    $post_id The post ID of the post being shared.
+		 */
+		$message = apply_filters( 'autoblue/share_message', $message, $post_id );
+
+		$message = html_entity_decode( wp_strip_all_tags( $message ) );
 		$message = ( new Utils\Text() )->trim_text( $message, 300 );
 
 		$body = [

@@ -37,6 +37,7 @@
 		<exclude name="Universal.Operators.DisallowShortTernary.Found"/>
 		<!-- Allow ExampleClass.php instead of class-example-class.php -->
 		<exclude name="WordPress.Files.FileName"/>
+		<exclude name="WordPress.NamingConventions.ValidHookName.UseUnderscores"/>
 	</rule>
 
 	<rule ref="Generic.CodeAnalysis.UnusedFunctionParameter"/>
