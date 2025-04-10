@@ -41,7 +41,8 @@ Currently, Autoblue only works in the block editor. It uses a lot of modern Word
 == Screenshots ==
 
 1. Easily connect your Bluesky account to your WordPress site and start sharing.
-2. Keep track of everything that Autoblue does.
+2. Show Bluesky likes and replies on your WordPress site.
+3. Keep track of everything that Autoblue does.
 
 == Changelog ==
 
