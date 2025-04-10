@@ -1,7 +1,7 @@
 === Autoblue ===
 Contributors: danielpost
 Tags: social, bluesky, auto, share, post
-Stable tag: 0.0.4
+Stable tag: 0.0.5
 Requires at least: 6.6
 Tested up to: 6.7
 Requires PHP: 7.4
@@ -44,6 +44,10 @@ Currently, Autoblue only works in the block editor. It uses a lot of modern Word
 2. Set a custom text, choose a featured image and publish your post.
 
 == Changelog ==
+
+= 0.0.5 =
+* Feature: Add filter for setting a custom share message
+* Fix: Excerpts are now trimmed correctly before being shared
 
 = 0.0.4 =
 * Fix: Script translations are now loaded properly (props [@imath](https://github.com/imath))
