@@ -18,26 +18,16 @@ const SharePanel = () => {
 	const { renderModal, openModal } = useNewAccountModal();
 	const { editPost } = useDispatch( 'core/editor' );
 
-	const { postType, postStatus, isEnabled, customMessage } = useSelect(
-		( select ) => {
-			const { getCurrentPostType, getEditedPostAttribute } =
-				select( 'core/editor' );
+	const { postStatus, isEnabled, customMessage } = useSelect( ( select ) => {
+		const { getEditedPostAttribute } = select( 'core/editor' );
 
-			return {
-				postType: getCurrentPostType(),
-				postStatus: getEditedPostAttribute( 'status' ),
-				isEnabled: getEditedPostAttribute( 'meta' )?.autoblue_enabled,
-				customMessage:
-					getEditedPostAttribute( 'meta' )?.autoblue_custom_message,
-			};
-		},
-		[]
-	);
-
-	// TODO: Add support for other post types.
-	if ( postType !== 'post' ) {
-		return null;
-	}
+		return {
+			postStatus: getEditedPostAttribute( 'status' ),
+			isEnabled: getEditedPostAttribute( 'meta' )?.autoblue_enabled,
+			customMessage:
+				getEditedPostAttribute( 'meta' )?.autoblue_custom_message,
+		};
+	}, [] );
 
 	if ( postStatus === 'publish' ) {
 		return <PublishedPostPanel />;
