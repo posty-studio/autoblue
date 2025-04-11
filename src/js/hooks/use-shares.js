@@ -6,6 +6,12 @@ import apiFetch from '@wordpress/api-fetch';
 const POLL_INTERVAL = 1000;
 const MAX_POLL_ATTEMPTS = 60;
 
+const getUriFromAtUri = ( atUri, did ) => {
+	const rkey = atUri.split( '/' ).pop();
+
+	return `https://bsky.app/profile/${ did }/post/${ rkey }`;
+};
+
 const useShares = () => {
 	const [ polledMeta, setPolledMeta ] = useState( null );
 	const [ pollCount, setPollCount ] = useState( 0 );
@@ -66,7 +72,15 @@ const useShares = () => {
 		return () => clearInterval( intervalId );
 	}, [ postData, polledMeta?.autoblue_shares?.length, pollCount ] );
 
-	const currentShares = polledMeta?.autoblue_shares || postData.shares;
+	let currentShares = polledMeta?.autoblue_shares || postData.shares;
+
+	// Add URL
+	currentShares = currentShares.map( ( share ) => {
+		return {
+			...share,
+			url: getUriFromAtUri( share.uri, share.did ),
+		};
+	} );
 
 	return {
 		shares: currentShares,

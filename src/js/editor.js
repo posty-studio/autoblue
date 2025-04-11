@@ -5,11 +5,24 @@ import {
 	PluginPostPublishPanel,
 	PluginDocumentSettingPanel,
 } from '@wordpress/editor';
+import { select } from '@wordpress/data'; // Import select function
 import { LogoImage } from './icons';
 import SharePanel from './components/share-panel';
 import PublishedPostPanel from './components/published-post-panel';
 
+// TODO: Add support for other post types.
+const ENABLED_POST_TYPES = [ 'post' ];
+
+const isEnabled = () => {
+	const currentPostType = select( 'core/editor' ).getCurrentPostType();
+	return ENABLED_POST_TYPES.includes( currentPostType );
+};
+
 const Panel = () => {
+	if ( ! isEnabled() ) {
+		return null;
+	}
+
 	return (
 		<PluginDocumentSettingPanel
 			name="autoblue-share-panel"
@@ -21,25 +34,37 @@ const Panel = () => {
 	);
 };
 
-const PrePublishSharePanel = () => (
-	<PluginPrePublishPanel
-		title={ 'Autoblue' }
-		initialOpen={ true }
-		icon={ LogoImage }
-	>
-		<SharePanel />
-	</PluginPrePublishPanel>
-);
+const PrePublishSharePanel = () => {
+	if ( ! isEnabled() ) {
+		return null;
+	}
 
-const PostPublishSharePanel = () => (
-	<PluginPostPublishPanel
-		title={ 'Autoblue' }
-		initialOpen={ true }
-		icon={ LogoImage }
-	>
-		<PublishedPostPanel />
-	</PluginPostPublishPanel>
-);
+	return (
+		<PluginPrePublishPanel
+			title={ 'Autoblue' }
+			initialOpen={ true }
+			icon={ LogoImage }
+		>
+			<SharePanel />
+		</PluginPrePublishPanel>
+	);
+};
+
+const PostPublishSharePanel = () => {
+	if ( ! isEnabled() ) {
+		return null;
+	}
+
+	return (
+		<PluginPostPublishPanel
+			title={ 'Autoblue' }
+			initialOpen={ true }
+			icon={ LogoImage }
+		>
+			<PublishedPostPanel />
+		</PluginPostPublishPanel>
+	);
+};
 
 registerPlugin( 'autoblue-share-panel', {
 	render: Panel,

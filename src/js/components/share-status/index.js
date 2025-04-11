@@ -1,5 +1,4 @@
 import { __ } from '@wordpress/i18n';
-import { useSelect } from '@wordpress/data';
 import { dateI18n, humanTimeDiff, getSettings } from '@wordpress/date';
 import {
 	Tooltip,
@@ -14,28 +13,8 @@ import { check } from '@wordpress/icons';
 import useShares from './../../hooks/use-shares';
 import styles from './styles.module.scss';
 
-const getUriFromAtUri = ( atUri, did ) => {
-	const rkey = atUri.split( '/' ).pop();
-
-	return `https://bsky.app/profile/${ did }/post/${ rkey }`;
-};
-
 const ShareStatus = () => {
 	const { shares, isSharingEnabled } = useShares();
-
-	const { postType } = useSelect( ( select ) => {
-		const { getCurrentPostType } = select( 'core/editor' );
-
-		return {
-			postType: getCurrentPostType(),
-		};
-	}, [] );
-
-	// TODO: Add support for other post types.
-	if ( postType !== 'post' ) {
-		return null;
-	}
-
 	const { formats } = getSettings();
 
 	if ( ! isSharingEnabled ) {
@@ -80,9 +59,7 @@ const ShareStatus = () => {
 							</Tooltip>
 						</VStack>
 					</HStack>
-					<ExternalLink
-						href={ getUriFromAtUri( share.uri, share.did ) }
-					>
+					<ExternalLink href={ share.url }>
 						{ __( 'View on Bluesky', 'autoblue' ) }
 					</ExternalLink>
 				</div>
