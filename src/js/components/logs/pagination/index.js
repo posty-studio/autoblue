@@ -1,8 +1,5 @@
 import { __, sprintf } from '@wordpress/i18n';
-import {
-	Button,
-	__experimentalHStack as HStack, // eslint-disable-line @wordpress/no-unsafe-wp-apis
-} from '@wordpress/components';
+import { Button } from '@wordpress/components';
 import { next, previous } from '@wordpress/icons';
 import useLogs from './../../../hooks/use-logs';
 import styles from './styles.module.scss';
@@ -23,7 +20,7 @@ const Pagination = () => {
 	};
 
 	return (
-		<HStack alignment="left" className={ styles.pagination }>
+		<div className={ styles.pagination }>
 			<Button
 				label={ __( 'Previous page', 'autoblue' ) }
 				onClick={ handlePreviousPage }
@@ -40,7 +37,7 @@ const Pagination = () => {
 				disabled={ page === totalPages || totalPages === 0 }
 				icon={ next }
 			/>
-			<span>
+			<span className={ styles.info }>
 				{ sprintf(
 					// translators: %1$d is the first item number, %2$d is the last item number, %3$d is the total number of items)
 					__( 'Showing %1$d-%2$d of %3$d logs', 'autoblue' ),
@@ -49,7 +46,7 @@ const Pagination = () => {
 					totalItems
 				) }
 			</span>
-		</HStack>
+		</div>
 	);
 };
 

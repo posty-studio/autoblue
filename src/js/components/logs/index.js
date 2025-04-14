@@ -46,10 +46,10 @@ const Logs = () => {
 			) }
 
 			<VStack spacing={ 2 }>
-				<HStack alignment="edge" className={ styles.header }>
+				<div className={ styles.header }>
 					<Pagination />
 					<Actions />
-				</HStack>
+				</div>
 				<Card>
 					<CardBody className={ styles.card }>
 						<VStack spacing={ 2 }>

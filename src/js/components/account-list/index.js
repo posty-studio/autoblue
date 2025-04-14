@@ -1,13 +1,15 @@
 import { __ } from '@wordpress/i18n';
 import {
 	Spinner,
-	__experimentalConfirmDialog as ConfirmDialog,
+	__experimentalConfirmDialog as ConfirmDialog, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 } from '@wordpress/components';
-import { useState } from '@wordpress/element'; // Add this import
+import { useState } from '@wordpress/element';
 import useAccounts from './../../hooks/use-accounts';
+import useWindowDimensions from '../../hooks/use-window-dimensions';
 import AccountInfo from './../account-info';
 
 const AccountList = () => {
+	const { width } = useWindowDimensions();
 	const { accounts, isLoading, deleteAccount } = useAccounts();
 	const [ isOpen, setIsOpen ] = useState( false );
 	const [ accountToDisconnect, setAccountToDisconnect ] = useState( null );
@@ -59,7 +61,7 @@ const AccountList = () => {
 					account={ account }
 					onDelete={ () => handleDisconnectClick( account ) }
 					deleteLabel={ __( 'Disconnect', 'autoblue' ) }
-					size="large"
+					size={ width > 500 ? 'large' : 'small' }
 				/>
 			) ) }
 		</div>
