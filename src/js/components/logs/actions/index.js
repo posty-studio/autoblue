@@ -84,7 +84,7 @@ const Actions = () => {
 			>
 				{ __( 'Are you sure you want to clear all logs?', 'autoblue' ) }
 			</ConfirmDialog>
-			<HStack alignment="right">
+			<div className={ styles.wrapper }>
 				<Dropdown
 					contentClassName={ styles.dropdown }
 					popoverProps={ { placement: 'bottom-end' } }
@@ -148,7 +148,7 @@ const Actions = () => {
 						isRefreshingLogs || isClearingLogs || totalItems === 0
 					}
 				/>
-			</HStack>
+			</div>
 		</>
 	);
 };

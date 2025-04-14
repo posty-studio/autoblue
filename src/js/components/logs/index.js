@@ -5,7 +5,7 @@ import {
 	__experimentalVStack as VStack, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 	__experimentalHStack as HStack, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 } from '@wordpress/components';
-import { useState } from '@wordpress/element';
+import { useState, useEffect, useCallback, useRef } from '@wordpress/element';
 import useLogs from './../../hooks/use-logs';
 import styles from './styles.module.scss';
 import ContextModal from './context-modal';
@@ -15,12 +15,26 @@ import Item from './item';
 import Table from './table';
 
 const Logs = () => {
-	const { logs } = useLogs();
+	const { logs, refreshLogs } = useLogs();
+	const firstRender = useRef( true );
 	const [ selectedLogContext, setSelectedLogContext ] = useState( null );
 
 	const handleContextView = ( log ) => {
 		setSelectedLogContext( log );
 	};
+
+	const refreshLogsOnMount = useCallback( async () => {
+		try {
+			await refreshLogs();
+		} catch ( error ) {}
+	}, [ refreshLogs ] );
+
+	useEffect( () => {
+		if ( firstRender.current ) {
+			refreshLogsOnMount();
+			firstRender.current = false;
+		}
+	}, [ refreshLogsOnMount ] );
 
 	return (
 		<>
@@ -32,10 +46,10 @@ const Logs = () => {
 			) }
 
 			<VStack spacing={ 2 }>
-				<HStack alignment="edge" className={ styles.header }>
+				<div className={ styles.header }>
 					<Pagination />
 					<Actions />
-				</HStack>
+				</div>
 				<Card>
 					<CardBody className={ styles.card }>
 						<VStack spacing={ 2 }>

@@ -1,6 +1,12 @@
 .pagination {
+	display: flex;
+	align-items: center;
 	font-size: 11px;
 	text-transform: uppercase;
 	font-weight: 500;
 	color: #1e1e1e;
+}
+
+.info {
+	margin-left: 10px;
 }

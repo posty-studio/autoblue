@@ -1,5 +1,11 @@
 .header {
-	padding: 0 16px;
+	display: flex;
+	justify-content: space-between;
+	flex-wrap: wrap;
+
+	@media screen and (min-width: 783px) {
+		padding: 0 16px;
+	}
 }
 
 .card.card {

@@ -17,3 +17,12 @@
 		margin: 0;
 	}
 }
+
+@media screen and (max-width: 782px) {
+	.table {
+		tr {
+			display: flex;
+			flex-direction: column;
+		}
+	}
+}

@@ -1,6 +1,11 @@
 .notices {
 	position: fixed;
-	bottom: 40px;
+	bottom: 20px;
+	padding-right: 20px;
+
+	@media screen and (max-width: 782px) {
+		bottom: 10px;
+	}
 }
 
 .header {
@@ -9,17 +14,22 @@
 	gap: 15px;
 	background-color: #fff;
 	padding: 20px 20px 0;
-
 	// TODO: Remove padding from #wpcontent instead.
 	margin-left: -20px;
-	@media screen and (max-width: 782px) {
-		margin-left: -10px;
-		padding: 20px 10px 0;
-	}
 
 	svg {
 		width: auto;
 		height: 28px;
+	}
+
+	@media screen and (max-width: 782px) {
+		// TODO: Remove padding from #wpcontent instead.
+		margin-left: -10px;
+		padding: 20px 16px 0;
+
+		svg {
+			height: 24px;
+		}
 	}
 }
 
@@ -45,6 +55,7 @@
 		margin-left: -20px;
 		@media screen and (max-width: 782px) {
 			margin-left: -10px;
+			justify-content: left;
 		}
 	}
 }

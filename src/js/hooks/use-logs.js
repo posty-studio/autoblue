@@ -1,5 +1,6 @@
 import { __, sprintf } from '@wordpress/i18n';
 import { useSelect, useDispatch } from '@wordpress/data';
+import { useCallback } from '@wordpress/element';
 import { useEntityProp } from '@wordpress/core-data';
 import { STORE_NAME } from '../store';
 import { store as noticesStore } from '@wordpress/notices';
@@ -54,29 +55,32 @@ const useLogs = ( { perPage = DEFAULT_PER_PAGE } = {} ) => {
 
 	const { refreshLogs, clearLogs } = useDispatch( STORE_NAME );
 
-	const handleRefreshLogs = async () => {
+	const handleRefreshLogs = useCallback( async () => {
 		try {
 			await refreshLogs( { page, perPage } );
 		} catch ( error ) {
 			console.error( 'Failed to refresh logs:', error );
 		}
-	};
+	}, [ refreshLogs, page, perPage ] );
 
-	const handleClearLogs = async () => {
+	const handleClearLogs = useCallback( async () => {
 		try {
 			await clearLogs();
 		} catch ( error ) {
 			console.error( 'Failed to clear logs:', error );
 		}
-	};
+	}, [ clearLogs ] );
 
-	const handlePageChange = async ( newPage ) => {
-		try {
-			await refreshLogs( { page: newPage, perPage } );
-		} catch ( error ) {
-			console.error( 'Failed to change page:', error );
-		}
-	};
+	const handlePageChange = useCallback(
+		async ( newPage ) => {
+			try {
+				await refreshLogs( { page: newPage, perPage } );
+			} catch ( error ) {
+				console.error( 'Failed to change page:', error );
+			}
+		},
+		[ refreshLogs, perPage ]
+	);
 
 	const [ logLevel, setLogLevelFn ] = useEntityProp(
 		'root',

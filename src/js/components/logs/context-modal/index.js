@@ -21,7 +21,7 @@ const ContextModal = ( { context, onRequestClose } ) => {
 		>
 			<VStack spacing={ 4 }>
 				<Table>
-					<tbody>
+					<tbody className={ styles.table }>
 						<tr>
 							<th>{ __( 'Level', 'autoblue' ) }</th>
 							<td>
