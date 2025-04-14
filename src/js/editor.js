@@ -1,11 +1,10 @@
-import { __ } from '@wordpress/i18n';
 import { registerPlugin } from '@wordpress/plugins';
 import {
 	PluginPrePublishPanel,
 	PluginPostPublishPanel,
 	PluginDocumentSettingPanel,
 } from '@wordpress/editor';
-import { select } from '@wordpress/data'; // Import select function
+import { select } from '@wordpress/data';
 import { LogoImage } from './icons';
 import SharePanel from './components/share-panel';
 import PublishedPostPanel from './components/published-post-panel';
