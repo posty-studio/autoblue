@@ -12,16 +12,21 @@ jobs:
             status: ${{ steps.check.outputs.conclusion }}
         steps:
             - uses: actions/checkout@v3
+              with:
+                  fetch-depth: 0
+            - name: Fetch base branch for comparison
+              run: git fetch origin ${{ github.base_ref }}
             - name: Check for relevant changes
               id: check
               env:
                   FILES_TO_CHECK: 'includes/** autoblue.php uninstall.php'
               run: |
-                  if [ -z "$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} -- $FILES_TO_CHECK)" ]; then
+                  changed_files=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }} -- $FILES_TO_CHECK)
+                  if [ -z "$changed_files" ]; then
                     echo "conclusion=should-not-run" >> $GITHUB_OUTPUT
-                    exit 0
+                  else
+                    echo "conclusion=should-run" >> $GITHUB_OUTPUT
                   fi
-                  echo "conclusion=should-run" >> $GITHUB_OUTPUT
     tests:
         runs-on: ubuntu-latest
         needs: check
