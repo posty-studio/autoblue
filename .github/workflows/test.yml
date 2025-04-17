@@ -23,9 +23,9 @@ jobs:
               run: |
                   changed_files=$(git diff --name-only origin/${{ github.base_ref }} ${{ github.sha }} -- $FILES_TO_CHECK)
                   if [ -z "$changed_files" ]; then
-                    echo "conclusion=should-not-run" >> $GITHUB_OUTPUT
-                  else
                     echo "conclusion=should-run" >> $GITHUB_OUTPUT
+                  else
+                    echo "conclusion=should-not-run" >> $GITHUB_OUTPUT
                   fi
     tests:
         runs-on: ubuntu-latest
