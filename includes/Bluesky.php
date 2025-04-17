@@ -144,7 +144,7 @@ class Bluesky {
 		$message = apply_filters( 'autoblue/share_message', $message, $post_id );
 
 		$message = html_entity_decode( wp_strip_all_tags( $message ), ENT_QUOTES );
-		$message = ( new Utils\Text() )->trim_text( $message, 300 );
+		$message = ( new Utils\Text() )->trim_text( $message, 400 );
 
 		$body = [
 			'collection' => 'app.bsky.feed.post',
