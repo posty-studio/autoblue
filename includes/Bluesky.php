@@ -143,7 +143,7 @@ class Bluesky {
 		 */
 		$message = apply_filters( 'autoblue/share_message', $message, $post_id );
 
-		$message = html_entity_decode( wp_strip_all_tags( $message ) );
+		$message = html_entity_decode( wp_strip_all_tags( $message ), ENT_QUOTES );
 		$message = ( new Utils\Text() )->trim_text( $message, 300 );
 
 		$body = [
@@ -158,8 +158,8 @@ class Bluesky {
 					'$type'    => 'app.bsky.embed.external',
 					'external' => [
 						'uri'         => get_permalink( $post->ID ),
-						'title'       => html_entity_decode( get_the_title( $post->ID ), ENT_QUOTES, 'UTF-8' ),
-						'description' => $excerpt,
+						'title'       => html_entity_decode( get_the_title( $post->ID ), ENT_QUOTES ),
+						'description' => html_entity_decode( wp_strip_all_tags( $excerpt ), ENT_QUOTES ),
 					],
 				],
 			],
