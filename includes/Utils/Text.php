@@ -23,7 +23,7 @@ class Text {
 			return '';
 		}
 
-		$last_space = strrpos( $trimmed_string, ' ' );
+		$last_space = grapheme_strrpos( $trimmed_string, ' ' );
 
 		if ( $last_space !== false ) {
 			$trimmed_string = grapheme_substr( $trimmed_string, 0, $last_space );
