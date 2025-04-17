@@ -9,6 +9,7 @@ import {
 import { useSelect, useDispatch } from '@wordpress/data';
 import AccountInfo from './../account-info';
 import PublishedPostPanel from './../published-post-panel';
+import MediaPicker from '../media-picker';
 import useNewAccountModal from './../new-account-modal';
 import useAccounts from './../../hooks/use-accounts';
 import styles from './styles.module.scss';
@@ -77,6 +78,7 @@ const SharePanel = () => {
 						maxLength={ 250 }
 						onChange={ setCustomMessage }
 					/>
+					<MediaPicker />
 					<BaseControl
 						__nextHasNoMarginBottom
 						label={ __( 'Sharing to:', 'autoblue' ) }
