@@ -55,10 +55,22 @@ check_prerequisites() {
 		exit 1
 	fi
 
-	# if [[ -n "$(git status --porcelain)" ]]; then
-	# 	echo "Error: Working directory not clean, make sure you're working from a clean checkout and try again."
-	# 	exit 1
-	# fi
+	if [[ -n "$(git status --porcelain)" ]]; then
+		echo "Error: Working directory not clean, make sure you're working from a clean checkout and try again."
+		exit 1
+	fi
+}
+
+checkout_branch() {
+	local new_version=$1
+	local branch_name="release/v$new_version"
+
+	if git rev-parse --verify "$branch_name" >/dev/null 2>&1; then
+		echo "Error: Branch $branch_name already exists"
+		exit 1
+	fi
+
+	git checkout -b "$branch_name"
 }
 
 update_files() {
@@ -108,6 +120,7 @@ main() {
 		exit 1
 	fi
 
+	checkout_branch "$new_version"
 	validate_version "$new_version" "$prev_version"
 	update_files "$new_version" "$prev_version"
 
