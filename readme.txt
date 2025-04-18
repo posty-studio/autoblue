@@ -1,7 +1,7 @@
 === Autoblue ===
 Contributors: danielpost
 Tags: social, bluesky, auto, share, post
-Stable tag: 0.0.5
+Stable tag: 0.0.6
 Requires at least: 6.6
 Tested up to: 6.7
 Requires PHP: 7.4
@@ -45,6 +45,11 @@ Currently, Autoblue only works in the block editor. It uses a lot of modern Word
 3. Keep track of everything that Autoblue does.
 
 == Changelog ==
+
+= 0.0.6 =
+* Improvement: Autoblue settings page is now more mobile-friendly.
+* Fix: Link to the Bluesky post after sharing works again.
+* Fix: Excerpts now render correctly in the Bluesky post.
 
 = 0.0.5 =
 * Feature: Add filter for setting a custom share message
