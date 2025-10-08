@@ -54,7 +54,7 @@ class Bluesky {
 	/**
 	 * @return array<string,mixed>|false
 	 */
-	private function upload_image( int $image_id, string $access_token ) {
+	private function upload_image( int $image_id, string $access_token, string $did ) {
 		if ( ! $image_id || ! $access_token ) {
 			return false;
 		}
@@ -89,7 +89,7 @@ class Bluesky {
 			return false;
 		}
 
-		$blob = $this->api_client->upload_blob( $image_blob, $mime_type, $access_token );
+		$blob = $this->api_client->upload_blob( $image_blob, $mime_type, $access_token, $did );
 
 		if ( is_wp_error( $blob ) ) {
 			$this->log->error( __( 'Skipping image: Failed to upload image with ID `{attachment_id}` to Bluesky:', 'autoblue' ) . ' ' . $blob->get_error_message(), [ 'attachment_id' => $image_id ] );
@@ -173,14 +173,14 @@ class Bluesky {
 
 		$image_blob = false;
 		if ( has_post_thumbnail( $post->ID ) ) {
-			$image_blob = $this->upload_image( get_post_thumbnail_id( $post->ID ), $connection['access_jwt'] ); // @phpstan-ignore argument.type
+			$image_blob = $this->upload_image( get_post_thumbnail_id( $post->ID ), $connection['access_jwt'], $connection['did'] ); // @phpstan-ignore argument.type
 		}
 
 		if ( ! empty( $image_blob ) ) {
 			$body['record']['embed']['external']['thumb'] = $image_blob;
 		}
 
-		$response = $this->api_client->create_record( $body, $connection['access_jwt'] );
+		$response = $this->api_client->create_record( $body, $connection['access_jwt'], $connection['did'] );
 
 		if ( is_wp_error( $response ) ) {
 			$this->log->error(
