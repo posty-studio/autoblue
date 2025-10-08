@@ -155,7 +155,7 @@ class ConnectionsManager {
 			return new \WP_Error( 'autoblue_connection_not_found', __( 'Connection not found.', 'autoblue' ) );
 		}
 
-		$response = $this->api_client->refresh_session( $connection['refresh_jwt'] );
+		$response = $this->api_client->refresh_session( $connection['refresh_jwt'], $did );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;

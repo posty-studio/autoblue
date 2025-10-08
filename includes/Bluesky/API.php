@@ -119,6 +119,46 @@ class API {
 	}
 
 	/**
+	 * @return string|\WP_Error
+	 */
+	private function resolve_pds_endpoint( string $did ) {
+		if ( ! $did ) {
+			return new \WP_Error( 'autoblue_invalid_did', __( 'Invalid DID.', 'autoblue' ) );
+		}
+
+		$response = wp_safe_remote_get( ' https://plc.directory/' . $did );
+
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		$code = wp_remote_retrieve_response_code( $response );
+
+		if ( 200 !== $code ) {
+			return new \WP_Error( 'autoblue_did_resolve_error', __( 'Error resolving DID document.', 'autoblue' ) );
+		}
+
+		$body    = wp_remote_retrieve_body( $response );
+		$did_doc = json_decode( $body, true );
+
+		if ( ! $did_doc ) {
+			return new \WP_Error( 'autoblue_did_parse_error', __( 'Failed to parse DID document.', 'autoblue' ) );
+		}
+
+		if ( ! isset( $did_doc['service'] ) || ! is_array( $did_doc['service'] ) ) {
+			return new \WP_Error( 'autoblue_did_no_service', __( 'No service found in DID document.', 'autoblue' ) );
+		}
+
+		foreach ( $did_doc['service'] as $service ) {
+			if ( isset( $service['type'] ) && 'AtprotoPersonalDataServer' === $service['type'] && isset( $service['serviceEndpoint'] ) ) {
+				return $service['serviceEndpoint'];
+			}
+		}
+
+		return new \WP_Error( 'autoblue_did_no_pds', __( 'No PDS service found in DID document.', 'autoblue' ) );
+	}
+
+	/**
 	 * @return array<string,mixed>|\WP_Error
 	 */
 	public function create_session( string $did, string $app_password ) {
@@ -126,7 +166,13 @@ class API {
 			return new \WP_Error( 'autoblue_invalid_did_or_password', __( 'Invalid DID or password.', 'autoblue' ) );
 		}
 
-		return $this->send_request(
+		$pds_endpoint = $this->resolve_pds_endpoint( $did );
+
+		if ( is_wp_error( $pds_endpoint ) ) {
+			return $pds_endpoint;
+		}
+
+		$result = $this->send_request(
 			[
 				'endpoint' => 'com.atproto.server.createSession',
 				'method'   => 'POST',
@@ -134,17 +180,25 @@ class API {
 					'identifier' => $did,
 					'password'   => $app_password,
 				],
-				'base_url' => self::BASE_URL,
+				'base_url' => $pds_endpoint,
 			]
 		);
+
+		return $result;
 	}
 
 	/**
 	 * @return array<string,mixed>|\WP_Error
 	 */
-	public function refresh_session( string $refresh_jwt ) {
+	public function refresh_session( string $refresh_jwt, string $did ) {
 		if ( ! $refresh_jwt ) {
 			return new \WP_Error( 'autoblue_invalid_refresh_jwt', __( 'Invalid refresh JWT.', 'autoblue' ) );
+		}
+
+		$pds_endpoint = $this->resolve_pds_endpoint( $did );
+
+		if ( is_wp_error( $pds_endpoint ) ) {
+			return $pds_endpoint;
 		}
 
 		return $this->send_request(
@@ -155,7 +209,7 @@ class API {
 					'Content-Type'  => 'application/json',
 					'Authorization' => 'Bearer ' . $refresh_jwt,
 				],
-				'base_url' => self::BASE_URL,
+				'base_url' => $pds_endpoint,
 			]
 		);
 	}
@@ -164,9 +218,15 @@ class API {
 	 * @param array<string, mixed> $record
 	 * @return array<string,mixed>|\WP_Error
 	 */
-	public function create_record( array $record, string $access_token ) {
+	public function create_record( array $record, string $access_token, string $did ) {
 		if ( ! $record || ! $access_token ) {
 			return new \WP_Error( 'autoblue_invalid_record_or_access_token', __( 'Invalid record or access token.', 'autoblue' ) );
+		}
+
+		$pds_endpoint = $this->resolve_pds_endpoint( $did );
+
+		if ( is_wp_error( $pds_endpoint ) ) {
+			return $pds_endpoint;
 		}
 
 		return $this->send_request(
@@ -177,7 +237,7 @@ class API {
 					'Authorization' => 'Bearer ' . $access_token,
 				],
 				'body'     => $record,
-				'base_url' => self::BASE_URL,
+				'base_url' => $pds_endpoint,
 			]
 		);
 	}
@@ -185,13 +245,19 @@ class API {
 	/**
 	 * @return array<string,mixed>|\WP_Error
 	 */
-	public function upload_blob( string $blob, string $mime_type, string $access_token ) {
+	public function upload_blob( string $blob, string $mime_type, string $access_token, string $did ) {
 		if ( ! $blob || ! $mime_type ) {
 			return new \WP_Error( 'autoblue_invalid_blob_or_mime_type', __( 'Invalid blob or MIME type.', 'autoblue' ) );
 		}
 
 		if ( ! $access_token ) {
 			return new \WP_Error( 'autoblue_invalid_access_token', __( 'Invalid access token.', 'autoblue' ) );
+		}
+
+		$pds_endpoint = $this->resolve_pds_endpoint( $did );
+
+		if ( is_wp_error( $pds_endpoint ) ) {
+			return $pds_endpoint;
 		}
 
 		$data = $this->send_request(
@@ -203,7 +269,7 @@ class API {
 					'Content-Type'  => $mime_type,
 				],
 				'body'     => $blob,
-				'base_url' => self::BASE_URL,
+				'base_url' => $pds_endpoint,
 			]
 		);
 
