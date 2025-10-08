@@ -72,52 +72,110 @@ class APITest extends WPTestCase {
 	}
 
 	public function test_create_session_with_valid_credentials() {
+		$request_count = 0;
+
 		add_filter(
 			'pre_http_request',
-			fn () => [
-				'response' => [ 'code' => 200 ],
-				'body'     => wp_json_encode(
-					[
-						'accessJwt'  => 'test-jwt-token',
-						'refreshJwt' => 'test-refresh-token',
-					]
-				),
-			],
+			function ( $response, $parsed_args, $url ) use ( &$request_count ) {
+				$request_count++;
+
+				if ( strpos( $url, 'plc.directory' ) !== false ) {
+					return [
+						'response' => [ 'code' => 200 ],
+						'body'     => wp_json_encode(
+							[
+								'id'      => 'did:plc:testuser123',
+								'service' => [
+									[
+										'id'              => '#atproto_pds',
+										'type'            => 'AtprotoPersonalDataServer',
+										'serviceEndpoint' => 'https://bsky.social',
+									],
+								],
+							]
+						),
+					];
+				}
+
+				if ( strpos( $url, 'createSession' ) !== false ) {
+					return [
+						'response' => [ 'code' => 200 ],
+						'body'     => wp_json_encode(
+							[
+								'accessJwt'  => 'test-jwt-token',
+								'refreshJwt' => 'test-refresh-token',
+							]
+						),
+					];
+				}
+
+				return $response;
+			},
+			10,
+			3
 		);
 
-		$result = $this->api->create_session( 'test-did', 'test-password' );
+		$result = $this->api->create_session( 'did:plc:testuser123', 'test-password' );
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'accessJwt', $result );
 		$this->assertArrayHasKey( 'refreshJwt', $result );
+		$this->assertEquals( 2, $request_count, 'Should make 2 HTTP requests: PLC directory + createSession' );
 	}
 
 	public function test_upload_blob_with_invalid_inputs() {
-		$result = $this->api->upload_blob( '', '', '' );
+		$result = $this->api->upload_blob( '', '', '', '' );
 		$this->assertInstanceOf( WP_Error::class, $result );
 	}
 
 	public function test_upload_blob_with_valid_inputs() {
 		add_filter(
 			'pre_http_request',
-			fn () => [
-				'response' => [ 'code' => 200 ],
-				'body'     => wp_json_encode(
-					[
-						'blob' => [
-							'ref'      => [ '$link' => 'test-blob-ref' ],
-							'mimeType' => 'image/jpeg',
-							'size'     => 1024,
-						],
-					]
-				),
-			],
+			function ( $response, $parsed_args, $url ) {
+				if ( strpos( $url, 'plc.directory' ) !== false ) {
+					return [
+						'response' => [ 'code' => 200 ],
+						'body'     => wp_json_encode(
+							[
+								'id'      => 'did:plc:testuser123',
+								'service' => [
+									[
+										'id'              => '#atproto_pds',
+										'type'            => 'AtprotoPersonalDataServer',
+										'serviceEndpoint' => 'https://bsky.social',
+									],
+								],
+							]
+						),
+					];
+				}
+
+				if ( strpos( $url, 'uploadBlob' ) !== false ) {
+					return [
+						'response' => [ 'code' => 200 ],
+						'body'     => wp_json_encode(
+							[
+								'blob' => [
+									'ref'      => [ '$link' => 'test-blob-ref' ],
+									'mimeType' => 'image/jpeg',
+									'size'     => 1024,
+								],
+							]
+						),
+					];
+				}
+
+				return $response;
+			},
+			10,
+			3
 		);
 
 		$result = $this->api->upload_blob(
 			'test-blob-data',
 			'image/jpeg',
-			'test-access-token'
+			'test-access-token',
+			'did:plc:testuser123'
 		);
 
 		$this->assertIsArray( $result );
@@ -174,6 +232,104 @@ class APITest extends WPTestCase {
 
 		$this->assertIsArray( $result );
 		$this->assertArrayHasKey( 'thread', $result );
+	}
+
+	public function test_create_session_with_self_hosted_pds() {
+		add_filter(
+			'pre_http_request',
+			function ( $response, $parsed_args, $url ) {
+				if ( strpos( $url, 'plc.directory' ) !== false ) {
+					return [
+						'response' => [ 'code' => 200 ],
+						'body'     => wp_json_encode(
+							[
+								'id'      => 'did:plc:testuser123',
+								'service' => [
+									[
+										'id'              => '#atproto_pds',
+										'type'            => 'AtprotoPersonalDataServer',
+										'serviceEndpoint' => 'https://example.com',
+									],
+								],
+							]
+						),
+					];
+				}
+
+				if ( strpos( $url, 'example.com' ) !== false && strpos( $url, 'createSession' ) !== false ) {
+					return [
+						'response' => [ 'code' => 200 ],
+						'body'     => wp_json_encode(
+							[
+								'accessJwt'  => 'self-hosted-jwt-token',
+								'refreshJwt' => 'self-hosted-refresh-token',
+							]
+						),
+					];
+				}
+
+				return $response;
+			},
+			10,
+			3
+		);
+
+		$result = $this->api->create_session( 'did:plc:testuser123', 'test-password' );
+
+		$this->assertIsArray( $result );
+		$this->assertArrayHasKey( 'accessJwt', $result );
+		$this->assertEquals( 'self-hosted-jwt-token', $result['accessJwt'] );
+	}
+
+	public function test_pds_resolution_with_missing_service() {
+		add_filter(
+			'pre_http_request',
+			function ( $response, $parsed_args, $url ) {
+				if ( strpos( $url, 'plc.directory' ) !== false ) {
+					return [
+						'response' => [ 'code' => 200 ],
+						'body'     => wp_json_encode(
+							[
+								'id'      => 'did:plc:testuser123',
+								'service' => [], // No services.
+							]
+						),
+					];
+				}
+
+				return $response;
+			},
+			10,
+			3
+		);
+
+		$result = $this->api->create_session( 'did:plc:testuser123', 'test-password' );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertEquals( 'autoblue_did_no_pds', $result->get_error_code() );
+	}
+
+	public function test_pds_resolution_with_plc_directory_error() {
+		add_filter(
+			'pre_http_request',
+			function ( $response, $parsed_args, $url ) {
+				if ( strpos( $url, 'plc.directory' ) !== false ) {
+					return [
+						'response' => [ 'code' => 404 ],
+						'body'     => wp_json_encode( [ 'error' => 'Not Found' ] ),
+					];
+				}
+
+				return $response;
+			},
+			10,
+			3
+		);
+
+		$result = $this->api->create_session( 'did:plc:nonexistent', 'test-password' );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertEquals( 'autoblue_did_resolve_error', $result->get_error_code() );
 	}
 
 	protected function tearDown(): void {
