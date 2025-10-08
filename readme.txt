@@ -1,7 +1,7 @@
 === Autoblue ===
 Contributors: danielpost
 Tags: social, bluesky, auto, share, post
-Stable tag: 0.0.6
+Stable tag: 1.0.0
 Requires at least: 6.6
 Tested up to: 6.8
 Requires PHP: 7.4
@@ -45,6 +45,10 @@ Currently, Autoblue only works in the block editor. It uses a lot of modern Word
 3. Keep track of everything that Autoblue does.
 
 == Changelog ==
+
+= 1.0.0 =
+* Autoblue is now out of beta.
+* Feature: Add support for self-hosted PDS
 
 = 0.0.6 =
 * Improvement: Autoblue settings page is now more mobile-friendly.
