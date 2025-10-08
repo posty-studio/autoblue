@@ -126,7 +126,14 @@ class API {
 			return new \WP_Error( 'autoblue_invalid_did', __( 'Invalid DID.', 'autoblue' ) );
 		}
 
-		$response = wp_safe_remote_get( ' https://plc.directory/' . $did );
+		$cache_key = 'autoblue_pds_endpoint_' . $did;
+		$cached    = get_transient( $cache_key );
+
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
+		$response = wp_safe_remote_get( 'https://plc.directory/' . $did );
 
 		if ( is_wp_error( $response ) ) {
 			return $response;
@@ -151,7 +158,11 @@ class API {
 
 		foreach ( $did_doc['service'] as $service ) {
 			if ( isset( $service['type'] ) && 'AtprotoPersonalDataServer' === $service['type'] && isset( $service['serviceEndpoint'] ) ) {
-				return $service['serviceEndpoint'];
+				$endpoint = $service['serviceEndpoint'];
+
+				set_transient( $cache_key, $endpoint, DAY_IN_SECONDS );
+
+				return $endpoint;
 			}
 		}
 

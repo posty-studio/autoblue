@@ -96,7 +96,9 @@ class ConnectionsManager {
 		}
 
 		update_option( self::OPTION_KEY, $filtered_connections );
+
 		delete_transient( $this->get_transient_key( $did ) );
+		delete_transient( 'autoblue_pds_endpoint_' . $did );
 
 		$this->log->info( __( 'Connection with DID `{did}` deleted.', 'autoblue' ), [ 'did' => $did ] );
 
