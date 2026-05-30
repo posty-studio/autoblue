@@ -57,9 +57,7 @@ class PostHandler {
 			return;
 		}
 
-		// Don't run this when saving already published posts. The block editor commonly
-		// fires `wp_after_insert_post` more than once per publish, so this branch is the
-		// expected no-op path — intentionally silent to avoid misleading log noise.
+		// Don't run this when saving already published posts.
 		if ( $post_before && $post_before->post_status === 'publish' ) {
 			return;
 		}
