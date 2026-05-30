@@ -25,12 +25,17 @@ const NewAccountModal = ( {
 	onAddAccount,
 	status,
 	errorMessage,
+	isReconnect,
 } ) => {
 	if ( ! isOpen ) return null;
 
 	return (
 		<Modal
-			title={ __( 'Connect Bluesky account', 'autoblue' ) }
+			title={
+				isReconnect
+					? __( 'Reconnect Bluesky account', 'autoblue' )
+					: __( 'Connect Bluesky account', 'autoblue' )
+			}
 			onRequestClose={ onClose }
 			focusOnMount="firstContentElement"
 			size="medium"
@@ -39,7 +44,11 @@ const NewAccountModal = ( {
 				{ selectedAccount ? (
 					<AccountInfo
 						account={ selectedAccount }
-						onDelete={ () => onSelectAccount( null ) }
+						onDelete={
+							isReconnect
+								? null
+								: () => onSelectAccount( null )
+						}
 					/>
 				) : (
 					<AccountSearch onSelect={ onSelectAccount } />
@@ -72,7 +81,9 @@ const NewAccountModal = ( {
 						onClick={ onAddAccount }
 						disabled={ status === 'loading' }
 					>
-						{ __( 'Connect Account', 'autoblue' ) }
+						{ isReconnect
+							? __( 'Reconnect account', 'autoblue' )
+							: __( 'Connect account', 'autoblue' ) }
 					</Button>
 					{ status === 'loading' && <Spinner /> }
 				</HStack>
@@ -90,16 +101,28 @@ const NewAccountModal = ( {
 const useNewAccountModal = ( initialIsOpen = false ) => {
 	const [ isOpen, setIsOpen ] = useState( initialIsOpen );
 	const [ selectedAccount, setSelectedAccount ] = useState( null );
+	const [ isReconnect, setIsReconnect ] = useState( false );
 	const [ appPassword, setAppPassword ] = useState( '' );
 	const [ status, setStatus ] = useState( 'idle' );
 	const [ errorMessage, setErrorMessage ] = useState( '' );
 	const { addAccount } = useAccounts();
 
-	const openModal = () => setIsOpen( true );
+	const openModal = () => {
+		setIsReconnect( false );
+		setIsOpen( true );
+	};
+	const openModalForReconnect = ( account ) => {
+		setSelectedAccount( account );
+		setIsReconnect( true );
+		setIsOpen( true );
+	};
 	const closeModal = () => {
 		setIsOpen( false );
 		setSelectedAccount( null );
 		setAppPassword( '' );
+		setIsReconnect( false );
+		setStatus( 'idle' );
+		setErrorMessage( '' );
 	};
 
 	const handleAppPasswordChange = ( newAppPassword ) => {
@@ -150,6 +173,7 @@ const useNewAccountModal = ( initialIsOpen = false ) => {
 			onAddAccount={ handleAddAccount }
 			status={ status }
 			errorMessage={ errorMessage }
+			isReconnect={ isReconnect }
 		/>
 	);
 
@@ -157,6 +181,7 @@ const useNewAccountModal = ( initialIsOpen = false ) => {
 		renderModal,
 		isOpen,
 		openModal,
+		openModalForReconnect,
 		closeModal,
 	};
 };

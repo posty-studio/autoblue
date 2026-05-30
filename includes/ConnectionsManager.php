@@ -30,11 +30,6 @@ class ConnectionsManager {
 	 * @return array<string,mixed>|\WP_Error The added connection with profile data or error object.
 	 */
 	public function add_connection( string $did, string $app_password ) {
-		if ( $this->connection_exists( $did ) ) {
-			$this->log->warning( __( 'Connection not added: Connection with DID `{did}` already exists.', 'autoblue' ), [ 'did' => $did ] );
-			return new \WP_Error( 'autoblue_connection_exists', __( 'Connection already exists.', 'autoblue' ) );
-		}
-
 		if ( ! $this->is_valid_did( $did ) ) {
 			$this->log->warning( __( 'Connection not added: Invalid DID: `{did}`', 'autoblue' ), [ 'did' => $did ] );
 			return new \WP_Error( 'autoblue_invalid_did', __( 'Invalid DID.', 'autoblue' ) );
@@ -52,13 +47,14 @@ class ConnectionsManager {
 			return $auth_response;
 		}
 
+		$is_reconnect   = $this->connection_exists( $did );
 		$new_connection = [
 			'did'         => sanitize_text_field( $did ),
 			'access_jwt'  => sanitize_text_field( $auth_response['accessJwt'] ),
 			'refresh_jwt' => sanitize_text_field( $auth_response['refreshJwt'] ),
 		];
 
-		$this->store_connection( $new_connection );
+		$this->store_connection( $new_connection, $is_reconnect );
 
 		$profile_data = $this->fetch_and_cache_profile( $new_connection['did'], true );
 
@@ -183,6 +179,9 @@ class ConnectionsManager {
 		$response = $this->api_client->refresh_session( $connection['refresh_jwt'], $did );
 
 		if ( is_wp_error( $response ) ) {
+			if ( $this->is_auth_error( $response ) ) {
+				$this->mark_needs_reauth( $did );
+			}
 			return $response;
 		}
 
@@ -249,13 +248,46 @@ class ConnectionsManager {
 		}
 
 		foreach ( $connections as $connection ) {
-			$this->refresh_tokens( $connection['did'] );
+			$result = $this->refresh_tokens( $connection['did'] );
+
+			if ( is_wp_error( $result ) ) {
+				$this->log->warning(
+					__( 'Scheduled token refresh failed for DID `{did}`: {message}', 'autoblue' ),
+					[
+						'did'     => $connection['did'],
+						'message' => $result->get_error_message(),
+					]
+				);
+			}
 		}
 	}
 
 	private function connection_exists( string $did ): bool {
 		$connections = get_option( self::OPTION_KEY, [] );
 		return in_array( $did, array_column( $connections, 'did' ), true );
+	}
+
+	private function is_auth_error( \WP_Error $error ): bool {
+		$message = strtolower( $error->get_error_message() );
+		foreach ( [ 'expiredtoken', 'invalidtoken', 'authenticationrequired', 'authrequired' ] as $needle ) {
+			if ( strpos( $message, $needle ) !== false ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private function mark_needs_reauth( string $did ): void {
+		$connections = get_option( self::OPTION_KEY, [] );
+
+		foreach ( $connections as &$connection ) {
+			if ( $connection['did'] === $did ) {
+				$connection['needs_reauth'] = true;
+				break;
+			}
+		}
+
+		update_option( self::OPTION_KEY, $connections );
 	}
 
 	private function is_valid_did( string $did ): bool {
@@ -282,8 +314,9 @@ class ConnectionsManager {
 		$meta = $connection['meta'] ?? [];
 
 		return [
-			'did'  => sanitize_text_field( $connection['did'] ?? '' ),
-			'meta' => [
+			'did'          => sanitize_text_field( $connection['did'] ?? '' ),
+			'needs_reauth' => ! empty( $connection['needs_reauth'] ),
+			'meta'         => [
 				'handle' => sanitize_text_field( $meta['handle'] ?? '' ),
 				'name'   => sanitize_text_field( $meta['name'] ?? '' ),
 				'avatar' => esc_url_raw( $meta['avatar'] ?? '' ),

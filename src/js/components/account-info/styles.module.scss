@@ -14,10 +14,8 @@
 	background-color: rgb(255, 255, 255);
 	background-color: #fff;
 	display: flex;
+	flex-direction: column;
 	gap: var(--gap-size);
-	justify-content: space-between;
-	align-items: center;
-	flex-wrap: wrap;
 	width: 100%;
 	box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 0px 1px;
 	outline: none;
@@ -31,6 +29,25 @@
 		border-bottom-left-radius: 7px;
 		border-bottom-right-radius: 7px;
 	}
+}
+
+.row {
+	display: flex;
+	gap: var(--gap-size);
+	justify-content: space-between;
+	align-items: center;
+	flex-wrap: wrap;
+	width: 100%;
+}
+
+.actions {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+
+.notice {
+	margin: 0 !important;
 }
 
 .meta {

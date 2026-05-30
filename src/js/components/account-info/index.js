@@ -1,7 +1,7 @@
 import { __ } from '@wordpress/i18n';
 import { useState, useEffect, useRef } from 'react';
 import apiFetch from '@wordpress/api-fetch';
-import { Spinner, Button } from '@wordpress/components';
+import { Spinner, Button, Notice } from '@wordpress/components';
 import clsx from 'clsx';
 import styles from './styles.module.scss';
 
@@ -61,20 +61,24 @@ const useAccountInfo = ( did, meta ) => {
 };
 
 const AccountInfo = ( {
-	account: { did, meta = {} },
+	account: { did, meta = {}, needs_reauth: needsReauth = false },
 	className,
 	onDelete = null,
 	deleteLabel = null,
+	onReconnect = null,
 	size = 'medium',
 } ) => {
 	const { userData, isLoading } = useAccountInfo( did, meta );
 	const [ isImageLoaded, setIsImageLoaded ] = useState( false );
 
+	const showReauthNotice = needsReauth && onReconnect;
+
 	className = clsx(
 		styles.wrapper,
 		className,
 		size === 'small' && styles.small,
-		size === 'large' && styles.large
+		size === 'large' && styles.large,
+		showReauthNotice && styles.needsReauth
 	);
 
 	if ( isLoading ) {
@@ -89,40 +93,70 @@ const AccountInfo = ( {
 
 	return (
 		<div className={ className }>
-			<div className={ styles.meta }>
-				<figure className={ styles.avatar }>
-					{ userData.avatar && (
-						<img
-							src={ userData.avatar }
-							alt={ userData.displayName }
-							style={ {
-								display: isImageLoaded ? 'block' : 'none',
-							} }
-							onLoad={ () => setIsImageLoaded( true ) }
-							onError={ () => setIsImageLoaded( false ) }
-						/>
-					) }
-				</figure>
-				<div className={ styles.info }>
-					<span className={ styles.name }>
-						{ userData.displayName }
-					</span>
-					<span className={ styles.handle }>
-						@{ userData.handle }
-					</span>
-				</div>
-			</div>
-			{ onDelete && (
-				<Button
-					icon={ ! deleteLabel ? 'no-alt' : undefined }
-					isDestructive
-					variant={ ! deleteLabel ? undefined : 'secondary' }
-					onClick={ onDelete }
-					label={ deleteLabel || __( 'Delete', 'autoblue' ) }
+			{ showReauthNotice && (
+				<Notice
+					status="warning"
+					isDismissible={ false }
+					className={ styles.notice }
 				>
-					{ deleteLabel || null }
-				</Button>
+					{ __(
+						'This connection has expired. Reconnect to keep sharing to Bluesky.',
+						'autoblue'
+					) }
+				</Notice>
 			) }
+			<div className={ styles.row }>
+				<div className={ styles.meta }>
+					<figure className={ styles.avatar }>
+						{ userData.avatar && (
+							<img
+								src={ userData.avatar }
+								alt={ userData.displayName }
+								style={ {
+									display: isImageLoaded ? 'block' : 'none',
+								} }
+								onLoad={ () => setIsImageLoaded( true ) }
+								onError={ () => setIsImageLoaded( false ) }
+							/>
+						) }
+					</figure>
+					<div className={ styles.info }>
+						<span className={ styles.name }>
+							{ userData.displayName }
+						</span>
+						<span className={ styles.handle }>
+							@{ userData.handle }
+						</span>
+					</div>
+				</div>
+				{ ( showReauthNotice || onDelete ) && (
+					<div className={ styles.actions }>
+						{ showReauthNotice && (
+							<Button
+								variant="primary"
+								onClick={ onReconnect }
+							>
+								{ __( 'Reconnect', 'autoblue' ) }
+							</Button>
+						) }
+						{ onDelete && (
+							<Button
+								icon={ ! deleteLabel ? 'no-alt' : undefined }
+								isDestructive
+								variant={
+									! deleteLabel ? undefined : 'secondary'
+								}
+								onClick={ onDelete }
+								label={
+									deleteLabel || __( 'Delete', 'autoblue' )
+								}
+							>
+								{ deleteLabel || null }
+							</Button>
+						) }
+					</div>
+				) }
+			</div>
 		</div>
 	);
 };

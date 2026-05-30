@@ -1,10 +1,12 @@
 import { __ } from '@wordpress/i18n';
+import { createInterpolateElement } from '@wordpress/element';
 import {
 	__experimentalVStack as VStack, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 	ToggleControl,
 	TextareaControl,
 	BaseControl,
 	Button,
+	Notice,
 } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
 import AccountInfo from './../account-info';
@@ -56,15 +58,35 @@ const SharePanel = () => {
 		} );
 	};
 
+	const hasBrokenConnection = accounts.some( ( a ) => a.needs_reauth );
+	const effectiveIsEnabled = isEnabled && ! hasBrokenConnection;
+
 	return (
 		<VStack spacing={ 3 }>
+			{ hasBrokenConnection && (
+				<Notice status="warning" isDismissible={ false }>
+					{ createInterpolateElement(
+						__(
+							'Your Bluesky connection has expired. <a>Reconnect in Settings →</a>',
+							'autoblue'
+						),
+						{
+							a: (
+								// eslint-disable-next-line jsx-a11y/anchor-has-content
+								<a href="admin.php?page=autoblue" />
+							),
+						}
+					) }
+				</Notice>
+			) }
 			<ToggleControl
 				__nextHasNoMarginBottom
 				label={ __( 'Share to Bluesky', 'autoblue' ) }
-				checked={ isEnabled }
+				checked={ effectiveIsEnabled }
 				onChange={ setIsEnabled }
+				disabled={ hasBrokenConnection }
 			/>
-			{ isEnabled && (
+			{ effectiveIsEnabled && (
 				<>
 					<TextareaControl
 						__nextHasNoMarginBottom

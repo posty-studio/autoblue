@@ -11,11 +11,20 @@ export default function accounts( state = DEFAULT_STATE, action ) {
 				...state,
 				items: action.accounts,
 			};
-		case ADD_ACCOUNT:
+		case ADD_ACCOUNT: {
+			const existingIndex = state.items.findIndex(
+				( item ) => item.did === action.account.did
+			);
+			if ( existingIndex !== -1 ) {
+				const items = [ ...state.items ];
+				items[ existingIndex ] = action.account;
+				return { ...state, items };
+			}
 			return {
 				...state,
 				items: [ ...state.items, action.account ],
 			};
+		}
 		case DELETE_ACCOUNT:
 			return {
 				...state,
