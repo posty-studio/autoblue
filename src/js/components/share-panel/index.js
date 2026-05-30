@@ -11,13 +11,13 @@ import {
 import { useSelect, useDispatch } from '@wordpress/data';
 import AccountInfo from './../account-info';
 import PublishedPostPanel from './../published-post-panel';
-import useNewAccountModal from './../new-account-modal';
+import useConnectAccountModal from './../connect-account-modal';
 import useAccounts from './../../hooks/use-accounts';
 import styles from './styles.module.scss';
 
 const SharePanel = () => {
 	const { accounts } = useAccounts();
-	const { renderModal, openModal } = useNewAccountModal();
+	const { renderModal, openModal } = useConnectAccountModal();
 	const { editPost } = useDispatch( 'core/editor' );
 
 	const { postStatus, isEnabled, customMessage } = useSelect( ( select ) => {

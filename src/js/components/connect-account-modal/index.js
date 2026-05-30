@@ -15,7 +15,7 @@ import useAccounts from '../../hooks/use-accounts';
 import { warning } from '@wordpress/icons';
 import styles from './styles.module.scss';
 
-const NewAccountModal = ( {
+const ConnectAccountModal = ( {
 	isOpen,
 	onClose,
 	selectedAccount,
@@ -98,7 +98,7 @@ const NewAccountModal = ( {
 	);
 };
 
-const useNewAccountModal = ( initialIsOpen = false ) => {
+const useConnectAccountModal = ( initialIsOpen = false ) => {
 	const [ isOpen, setIsOpen ] = useState( initialIsOpen );
 	const [ selectedAccount, setSelectedAccount ] = useState( null );
 	const [ isReconnect, setIsReconnect ] = useState( false );
@@ -163,7 +163,7 @@ const useNewAccountModal = ( initialIsOpen = false ) => {
 	};
 
 	const renderModal = () => (
-		<NewAccountModal
+		<ConnectAccountModal
 			isOpen={ isOpen }
 			onClose={ closeModal }
 			selectedAccount={ selectedAccount }
@@ -186,4 +186,4 @@ const useNewAccountModal = ( initialIsOpen = false ) => {
 	};
 };
 
-export default useNewAccountModal;
+export default useConnectAccountModal;
