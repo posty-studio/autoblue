@@ -59,13 +59,6 @@ class PostHandler {
 
 		// Don't run this when saving already published posts.
 		if ( $post_before && $post_before->post_status === 'publish' ) {
-			$this->log->debug(
-				__( 'Skipping share for post `{post_title}` with ID `{post_id}` because the post is already published.', 'autoblue' ),
-				[
-					'post_id'    => $post_id,
-					'post_title' => $post->post_title,
-				]
-			);
 			return;
 		}
 
@@ -124,7 +117,19 @@ class PostHandler {
 			]
 		);
 
-		$bluesky = new Bluesky();
-		$bluesky->share_to_bluesky( $post_id );
+		try {
+			$bluesky = new Bluesky();
+			$bluesky->share_to_bluesky( $post_id );
+		} catch ( \Throwable $e ) {
+			$this->log->error(
+				__( 'Share failed: Uncaught exception while sharing post with ID {post_id}: {message}', 'autoblue' ),
+				[
+					'post_id' => $post_id,
+					'message' => $e->getMessage(),
+					'file'    => $e->getFile(),
+					'line'    => $e->getLine(),
+				]
+			);
+		}
 	}
 }
