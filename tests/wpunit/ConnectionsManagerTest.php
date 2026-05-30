@@ -64,10 +64,13 @@ class ConnectionsManagerTest extends WPTestCase {
 
 	public function test_refresh_tokens_sets_needs_reauth_on_expired_token(): void {
 		$this->seed_connection();
-		$this->mock_refresh_session_response( 400, [
-			'error'   => 'ExpiredToken',
-			'message' => 'Token has been revoked',
-		] );
+		$this->mock_refresh_session_response(
+			400,
+			[
+				'error'   => 'ExpiredToken',
+				'message' => 'Token has been revoked',
+			]
+		);
 
 		$result = ( new ConnectionsManager() )->refresh_tokens( self::DID );
 
@@ -89,10 +92,13 @@ class ConnectionsManagerTest extends WPTestCase {
 
 	public function test_successful_refresh_clears_needs_reauth(): void {
 		$this->seed_connection( [ 'needs_reauth' => true ] );
-		$this->mock_refresh_session_response( 200, [
-			'accessJwt'  => 'fresh-access',
-			'refreshJwt' => 'fresh-refresh',
-		] );
+		$this->mock_refresh_session_response(
+			200,
+			[
+				'accessJwt'  => 'fresh-access',
+				'refreshJwt' => 'fresh-refresh',
+			]
+		);
 
 		$result = ( new ConnectionsManager() )->refresh_tokens( self::DID );
 
@@ -104,18 +110,25 @@ class ConnectionsManagerTest extends WPTestCase {
 
 	public function test_add_connection_upserts_when_did_exists(): void {
 		$this->seed_connection( [ 'needs_reauth' => true ] );
-		add_filter( 'pre_http_request', function ( $response, $args, $url ) {
-			if ( strpos( $url, 'createSession' ) !== false ) {
-				return [
-					'response' => [ 'code' => 200 ],
-					'body'     => wp_json_encode( [
-						'accessJwt'  => 'reconnect-access',
-						'refreshJwt' => 'reconnect-refresh',
-					] ),
-				];
-			}
-			return $response;
-		}, 10, 3 );
+		add_filter(
+			'pre_http_request',
+			function ( $response, $args, $url ) {
+				if ( strpos( $url, 'createSession' ) !== false ) {
+					return [
+						'response' => [ 'code' => 200 ],
+						'body'     => wp_json_encode(
+							[
+								'accessJwt'  => 'reconnect-access',
+								'refreshJwt' => 'reconnect-refresh',
+							]
+						),
+					];
+				}
+				return $response;
+			},
+			10,
+			3
+		);
 
 		$result = ( new ConnectionsManager() )->add_connection( self::DID, 'aaaa-bbbb-cccc-dddd' );
 
@@ -143,15 +156,20 @@ class ConnectionsManagerTest extends WPTestCase {
 	}
 
 	private function mock_refresh_session_response( int $code, array $body ): void {
-		add_filter( 'pre_http_request', function ( $response, $args, $url ) use ( $code, $body ) {
-			if ( strpos( $url, 'refreshSession' ) !== false ) {
-				return [
-					'response' => [ 'code' => $code ],
-					'body'     => wp_json_encode( $body ),
-				];
-			}
-			return $response;
-		}, 10, 3 );
+		add_filter(
+			'pre_http_request',
+			function ( $response, $args, $url ) use ( $code, $body ) {
+				if ( strpos( $url, 'refreshSession' ) !== false ) {
+					return [
+						'response' => [ 'code' => $code ],
+						'body'     => wp_json_encode( $body ),
+					];
+				}
+				return $response;
+			},
+			10,
+			3
+		);
 	}
 
 	protected function tearDown(): void {
