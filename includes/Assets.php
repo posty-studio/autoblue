@@ -73,7 +73,11 @@ class Assets {
 		$this->enqueue_style( 'editor' );
 	}
 
-	public function register_admin_assets(): void {
+	public function register_admin_assets( string $hook_suffix ): void {
+		if ( 'settings_page_autoblue' !== $hook_suffix ) {
+			return;
+		}
+
 		wp_enqueue_style( 'wp-components' );
 		wp_enqueue_style( 'dataviews' );
 		$this->enqueue_script(
@@ -92,8 +96,17 @@ class Assets {
 	private function get_initial_state(): array {
 		$current_page     = get_current_screen();
 		$refresh_accounts = $current_page && $current_page->id === 'settings_page_autoblue';
-		$connections      = ( new ConnectionsManager() )->get_all_connections( $refresh_accounts );
-		$logs             = ( new Logging\LogRepository() )->get_logs();
+		$is_settings_page = $current_page && $current_page->id === 'settings_page_autoblue';
+		$connections      = ( new ConnectionsManager() )->get_public_connections( $refresh_accounts );
+		$logs             = $is_settings_page ? ( new Logging\LogRepository() )->get_logs() : [
+			'data'       => [],
+			'pagination' => [
+				'page'        => 1,
+				'per_page'    => 10,
+				'total_items' => 0,
+				'total_pages' => 0,
+			],
+		];
 
 		return [
 			'accounts' => [
