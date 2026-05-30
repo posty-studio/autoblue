@@ -82,7 +82,7 @@ const NewAccountModal = ( {
 						disabled={ status === 'loading' }
 					>
 						{ isReconnect
-							? __( 'Reconnect Account', 'autoblue' )
+							? __( 'Reconnect account', 'autoblue' )
 							: __( 'Connect Account', 'autoblue' ) }
 					</Button>
 					{ status === 'loading' && <Spinner /> }
