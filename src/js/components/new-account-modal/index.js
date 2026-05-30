@@ -83,7 +83,7 @@ const NewAccountModal = ( {
 					>
 						{ isReconnect
 							? __( 'Reconnect account', 'autoblue' )
-							: __( 'Connect Account', 'autoblue' ) }
+							: __( 'Connect account', 'autoblue' ) }
 					</Button>
 					{ status === 'loading' && <Spinner /> }
 				</HStack>
