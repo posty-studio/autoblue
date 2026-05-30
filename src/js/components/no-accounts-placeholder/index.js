@@ -6,11 +6,11 @@ import {
 	CardBody,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import useNewAccountModal from './../new-account-modal';
+import useConnectAccountModal from './../connect-account-modal';
 import styles from './styles.module.scss';
 
 const NoAccountsPlaceholder = () => {
-	const { renderModal, openModal } = useNewAccountModal();
+	const { renderModal, openModal } = useConnectAccountModal();
 
 	return (
 		<Card>

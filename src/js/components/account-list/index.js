@@ -7,14 +7,14 @@ import { useState } from '@wordpress/element';
 import useAccounts from './../../hooks/use-accounts';
 import useWindowDimensions from '../../hooks/use-window-dimensions';
 import AccountInfo from './../account-info';
-import useNewAccountModal from './../new-account-modal';
+import useConnectAccountModal from './../connect-account-modal';
 
 const AccountList = () => {
 	const { width } = useWindowDimensions();
 	const { accounts, isLoading, deleteAccount } = useAccounts();
 	const [ isOpen, setIsOpen ] = useState( false );
 	const [ accountToDisconnect, setAccountToDisconnect ] = useState( null );
-	const { renderModal, openModalForReconnect } = useNewAccountModal();
+	const { renderModal, openModalForReconnect } = useConnectAccountModal();
 
 	if ( isLoading ) {
 		return <Spinner />;
