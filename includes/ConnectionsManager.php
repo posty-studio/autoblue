@@ -126,6 +126,19 @@ class ConnectionsManager {
 	}
 
 	/**
+	 * @return array<string,mixed>|null
+	 */
+	public function get_public_connection_by_did( string $did, bool $force_refresh = false ): ?array {
+		$connection = $this->get_connection_by_did( $did, $force_refresh );
+
+		if ( ! $connection ) {
+			return null;
+		}
+
+		return $this->get_public_connection_data( $connection );
+	}
+
+	/**
 	 * @return array<int,array<string,mixed>>
 	 */
 	public function get_all_connections( bool $force_refresh = false ): array {
@@ -145,6 +158,16 @@ class ConnectionsManager {
 		}
 
 		return $connections;
+	}
+
+	/**
+	 * @return array<int,array<string,mixed>>
+	 */
+	public function get_public_connections( bool $force_refresh = false ): array {
+		return array_map(
+			[ $this, 'get_public_connection_data' ],
+			$this->get_all_connections( $force_refresh )
+		);
 	}
 
 	/**
@@ -248,6 +271,23 @@ class ConnectionsManager {
 			'handle' => sanitize_text_field( $profile['handle'] ?? '' ),
 			'name'   => sanitize_text_field( $profile['displayName'] ?? '' ),
 			'avatar' => esc_url_raw( $profile['avatar'] ?? '' ),
+		];
+	}
+
+	/**
+	 * @param array<string,mixed> $connection
+	 * @return array<string,mixed>
+	 */
+	private function get_public_connection_data( array $connection ): array {
+		$meta = $connection['meta'] ?? [];
+
+		return [
+			'did'  => sanitize_text_field( $connection['did'] ?? '' ),
+			'meta' => [
+				'handle' => sanitize_text_field( $meta['handle'] ?? '' ),
+				'name'   => sanitize_text_field( $meta['name'] ?? '' ),
+				'avatar' => esc_url_raw( $meta['avatar'] ?? '' ),
+			],
 		];
 	}
 

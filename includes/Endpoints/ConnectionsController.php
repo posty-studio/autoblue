@@ -59,7 +59,7 @@ class ConnectionsController extends WP_REST_Controller {
 	public function get_connections() {
 		$connections = new \Autoblue\ConnectionsManager();
 
-		return rest_ensure_response( $connections->get_all_connections() );
+		return rest_ensure_response( $connections->get_public_connections() );
 	}
 
 	/**
@@ -71,8 +71,13 @@ class ConnectionsController extends WP_REST_Controller {
 		$connections  = new \Autoblue\ConnectionsManager();
 		$did          = $request->get_param( 'did' );
 		$app_password = $request->get_param( 'app_password' );
+		$connection   = $connections->add_connection( $did, $app_password );
 
-		return rest_ensure_response( $connections->add_connection( $did, $app_password ) );
+		if ( is_wp_error( $connection ) ) {
+			return $connection;
+		}
+
+		return rest_ensure_response( $connections->get_public_connection_by_did( $connection['did'], true ) );
 	}
 
 	/**
