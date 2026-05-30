@@ -58,32 +58,36 @@ const SharePanel = () => {
 		} );
 	};
 
+	const hasBrokenConnection = accounts.some( ( a ) => a.needs_reauth );
+	const effectiveIsEnabled = isEnabled && ! hasBrokenConnection;
+
 	return (
 		<VStack spacing={ 3 }>
+			{ hasBrokenConnection && (
+				<Notice status="warning" isDismissible={ false }>
+					{ createInterpolateElement(
+						__(
+							'Your Bluesky connection has expired. <a>Reconnect in Settings →</a>',
+							'autoblue'
+						),
+						{
+							a: (
+								// eslint-disable-next-line jsx-a11y/anchor-has-content
+								<a href="admin.php?page=autoblue" />
+							),
+						}
+					) }
+				</Notice>
+			) }
 			<ToggleControl
 				__nextHasNoMarginBottom
 				label={ __( 'Share to Bluesky', 'autoblue' ) }
-				checked={ isEnabled }
+				checked={ effectiveIsEnabled }
 				onChange={ setIsEnabled }
+				disabled={ hasBrokenConnection }
 			/>
-			{ isEnabled && (
+			{ effectiveIsEnabled && (
 				<>
-					{ accounts.some( ( a ) => a.needs_reauth ) && (
-						<Notice status="warning" isDismissible={ false }>
-							{ createInterpolateElement(
-								__(
-									'Your Bluesky connection has expired. <a>Reconnect in Settings →</a>',
-									'autoblue'
-								),
-								{
-									a: (
-										// eslint-disable-next-line jsx-a11y/anchor-has-content
-										<a href="admin.php?page=autoblue" />
-									),
-								}
-							) }
-						</Notice>
-					) }
 					<TextareaControl
 						__nextHasNoMarginBottom
 						label={ __( 'Message', 'autoblue' ) }
