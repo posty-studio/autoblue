@@ -312,6 +312,10 @@ class API {
 			return new \WP_Error( 'autoblue_api_error', $error . ': ' . $message );
 		}
 
+		if ( ! is_array( $data ) ) {
+			return new \WP_Error( 'autoblue_invalid_response', __( 'Invalid JSON response from Bluesky API.', 'autoblue' ) );
+		}
+
 		return $data;
 	}
 
