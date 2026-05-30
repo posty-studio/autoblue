@@ -1,10 +1,12 @@
 import { __ } from '@wordpress/i18n';
+import { createInterpolateElement } from '@wordpress/element';
 import {
 	__experimentalVStack as VStack, // eslint-disable-line @wordpress/no-unsafe-wp-apis
 	ToggleControl,
 	TextareaControl,
 	BaseControl,
 	Button,
+	Notice,
 } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
 import AccountInfo from './../account-info';
@@ -66,6 +68,22 @@ const SharePanel = () => {
 			/>
 			{ isEnabled && (
 				<>
+					{ accounts.some( ( a ) => a.needs_reauth ) && (
+						<Notice status="warning" isDismissible={ false }>
+							{ createInterpolateElement(
+								__(
+									'Your Bluesky connection has expired. <a>Reconnect in Settings →</a>',
+									'autoblue'
+								),
+								{
+									a: (
+										// eslint-disable-next-line jsx-a11y/anchor-has-content
+										<a href="admin.php?page=autoblue" />
+									),
+								}
+							) }
+						</Notice>
+					) }
 					<TextareaControl
 						__nextHasNoMarginBottom
 						label={ __( 'Message', 'autoblue' ) }

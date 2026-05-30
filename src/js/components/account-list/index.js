@@ -7,12 +7,14 @@ import { useState } from '@wordpress/element';
 import useAccounts from './../../hooks/use-accounts';
 import useWindowDimensions from '../../hooks/use-window-dimensions';
 import AccountInfo from './../account-info';
+import useNewAccountModal from './../new-account-modal';
 
 const AccountList = () => {
 	const { width } = useWindowDimensions();
 	const { accounts, isLoading, deleteAccount } = useAccounts();
 	const [ isOpen, setIsOpen ] = useState( false );
 	const [ accountToDisconnect, setAccountToDisconnect ] = useState( null );
+	const { renderModal, openModalForReconnect } = useNewAccountModal();
 
 	if ( isLoading ) {
 		return <Spinner />;
@@ -61,9 +63,12 @@ const AccountList = () => {
 					account={ account }
 					onDelete={ () => handleDisconnectClick( account ) }
 					deleteLabel={ __( 'Disconnect', 'autoblue' ) }
+					onReconnect={ () => openModalForReconnect( account ) }
 					size={ width > 500 ? 'large' : 'small' }
 				/>
 			) ) }
+
+			{ renderModal() }
 		</div>
 	);
 };
