@@ -25,20 +25,6 @@ class UtilsTest extends WPTestCase {
 		$this->assertSame( [ 'post' ], Utils::get_enabled_post_types() );
 	}
 
-	public function test_sanitize_enabled_post_types_filters_unknown_slugs(): void {
-		$result = Utils::sanitize_enabled_post_types( [ 'post', 'bogus-slug-12345' ] );
-
-		$this->assertContains( 'post', $result );
-		$this->assertNotContains( 'bogus-slug-12345', $result );
-	}
-
-	public function test_sanitize_enabled_post_types_drops_attachment(): void {
-		$result = Utils::sanitize_enabled_post_types( [ 'post', 'attachment' ] );
-
-		$this->assertContains( 'post', $result );
-		$this->assertNotContains( 'attachment', $result );
-	}
-
 	protected function tearDown(): void {
 		delete_option( 'autoblue_enabled_post_types' );
 		parent::tearDown();

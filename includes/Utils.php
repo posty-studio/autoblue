@@ -50,20 +50,6 @@ class Utils {
 		);
 	}
 
-	/**
-	 * @param mixed $value
-	 * @return array<int,string>
-	 */
-	public static function sanitize_enabled_post_types( $value ): array {
-		if ( ! is_array( $value ) ) {
-			return self::DEFAULT_ENABLED_POST_TYPES;
-		}
-
-		$available = array_column( self::get_available_post_types(), 'slug' );
-		$cleaned   = array_values( array_unique( array_filter( array_map( 'sanitize_key', $value ) ) ) );
-
-		return array_values( array_intersect( $cleaned, $available ) );
-	}
 
 	public static function error_log( string $message ): void {
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
