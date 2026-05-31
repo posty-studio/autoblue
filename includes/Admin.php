@@ -126,9 +126,13 @@ class Admin {
 					'schema' => [
 						'type'                 => 'object',
 						'properties'           => [
-							'name'        => [ 'type' => [ 'string', 'null' ] ],
-							'description' => [ 'type' => [ 'string', 'null' ] ],
-							'icon_id'     => [ 'type' => [ 'integer', 'null' ] ],
+							'name'                   => [ 'type' => [ 'string', 'null' ] ],
+							'description'            => [ 'type' => [ 'string', 'null' ] ],
+							'icon_id'                => [ 'type' => [ 'integer', 'null' ] ],
+							'theme_background'       => [ 'type' => [ 'string', 'null' ] ],
+							'theme_foreground'       => [ 'type' => [ 'string', 'null' ] ],
+							'theme_accent'           => [ 'type' => [ 'string', 'null' ] ],
+							'theme_accent_foreground' => [ 'type' => [ 'string', 'null' ] ],
 						],
 						'additionalProperties' => false,
 					],

@@ -46,9 +46,17 @@ const Settings = () => {
 
 	const savedName = publicationOverrides.name ?? '';
 	const savedDescription = publicationOverrides.description ?? '';
+	const savedThemeBackground = publicationOverrides.theme_background ?? '';
+	const savedThemeForeground = publicationOverrides.theme_foreground ?? '';
+	const savedThemeAccent = publicationOverrides.theme_accent ?? '';
+	const savedThemeAccentFg = publicationOverrides.theme_accent_foreground ?? '';
 
 	const [ draftName, setDraftName ] = useState( savedName );
 	const [ draftDescription, setDraftDescription ] = useState( savedDescription );
+	const [ draftThemeBackground, setDraftThemeBackground ] = useState( savedThemeBackground );
+	const [ draftThemeForeground, setDraftThemeForeground ] = useState( savedThemeForeground );
+	const [ draftThemeAccent, setDraftThemeAccent ] = useState( savedThemeAccent );
+	const [ draftThemeAccentFg, setDraftThemeAccentFg ] = useState( savedThemeAccentFg );
 
 	// Re-sync drafts when the saved overrides change (initial load + after our own save).
 	useEffect( () => {
@@ -57,9 +65,26 @@ const Settings = () => {
 	useEffect( () => {
 		setDraftDescription( savedDescription );
 	}, [ savedDescription ] );
+	useEffect( () => {
+		setDraftThemeBackground( savedThemeBackground );
+	}, [ savedThemeBackground ] );
+	useEffect( () => {
+		setDraftThemeForeground( savedThemeForeground );
+	}, [ savedThemeForeground ] );
+	useEffect( () => {
+		setDraftThemeAccent( savedThemeAccent );
+	}, [ savedThemeAccent ] );
+	useEffect( () => {
+		setDraftThemeAccentFg( savedThemeAccentFg );
+	}, [ savedThemeAccentFg ] );
 
 	const isPublicationDirty =
-		draftName !== savedName || draftDescription !== savedDescription;
+		draftName !== savedName ||
+		draftDescription !== savedDescription ||
+		draftThemeBackground !== savedThemeBackground ||
+		draftThemeForeground !== savedThemeForeground ||
+		draftThemeAccent !== savedThemeAccent ||
+		draftThemeAccentFg !== savedThemeAccentFg;
 
 	const handleUpdatePublication = () => {
 		const next = {};
@@ -68,6 +93,18 @@ const Settings = () => {
 		}
 		if ( draftDescription.trim() !== '' ) {
 			next.description = draftDescription;
+		}
+		if ( draftThemeBackground.trim() !== '' ) {
+			next.theme_background = draftThemeBackground;
+		}
+		if ( draftThemeForeground.trim() !== '' ) {
+			next.theme_foreground = draftThemeForeground;
+		}
+		if ( draftThemeAccent.trim() !== '' ) {
+			next.theme_accent = draftThemeAccent;
+		}
+		if ( draftThemeAccentFg.trim() !== '' ) {
+			next.theme_accent_foreground = draftThemeAccentFg;
 		}
 		savePublicationOverrides( next );
 	};
@@ -246,6 +283,70 @@ const Settings = () => {
 													readOnly
 												/>
 											) }
+											<Text variant="muted">
+												{ __(
+													'Theme colors are used by standard.site readers to style your publication. Leave blank to omit.',
+													'autoblue'
+												) }
+											</Text>
+											<HStack spacing={ 3 } alignment="top">
+												<TextControl
+													__nextHasNoMarginBottom
+													label={ __(
+														'Background',
+														'autoblue'
+													) }
+													value={
+														draftThemeBackground
+													}
+													placeholder="#ffffff"
+													onChange={
+														setDraftThemeBackground
+													}
+												/>
+												<TextControl
+													__nextHasNoMarginBottom
+													label={ __(
+														'Foreground',
+														'autoblue'
+													) }
+													value={
+														draftThemeForeground
+													}
+													placeholder="#111111"
+													onChange={
+														setDraftThemeForeground
+													}
+												/>
+											</HStack>
+											<HStack spacing={ 3 } alignment="top">
+												<TextControl
+													__nextHasNoMarginBottom
+													label={ __(
+														'Accent',
+														'autoblue'
+													) }
+													value={ draftThemeAccent }
+													placeholder="#0073aa"
+													onChange={
+														setDraftThemeAccent
+													}
+												/>
+												<TextControl
+													__nextHasNoMarginBottom
+													label={ __(
+														'Accent foreground',
+														'autoblue'
+													) }
+													value={
+														draftThemeAccentFg
+													}
+													placeholder="#ffffff"
+													onChange={
+														setDraftThemeAccentFg
+													}
+												/>
+											</HStack>
 											<HStack alignment="left">
 												<Button
 													variant="primary"

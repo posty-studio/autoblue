@@ -153,7 +153,59 @@ class Publication {
 			$record['icon'] = $icon_blob;
 		}
 
+		$basic_theme = $this->build_basic_theme( $overrides );
+		if ( $basic_theme ) {
+			$record['basicTheme'] = $basic_theme;
+		}
+
 		return $record;
+	}
+
+	/**
+	 * Build the inline site.standard.theme.basic value from hex overrides.
+	 *
+	 * @param array<string,mixed> $overrides
+	 * @return array<string,array<string,int>>|null
+	 */
+	private function build_basic_theme( array $overrides ): ?array {
+		$mapping = [
+			'background'      => 'theme_background',
+			'foreground'      => 'theme_foreground',
+			'accent'          => 'theme_accent',
+			'accentForeground' => 'theme_accent_foreground',
+		];
+
+		$theme = [ '$type' => 'site.standard.theme.basic' ];
+		foreach ( $mapping as $field => $key ) {
+			$rgb = $this->hex_to_rgb( $overrides[ $key ] ?? null );
+			if ( $rgb ) {
+				$theme[ $field ] = $rgb;
+			}
+		}
+
+		// Only return the theme if at least one colour was set.
+		return count( $theme ) > 1 ? $theme : null;
+	}
+
+	/**
+	 * @return array{r:int,g:int,b:int}|null
+	 */
+	private function hex_to_rgb( $hex ): ?array {
+		if ( ! is_string( $hex ) ) {
+			return null;
+		}
+		$hex = ltrim( trim( $hex ), '#' );
+		if ( 3 === strlen( $hex ) ) {
+			$hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+		}
+		if ( ! preg_match( '/^[0-9a-fA-F]{6}$/', $hex ) ) {
+			return null;
+		}
+		return [
+			'r' => hexdec( substr( $hex, 0, 2 ) ),
+			'g' => hexdec( substr( $hex, 2, 2 ) ),
+			'b' => hexdec( substr( $hex, 4, 2 ) ),
+		];
 	}
 
 	/**
