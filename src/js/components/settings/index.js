@@ -4,6 +4,7 @@ import {
 	Card,
 	CardBody,
 	CheckboxControl,
+	Spinner,
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
@@ -21,6 +22,7 @@ const Settings = () => {
 		isEnabled,
 		setIsEnabled,
 		enabledPostTypes,
+		isLoadingPostTypes,
 		availablePostTypes,
 		togglePostType,
 	} = useSettings();
@@ -75,21 +77,28 @@ const Settings = () => {
 										'autoblue'
 									) }
 								</Text>
-								<VStack spacing={ 2 }>
-									{ availablePostTypes.map( ( pt ) => (
-										<CheckboxControl
-											key={ pt.slug }
-											__nextHasNoMarginBottom
-											label={ pt.label }
-											checked={ enabledPostTypes.includes(
-												pt.slug
-											) }
-											onChange={ ( checked ) =>
-												togglePostType( pt.slug, checked )
-											}
-										/>
-									) ) }
-								</VStack>
+								{ isLoadingPostTypes ? (
+									<Spinner />
+								) : (
+									<VStack spacing={ 2 }>
+										{ availablePostTypes.map( ( pt ) => (
+											<CheckboxControl
+												key={ pt.slug }
+												__nextHasNoMarginBottom
+												label={ pt.label }
+												checked={ enabledPostTypes.includes(
+													pt.slug
+												) }
+												onChange={ ( checked ) =>
+													togglePostType(
+														pt.slug,
+														checked
+													)
+												}
+											/>
+										) ) }
+									</VStack>
+								) }
 							</VStack>
 						</CardBody>
 					</Card>

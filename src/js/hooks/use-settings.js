@@ -71,6 +71,7 @@ const useSettings = () => {
 				: autoblue?.initialState?.settings?.enabled, // TODO: Add to store.
 		setIsEnabled,
 		enabledPostTypes: resolvedEnabledPostTypes,
+		isLoadingPostTypes: enabledPostTypes === undefined,
 		availablePostTypes:
 			autoblue?.initialState?.settings?.availablePostTypes || [],
 		togglePostType,
