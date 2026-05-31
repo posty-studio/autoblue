@@ -125,6 +125,22 @@ class Publication {
 	}
 
 	/**
+	 * Get the cached publication strongRef ({ uri, cid }) without making network calls.
+	 *
+	 * @return array{uri:string,cid:string}|null
+	 */
+	public function get_strongref(): ?array {
+		$stored = get_option( self::OPTION_KEY, [] );
+		if ( empty( $stored['uri'] ) || empty( $stored['cid'] ) ) {
+			return null;
+		}
+		return [
+			'uri' => (string) $stored['uri'],
+			'cid' => (string) $stored['cid'],
+		];
+	}
+
+	/**
 	 * Reactively update the publication record when WP settings or overrides change.
 	 */
 	public function sync(): void {

@@ -180,6 +180,16 @@ class Bluesky {
 			$body['record']['embed']['external']['thumb'] = $image_blob;
 		}
 
+		// If standard.site publishing is on for this post, write the document FIRST
+		// (so we know its URI + CID) and attach strongRefs to the bsky post's
+		// external embed via associatedRefs. The bsky post still looks like a
+		// normal link card to Bluesky users; standard.site-aware clients can
+		// follow the refs to the document and publication records.
+		$associated_refs = $this->build_associated_refs( $post_id, is_array( $image_blob ) ? $image_blob : null );
+		if ( ! empty( $associated_refs ) ) {
+			$body['record']['embed']['external']['associatedRefs'] = $associated_refs;
+		}
+
 		$response = $this->api_client->create_record( $body, $connection['access_jwt'], $connection['did'] );
 
 		if ( is_wp_error( $response ) ) {
@@ -217,34 +227,59 @@ class Bluesky {
 			]
 		);
 
-		if ( $this->should_publish_document( $post_id, $response ) ) {
-			( new Standard\Document( $this->api_client, $this->log ) )->publish(
-				$post_id,
-				[
-					'uri' => (string) $response['uri'],
-					'cid' => (string) $response['cid'],
-				],
-				is_array( $image_blob ) ? $image_blob : null
-			);
-		}
-
 		return $share;
 	}
 
 	/**
-	 * Whether this share should also produce a standard.site document record.
-	 *
-	 * @param array<string,mixed> $bsky_response
+	 * Whether this post should also produce a standard.site document record.
 	 */
-	private function should_publish_document( int $post_id, array $bsky_response ): bool {
-		if ( empty( $bsky_response['uri'] ) || empty( $bsky_response['cid'] ) ) {
-			return false;
-		}
-
+	private function should_publish_document_for( int $post_id ): bool {
 		if ( ! Utils::is_standard_site_enabled() ) {
 			return false;
 		}
 
 		return (bool) get_post_meta( $post_id, 'autoblue_publish_document', true );
+	}
+
+	/**
+	 * If standard.site is enabled for this post, ensure the publication record
+	 * exists, write the document record (without bskyPostRef — we don't have
+	 * the bsky URI yet), and return strongRefs for both so the bsky post can
+	 * attach them via embed.external.associatedRefs.
+	 *
+	 * @param array<string,mixed>|null $image_blob Optional reusable cover image blob.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private function build_associated_refs( int $post_id, ?array $image_blob ): array {
+		if ( ! $this->should_publish_document_for( $post_id ) ) {
+			return [];
+		}
+
+		$document    = new Standard\Document( $this->api_client, $this->log );
+		$publication = new Standard\Publication( $this->api_client, $this->log );
+
+		$doc_ref = $document->publish( $post_id, null, $image_blob );
+		if ( is_wp_error( $doc_ref ) || empty( $doc_ref['uri'] ) || empty( $doc_ref['cid'] ) ) {
+			return [];
+		}
+
+		$refs = [
+			[
+				'$type' => 'com.atproto.repo.strongRef',
+				'uri'   => $doc_ref['uri'],
+				'cid'   => $doc_ref['cid'],
+			],
+		];
+
+		$pub_ref = $publication->get_strongref();
+		if ( $pub_ref ) {
+			$refs[] = [
+				'$type' => 'com.atproto.repo.strongRef',
+				'uri'   => $pub_ref['uri'],
+				'cid'   => $pub_ref['cid'],
+			];
+		}
+
+		return $refs;
 	}
 }
