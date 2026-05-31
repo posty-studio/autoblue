@@ -30,18 +30,22 @@ class Document {
 	/**
 	 * Publish a post as a standard.site document.
 	 *
-	 * @param int                              $post_id
-	 * @param array{uri:string,cid:string}     $bsky_post_ref
-	 * @param array<string,mixed>|null         $cover_blob_ref Optional reusable blob ref from the bsky post upload.
+	 * @param int                                   $post_id
+	 * @param array{uri:string,cid:string}|null     $bsky_post_ref
+	 *        Optional Bluesky strongRef. Pass null to publish a document without a
+	 *        back-reference (e.g. when writing the document BEFORE the bsky post so
+	 *        the bsky post can embed it via app.bsky.embed.record).
+	 * @param array<string,mixed>|null              $cover_blob_ref
+	 *        Optional reusable blob ref from the bsky post upload.
 	 * @return array<string,mixed>|\WP_Error
 	 */
-	public function publish( int $post_id, array $bsky_post_ref, ?array $cover_blob_ref = null ) {
+	public function publish( int $post_id, ?array $bsky_post_ref, ?array $cover_blob_ref = null ) {
 		$post = get_post( $post_id );
 		if ( ! $post ) {
 			return new \WP_Error( 'autoblue_document_post_not_found', __( 'Post not found.', 'autoblue' ) );
 		}
 
-		if ( empty( $bsky_post_ref['uri'] ) || empty( $bsky_post_ref['cid'] ) ) {
+		if ( null !== $bsky_post_ref && ( empty( $bsky_post_ref['uri'] ) || empty( $bsky_post_ref['cid'] ) ) ) {
 			return new \WP_Error( 'autoblue_document_invalid_bsky_ref', __( 'A Bluesky post URI and CID are required.', 'autoblue' ) );
 		}
 
@@ -112,23 +116,26 @@ class Document {
 	}
 
 	/**
-	 * @param \WP_Post                          $post
-	 * @param string                            $publication_uri
-	 * @param array{uri:string,cid:string}      $bsky_post_ref
-	 * @param array<string,mixed>|null          $cover_blob_ref
+	 * @param \WP_Post                              $post
+	 * @param string                                $publication_uri
+	 * @param array{uri:string,cid:string}|null     $bsky_post_ref
+	 * @param array<string,mixed>|null              $cover_blob_ref
 	 * @return array<string,mixed>
 	 */
-	public function build_record( \WP_Post $post, string $publication_uri, array $bsky_post_ref, ?array $cover_blob_ref ): array {
+	public function build_record( \WP_Post $post, string $publication_uri, ?array $bsky_post_ref, ?array $cover_blob_ref ): array {
 		$record = [
 			'$type'       => self::COLLECTION,
 			'site'        => $publication_uri,
 			'title'       => html_entity_decode( get_the_title( $post ), ENT_QUOTES ),
 			'publishedAt' => gmdate( 'c', strtotime( $post->post_date_gmt ) ?: time() ),
-			'bskyPostRef' => [
+		];
+
+		if ( $bsky_post_ref ) {
+			$record['bskyPostRef'] = [
 				'uri' => $bsky_post_ref['uri'],
 				'cid' => $bsky_post_ref['cid'],
-			],
-		];
+			];
+		}
 
 		$path = wp_parse_url( get_permalink( $post ), PHP_URL_PATH );
 		if ( is_string( $path ) && '' !== $path ) {

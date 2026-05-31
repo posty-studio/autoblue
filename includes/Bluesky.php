@@ -176,7 +176,34 @@ class Bluesky {
 			$image_blob = $this->upload_image( get_post_thumbnail_id( $post->ID ), $connection['access_jwt'], $connection['did'] ); // @phpstan-ignore argument.type
 		}
 
-		if ( ! empty( $image_blob ) ) {
+		// When standard.site publishing is on for this post, write the document FIRST
+		// and swap the bsky post's external link card for a record embed pointing at
+		// the document.
+		$publish_document = $this->should_publish_document_for( $post_id );
+		$document_ref     = null;
+
+		if ( $publish_document ) {
+			$document_ref = ( new Standard\Document( $this->api_client, $this->log ) )->publish(
+				$post_id,
+				null,
+				is_array( $image_blob ) ? $image_blob : null
+			);
+
+			if ( is_wp_error( $document_ref ) ) {
+				// Fall back to the regular link-card path if the document write failed.
+				$document_ref = null;
+			}
+		}
+
+		if ( is_array( $document_ref ) && ! empty( $document_ref['uri'] ) && ! empty( $document_ref['cid'] ) ) {
+			$body['record']['embed'] = [
+				'$type'  => 'app.bsky.embed.record',
+				'record' => [
+					'uri' => $document_ref['uri'],
+					'cid' => $document_ref['cid'],
+				],
+			];
+		} elseif ( ! empty( $image_blob ) ) {
 			$body['record']['embed']['external']['thumb'] = $image_blob;
 		}
 
@@ -217,30 +244,13 @@ class Bluesky {
 			]
 		);
 
-		if ( $this->should_publish_document( $post_id, $response ) ) {
-			( new Standard\Document( $this->api_client, $this->log ) )->publish(
-				$post_id,
-				[
-					'uri' => (string) $response['uri'],
-					'cid' => (string) $response['cid'],
-				],
-				is_array( $image_blob ) ? $image_blob : null
-			);
-		}
-
 		return $share;
 	}
 
 	/**
-	 * Whether this share should also produce a standard.site document record.
-	 *
-	 * @param array<string,mixed> $bsky_response
+	 * Whether this post should also produce a standard.site document record.
 	 */
-	private function should_publish_document( int $post_id, array $bsky_response ): bool {
-		if ( empty( $bsky_response['uri'] ) || empty( $bsky_response['cid'] ) ) {
-			return false;
-		}
-
+	private function should_publish_document_for( int $post_id ): bool {
 		if ( ! Utils::is_standard_site_enabled() ) {
 			return false;
 		}
