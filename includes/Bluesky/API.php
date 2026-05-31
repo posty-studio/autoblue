@@ -254,6 +254,45 @@ class API {
 	}
 
 	/**
+	 * List records in a collection via com.atproto.repo.listRecords.
+	 *
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function list_records( string $repo, string $collection, string $access_token, ?string $cursor = null, int $limit = 100 ) {
+		if ( ! $repo || ! $collection || ! $access_token ) {
+			return new \WP_Error( 'autoblue_invalid_list_records_args', __( 'Repo, collection, and access token are required.', 'autoblue' ) );
+		}
+
+		$pds_endpoint = $this->resolve_pds_endpoint( $repo );
+
+		if ( is_wp_error( $pds_endpoint ) ) {
+			return $pds_endpoint;
+		}
+
+		$body = [
+			'repo'       => $repo,
+			'collection' => $collection,
+			'limit'      => $limit,
+		];
+
+		if ( $cursor ) {
+			$body['cursor'] = $cursor;
+		}
+
+		return $this->send_request(
+			[
+				'endpoint' => 'com.atproto.repo.listRecords',
+				'method'   => 'GET',
+				'headers'  => [
+					'Authorization' => 'Bearer ' . $access_token,
+				],
+				'body'     => $body,
+				'base_url' => $pds_endpoint,
+			]
+		);
+	}
+
+	/**
 	 * Create-or-update a record at a known rkey via com.atproto.repo.putRecord.
 	 *
 	 * @param array<string, mixed> $record Must include repo, collection, rkey, record.

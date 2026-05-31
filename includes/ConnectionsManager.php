@@ -71,6 +71,14 @@ class ConnectionsManager {
 			$this->log->success( __( 'Connection added.', 'autoblue' ), [ 'did' => $did ] );
 		}
 
+		/**
+		 * Fires after a Bluesky connection is added or refreshed via reconnect.
+		 *
+		 * @param array<string,mixed> $new_connection The freshly stored connection.
+		 * @param bool                $is_reconnect   Whether this was a reconnect of an existing DID.
+		 */
+		do_action( 'autoblue/connection_added', $new_connection, $is_reconnect );
+
 		return $new_connection;
 	}
 

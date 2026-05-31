@@ -32,6 +32,69 @@ class Publication {
 		add_action( 'update_option_blogdescription', [ $this, 'sync' ] );
 		add_action( 'update_option_site_icon', [ $this, 'sync' ] );
 		add_action( 'update_option_' . self::OVERRIDES_KEY, [ $this, 'sync' ] );
+		add_action( 'autoblue/connection_added', [ $this, 'maybe_adopt_existing' ], 10, 2 );
+	}
+
+	/**
+	 * On a fresh Bluesky connection, search the user's PDS for a publication
+	 * record whose `url` matches our home_url() and adopt it instead of writing
+	 * a duplicate on the next publish. No-op on reconnects of the same DID.
+	 *
+	 * @param array<string,mixed> $connection
+	 */
+	public function maybe_adopt_existing( array $connection, bool $is_reconnect = false ): void {
+		if ( empty( $connection['did'] ) || empty( $connection['access_jwt'] ) ) {
+			return;
+		}
+
+		$stored = get_option( self::OPTION_KEY, [] );
+		if ( ! empty( $stored['uri'] ) && ! empty( $stored['did'] ) && $stored['did'] === $connection['did'] ) {
+			// Already linked to this DID's publication.
+			return;
+		}
+
+		$response = $this->api_client->list_records(
+			$connection['did'],
+			self::COLLECTION,
+			$connection['access_jwt']
+		);
+
+		if ( is_wp_error( $response ) || empty( $response['records'] ) ) {
+			return;
+		}
+
+		$home = untrailingslashit( home_url( '/' ) );
+		foreach ( $response['records'] as $record ) {
+			$value = $record['value'] ?? [];
+			$url   = isset( $value['url'] ) ? untrailingslashit( (string) $value['url'] ) : '';
+			if ( $url !== $home ) {
+				continue;
+			}
+
+			$uri  = isset( $record['uri'] ) ? (string) $record['uri'] : '';
+			$cid  = isset( $record['cid'] ) ? (string) $record['cid'] : '';
+			$rkey = $this->extract_rkey( $uri );
+			if ( ! $uri || ! $rkey ) {
+				continue;
+			}
+
+			update_option(
+				self::OPTION_KEY,
+				[
+					'did'         => $connection['did'],
+					'uri'         => $uri,
+					'cid'         => $cid,
+					'rkey'        => $rkey,
+					'fingerprint' => $this->fingerprint( $value ),
+				]
+			);
+
+			$this->log->info(
+				__( 'Adopted existing standard.site publication record at {uri}.', 'autoblue' ),
+				[ 'uri' => $uri ]
+			);
+			return;
+		}
 	}
 
 	/**
