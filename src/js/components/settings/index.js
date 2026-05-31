@@ -505,10 +505,7 @@ const Settings = () => {
 																	handleThemeChange
 																}
 																canOnlyChangeValues
-																paletteLabel={ __(
-																	'Theme colors',
-																	'autoblue'
-																) }
+																paletteLabel=""
 																popoverProps={ {
 																	offset: 8,
 																	placement:
