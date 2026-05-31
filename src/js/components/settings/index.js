@@ -444,12 +444,6 @@ const Settings = () => {
 													readOnly
 												/>
 											) }
-											<Text variant="muted">
-												{ __(
-													'Theme colors are used by standard.site readers to style your publication.',
-													'autoblue'
-												) }
-											</Text>
 											<PaletteEdit
 												colors={ themePalette }
 												onChange={ handleThemeChange }
@@ -463,6 +457,12 @@ const Settings = () => {
 													placement: 'bottom-start',
 												} }
 											/>
+											<Text variant="muted">
+												{ __(
+													'Theme colors are used by standard.site readers to style your publication.',
+													'autoblue'
+												) }
+											</Text>
 											<HStack alignment="left">
 												<Button
 													variant="primary"
