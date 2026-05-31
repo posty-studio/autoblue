@@ -254,7 +254,7 @@ class Publication {
 			'accentForeground' => 'theme_accent_foreground',
 		];
 
-		$theme = [];
+		$theme = [ '$type' => 'site.standard.theme.basic' ];
 		foreach ( $mapping as $field => $key ) {
 			$rgb = $this->hex_to_rgb( $overrides[ $key ] ?? null );
 			if ( $rgb ) {
@@ -263,7 +263,7 @@ class Publication {
 		}
 
 		// Only return the theme if at least one colour was set.
-		return ! empty( $theme ) ? $theme : null;
+		return count( $theme ) > 1 ? $theme : null;
 	}
 
 	/**

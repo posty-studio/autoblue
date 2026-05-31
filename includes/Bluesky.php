@@ -227,6 +227,18 @@ class Bluesky {
 			]
 		);
 
+		// Back-fill bskyPostRef on the document now that we know the bsky post's URI/CID.
+		if ( ! empty( $associated_refs ) && ! empty( $response['uri'] ) && ! empty( $response['cid'] ) ) {
+			( new Standard\Document( $this->api_client, $this->log ) )->update_bsky_ref(
+				$post_id,
+				[
+					'uri' => (string) $response['uri'],
+					'cid' => (string) $response['cid'],
+				],
+				is_array( $image_blob ) ? $image_blob : null
+			);
+		}
+
 		return $share;
 	}
 
