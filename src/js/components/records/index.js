@@ -2,6 +2,7 @@ import { __ } from '@wordpress/i18n';
 import { useEffect, useState, useCallback } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import {
+	BaseControl,
 	Button,
 	Card,
 	CardBody,
@@ -10,6 +11,18 @@ import {
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
+import styles from './styles.module.scss';
+
+const extractDid = ( atUri = '' ) => {
+	const match = atUri.match( /^at:\/\/(did:[^/]+)/ );
+	return match ? match[ 1 ] : '';
+};
+
+const blobThumbnailUrl = ( did, blob ) => {
+	const cid = blob?.ref?.$link;
+	if ( ! did || ! cid ) return null;
+	return `https://cdn.bsky.app/img/feed_thumbnail/plain/${ did }/${ cid }@jpeg`;
+};
 
 const Records = () => {
 	const [ publication, setPublication ] = useState( null );
@@ -86,32 +99,45 @@ const Records = () => {
 		);
 	}
 
+	const publicationDid = extractDid( publication?.uri ?? '' );
+	const publicationIconUrl = blobThumbnailUrl(
+		publicationDid,
+		publication?.value?.icon
+	);
+
 	return (
-		<VStack spacing={ 5 }>
-			<Card>
-				<CardBody>
-					<VStack spacing={ 2 }>
-						<Text weight="600">
-							{ __( 'Publication', 'autoblue' ) }
-						</Text>
+		<>
+			<BaseControl
+				__nextHasNoMarginBottom
+				label={ __( 'Publication', 'autoblue' ) }
+				id="autoblue-records-publication"
+			>
+				<Card>
+					<CardBody>
 						{ publication ? (
-							<>
-								<Text>
-									{ publication.value?.name ||
-										__(
-											'(no name)',
-											'autoblue'
-										) }
-								</Text>
-								{ publication.value?.description && (
-									<Text variant="muted">
-										{ publication.value.description }
-									</Text>
+							<div className={ styles.row }>
+								{ publicationIconUrl && (
+									<img
+										className={ styles.icon }
+										src={ publicationIconUrl }
+										alt=""
+									/>
 								) }
-								<Text variant="muted">
-									{ publication.uri }
-								</Text>
-							</>
+								<VStack spacing={ 1 }>
+									<Text weight="600">
+										{ publication.value?.name ||
+											__( '(no name)', 'autoblue' ) }
+									</Text>
+									{ publication.value?.description && (
+										<Text variant="muted">
+											{ publication.value.description }
+										</Text>
+									) }
+									<Text variant="muted">
+										{ publication.uri }
+									</Text>
+								</VStack>
+							</div>
 						) : (
 							<Text variant="muted">
 								{ __(
@@ -120,64 +146,88 @@ const Records = () => {
 								) }
 							</Text>
 						) }
-					</VStack>
-				</CardBody>
-			</Card>
+					</CardBody>
+				</Card>
+			</BaseControl>
 
-			<Card>
-				<CardBody>
-					<VStack spacing={ 3 }>
-						<Text weight="600">
-							{ __( 'Documents', 'autoblue' ) }
-							{ ' ' }
-							<Text variant="muted">
-								({ documents.length })
-							</Text>
-						</Text>
-						{ documents.length === 0 ? (
+			<BaseControl
+				__nextHasNoMarginBottom
+				label={ __( 'Documents', 'autoblue' ) }
+				id="autoblue-records-documents"
+			>
+				{ documents.length === 0 ? (
+					<Card>
+						<CardBody>
 							<Text variant="muted">
 								{ __(
 									'No document records on the PDS yet.',
 									'autoblue'
 								) }
 							</Text>
-						) : (
-							<VStack spacing={ 2 }>
-								{ documents.map( ( doc ) => (
-									<Card key={ doc.uri } size="small">
-										<CardBody>
-											<VStack spacing={ 1 }>
-												<Text weight="600">
-													{ doc.value?.title ||
-														__(
-															'(untitled)',
-															'autoblue'
-														) }
-												</Text>
-												{ doc.value?.description && (
-													<Text variant="muted">
-														{
-															doc.value
-																.description
+						</CardBody>
+					</Card>
+				) : (
+					<VStack spacing={ 3 }>
+						<Card>
+							<CardBody>
+								<VStack spacing={ 3 }>
+									{ documents.map( ( doc ) => {
+										const did = extractDid(
+											doc.uri ?? ''
+										);
+										const coverUrl = blobThumbnailUrl(
+											did,
+											doc.value?.coverImage
+										);
+										return (
+											<div
+												key={ doc.uri }
+												className={ styles.row }
+											>
+												{ coverUrl && (
+													<img
+														className={
+															styles.cover
 														}
-													</Text>
+														src={ coverUrl }
+														alt=""
+													/>
 												) }
-												<Text variant="muted">
-													{ doc.uri }
-												</Text>
-												{ doc.value?.publishedAt && (
+												<VStack spacing={ 1 }>
+													<Text weight="600">
+														{ doc.value?.title ||
+															__(
+																'(untitled)',
+																'autoblue'
+															) }
+													</Text>
+													{ doc.value
+														?.description && (
+														<Text variant="muted">
+															{
+																doc.value
+																	.description
+															}
+														</Text>
+													) }
 													<Text variant="muted">
-														{ new Date(
-															doc.value.publishedAt
-														).toLocaleString() }
+														{ doc.uri }
 													</Text>
-												) }
-											</VStack>
-										</CardBody>
-									</Card>
-								) ) }
-							</VStack>
-						) }
+													{ doc.value
+														?.publishedAt && (
+														<Text variant="muted">
+															{ new Date(
+																doc.value.publishedAt
+															).toLocaleString() }
+														</Text>
+													) }
+												</VStack>
+											</div>
+										);
+									} ) }
+								</VStack>
+							</CardBody>
+						</Card>
 						{ cursor && (
 							<Button
 								variant="secondary"
@@ -190,9 +240,9 @@ const Records = () => {
 							</Button>
 						) }
 					</VStack>
-				</CardBody>
-			</Card>
-		</VStack>
+				) }
+			</BaseControl>
+		</>
 	);
 };
 
