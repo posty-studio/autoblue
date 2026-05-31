@@ -376,78 +376,6 @@ const Settings = () => {
 												) }
 												onChange={ setDraftDescription }
 											/>
-											<BaseControl
-												__nextHasNoMarginBottom
-												label={ __(
-													'Publication icon',
-													'autoblue'
-												) }
-												help={
-													draftIconId
-														? __(
-																'Custom icon set. Remove to fall back to the WordPress site icon.',
-																'autoblue'
-														  )
-														: __(
-																'Falls back to the WordPress site icon. Should be at least 256×256.',
-																'autoblue'
-														  )
-												}
-												id="autoblue-publication-icon"
-											>
-												<HStack
-													spacing={ 3 }
-													alignment="left"
-												>
-													{ currentIconUrl ? (
-														<img
-															src={
-																currentIconUrl
-															}
-															alt=""
-															className={
-																styles.iconPreview
-															}
-														/>
-													) : (
-														<div
-															className={
-																styles.iconPlaceholder
-															}
-														/>
-													) }
-													<Button
-														variant="secondary"
-														onClick={
-															openIconPicker
-														}
-													>
-														{ draftIconId
-															? __(
-																	'Replace icon',
-																	'autoblue'
-															  )
-															: __(
-																	'Choose icon',
-																	'autoblue'
-															  ) }
-													</Button>
-													{ draftIconId && (
-														<Button
-															variant="tertiary"
-															isDestructive
-															onClick={
-																handleRemoveIcon
-															}
-														>
-															{ __(
-																'Remove',
-																'autoblue'
-															) }
-														</Button>
-													) }
-												</HStack>
-											</BaseControl>
 											<TextControl
 												__nextHasNoMarginBottom
 												label={ __(
@@ -473,55 +401,129 @@ const Settings = () => {
 													readOnly
 												/>
 											) }
-											<BaseControl
-												__nextHasNoMarginBottom
-												label={ __(
-													'Publication colors',
-													'autoblue'
-												) }
-												id="autoblue-publication-colors"
-											>
-												<VStack spacing={ 3 }>
-													<ToggleControl
-														__nextHasNoMarginBottom
-														label={ __(
-															'Customize publication colors',
-															'autoblue'
-														) }
-														checked={
-															draftHasTheme
-														}
-														onChange={
-															handleToggleTheme
-														}
-													/>
-													{ draftHasTheme && (
-														<>
-															<PaletteEdit
-																colors={
-																	themePalette
+											<div className={ styles.split }>
+												<BaseControl
+													__nextHasNoMarginBottom
+													label={ __(
+														'Publication icon',
+														'autoblue'
+													) }
+													help={
+														draftIconId
+															? __(
+																	'Custom icon set. Remove to fall back to the WordPress site icon.',
+																	'autoblue'
+															  )
+															: __(
+																	'Falls back to the WordPress site icon. Should be at least 256×256.',
+																	'autoblue'
+															  )
+													}
+													id="autoblue-publication-icon"
+												>
+													<HStack
+														spacing={ 3 }
+														alignment="left"
+													>
+														{ currentIconUrl ? (
+															<img
+																src={
+																	currentIconUrl
 																}
-																onChange={
-																	handleThemeChange
+																alt=""
+																className={
+																	styles.iconPreview
 																}
-																canOnlyChangeValues
-																paletteLabel=""
-																popoverProps={ {
-																	offset: 8,
-																	placement:
-																		'bottom-start',
-																} }
 															/>
-															<Text variant="muted">
+														) : (
+															<div
+																className={
+																	styles.iconPlaceholder
+																}
+															/>
+														) }
+														<Button
+															variant="secondary"
+															onClick={
+																openIconPicker
+															}
+														>
+															{ draftIconId
+																? __(
+																		'Replace icon',
+																		'autoblue'
+																  )
+																: __(
+																		'Choose icon',
+																		'autoblue'
+																  ) }
+														</Button>
+														{ draftIconId && (
+															<Button
+																variant="tertiary"
+																isDestructive
+																onClick={
+																	handleRemoveIcon
+																}
+															>
 																{ __(
-																	'Theme colors are used by standard.site readers to style your publication.',
+																	'Remove',
 																	'autoblue'
 																) }
-															</Text>
-														</>
+															</Button>
+														) }
+													</HStack>
+												</BaseControl>
+												<BaseControl
+													__nextHasNoMarginBottom
+													label={ __(
+														'Publication colors',
+														'autoblue'
 													) }
-												</VStack>
-											</BaseControl>
+													id="autoblue-publication-colors"
+												>
+													<VStack spacing={ 3 }>
+														<ToggleControl
+															__nextHasNoMarginBottom
+															label={ __(
+																'Customize publication colors',
+																'autoblue'
+															) }
+															checked={
+																draftHasTheme
+															}
+															onChange={
+																handleToggleTheme
+															}
+														/>
+														{ draftHasTheme && (
+															<>
+																<PaletteEdit
+																	colors={
+																		themePalette
+																	}
+																	onChange={
+																		handleThemeChange
+																	}
+																	canOnlyChangeValues
+																	paletteLabel=""
+																	popoverProps={ {
+																		offset: 8,
+																		placement:
+																			'bottom-start',
+																	} }
+																/>
+																<Text variant="muted">
+																	{ __(
+																		'Theme colors are used by standard.site readers to style your publication.',
+																		'autoblue'
+																	) }
+																</Text>
+															</>
+														) }
+													</VStack>
+												</BaseControl>
+											</div>
 											<HStack alignment="left">
 												<Button
 													variant="primary"
