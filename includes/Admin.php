@@ -90,6 +90,23 @@ class Admin {
 
 		register_setting(
 			'autoblue',
+			'autoblue_enabled_post_types',
+			[
+				'type'              => 'array',
+				'description'       => __( 'Post types eligible to be shared to Bluesky.', 'autoblue' ),
+				'show_in_rest'      => [
+					'schema' => [
+						'type'  => 'array',
+						'items' => [ 'type' => 'string' ],
+					],
+				],
+				'default'           => Utils::DEFAULT_ENABLED_POST_TYPES,
+				'sanitize_callback' => [ Utils::class, 'sanitize_enabled_post_types' ],
+			],
+		);
+
+		register_setting(
+			'autoblue',
 			'autoblue_log_level',
 			[
 				'type'              => 'string',

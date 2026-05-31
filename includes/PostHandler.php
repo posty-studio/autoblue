@@ -42,8 +42,7 @@ class PostHandler {
 			return;
 		}
 
-		// TODO: Add support for multiple post types.
-		$valid_post_types = [ 'post' ];
+		$valid_post_types = Utils::get_enabled_post_types();
 		if ( ! in_array( $post->post_type, $valid_post_types, true ) ) {
 			$this->log->debug(
 				__( 'Skipping share for post `{post_title}` with ID `{post_id}` because it is not a supported post type. Valid post types are: `{valid_post_types}`, but got `{post_type}`.', 'autoblue' ),

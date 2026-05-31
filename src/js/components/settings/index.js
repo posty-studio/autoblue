@@ -3,6 +3,7 @@ import {
 	BaseControl,
 	Card,
 	CardBody,
+	CheckboxControl,
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
@@ -16,7 +17,13 @@ import styles from './styles.module.scss';
 
 const Settings = () => {
 	const { hasAccounts } = useAccounts();
-	const { isEnabled, setIsEnabled } = useSettings();
+	const {
+		isEnabled,
+		setIsEnabled,
+		enabledPostTypes,
+		availablePostTypes,
+		togglePostType,
+	} = useSettings();
 
 	return (
 		<>
@@ -48,6 +55,41 @@ const Settings = () => {
 									checked={ isEnabled }
 									onChange={ setIsEnabled }
 								/>
+							</VStack>
+						</CardBody>
+					</Card>
+				</BaseControl>
+			) }
+			{ hasAccounts && availablePostTypes.length > 0 && (
+				<BaseControl
+					__nextHasNoMarginBottom
+					label={ __( 'Post types', 'autoblue' ) }
+					id="autoblue-post-types"
+				>
+					<Card>
+						<CardBody className={ styles.card }>
+							<VStack spacing={ 3 }>
+								<Text variant="muted">
+									{ __(
+										'Choose which post types can be shared to Bluesky.',
+										'autoblue'
+									) }
+								</Text>
+								<VStack spacing={ 2 }>
+									{ availablePostTypes.map( ( pt ) => (
+										<CheckboxControl
+											key={ pt.slug }
+											__nextHasNoMarginBottom
+											label={ pt.label }
+											checked={ enabledPostTypes.includes(
+												pt.slug
+											) }
+											onChange={ ( checked ) =>
+												togglePostType( pt.slug, checked )
+											}
+										/>
+									) ) }
+								</VStack>
 							</VStack>
 						</CardBody>
 					</Card>
