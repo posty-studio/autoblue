@@ -11,9 +11,11 @@ import { store as noticesStore } from '@wordpress/notices';
 import { Logo } from './../../icons';
 import Settings from './../settings';
 import Logs from './../logs';
+import Records from './../records';
+import useSettings from './../../hooks/use-settings';
 import styles from './styles.module.scss';
 
-const TABS = [ 'settings', 'logs' ];
+const TABS = [ 'settings', 'logs', 'records' ];
 
 const Notices = () => {
 	const { removeNotice } = useDispatch( noticesStore );
@@ -34,6 +36,8 @@ const Notices = () => {
 };
 
 const AdminPage = () => {
+	const { isStandardSiteEnabled } = useSettings();
+
 	const getInitialTab = () => {
 		const hash = window.location.hash.replace( '#', '' );
 		return TABS.includes( hash ) ? hash : 'settings';
@@ -46,6 +50,27 @@ const AdminPage = () => {
 		window.location.hash = tabName;
 	};
 
+	const tabs = [
+		{
+			name: 'settings',
+			title: __( 'Settings', 'autoblue' ),
+			className: 'autoblue-settings',
+		},
+		{
+			name: 'logs',
+			title: __( 'Logs', 'autoblue' ),
+			className: 'autoblue-logs',
+		},
+	];
+
+	if ( isStandardSiteEnabled ) {
+		tabs.push( {
+			name: 'records',
+			title: __( 'Records', 'autoblue' ),
+			className: 'autoblue-records',
+		} );
+	}
+
 	return (
 		<>
 			<div className={ styles.header }>
@@ -56,18 +81,7 @@ const AdminPage = () => {
 				className={ styles.tabs }
 				initialTabName={ activeTab }
 				onSelect={ handleTabChange }
-				tabs={ [
-					{
-						name: 'settings',
-						title: __( 'Settings', 'autoblue' ),
-						className: 'autoblue-settings',
-					},
-					{
-						name: 'logs',
-						title: __( 'Logs', 'autoblue' ),
-						className: 'autoblue-logs',
-					},
-				] }
+				tabs={ tabs }
 			>
 				{ ( tab ) => {
 					return (
@@ -81,6 +95,7 @@ const AdminPage = () => {
 							>
 								{ tab.name === 'settings' && <Settings /> }
 								{ tab.name === 'logs' && <Logs /> }
+								{ tab.name === 'records' && <Records /> }
 							</VStack>
 						</div>
 					);

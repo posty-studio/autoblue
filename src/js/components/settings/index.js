@@ -1,14 +1,25 @@
 import { __ } from '@wordpress/i18n';
 import {
 	BaseControl,
+	Button,
 	Card,
 	CardBody,
 	CheckboxControl,
+	Notice,
 	Spinner,
+	TextControl,
+	TextareaControl,
+	ToggleControl,
+	__experimentalHStack as HStack,
+	__experimentalPaletteEdit as PaletteEdit,
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import { createInterpolateElement } from '@wordpress/element';
+import {
+	createInterpolateElement,
+	useEffect,
+	useState,
+} from '@wordpress/element';
 import NoAccountsPlaceholder from './../no-accounts-placeholder';
 import AccountList from './../account-list';
 import SettingToggle from './../setting-toggle';
@@ -25,7 +36,196 @@ const Settings = () => {
 		isLoadingPostTypes,
 		availablePostTypes,
 		togglePostType,
+		isStandardSiteEnabled,
+		isLoadingStandardSite,
+		setIsStandardSiteEnabled,
+		publicationOverrides,
+		savePublicationOverrides,
+		standardSitePublication,
+		isRootInstall,
+		isSaving,
 	} = useSettings();
+
+	const savedName = publicationOverrides.name ?? '';
+	const savedDescription = publicationOverrides.description ?? '';
+	const savedIconId = publicationOverrides.icon_id ?? null;
+	const savedThemeBackground = publicationOverrides.theme_background ?? '';
+	const savedThemeForeground = publicationOverrides.theme_foreground ?? '';
+	const savedThemeAccent = publicationOverrides.theme_accent ?? '';
+	const savedThemeAccentFg = publicationOverrides.theme_accent_foreground ?? '';
+
+	const [ draftName, setDraftName ] = useState( savedName );
+	const [ draftDescription, setDraftDescription ] = useState( savedDescription );
+	const [ draftIconId, setDraftIconId ] = useState( savedIconId );
+	const [ draftIconUrl, setDraftIconUrl ] = useState(
+		standardSitePublication.iconOverrideUrl || ''
+	);
+	const [ draftThemeBackground, setDraftThemeBackground ] = useState( savedThemeBackground );
+	const [ draftThemeForeground, setDraftThemeForeground ] = useState( savedThemeForeground );
+	const [ draftThemeAccent, setDraftThemeAccent ] = useState( savedThemeAccent );
+	const [ draftThemeAccentFg, setDraftThemeAccentFg ] = useState( savedThemeAccentFg );
+
+	// Re-sync drafts when the saved overrides change (initial load + after our own save).
+	useEffect( () => {
+		setDraftName( savedName );
+	}, [ savedName ] );
+	useEffect( () => {
+		setDraftDescription( savedDescription );
+	}, [ savedDescription ] );
+	useEffect( () => {
+		setDraftIconId( savedIconId );
+	}, [ savedIconId ] );
+	useEffect( () => {
+		setDraftThemeBackground( savedThemeBackground );
+	}, [ savedThemeBackground ] );
+	useEffect( () => {
+		setDraftThemeForeground( savedThemeForeground );
+	}, [ savedThemeForeground ] );
+	useEffect( () => {
+		setDraftThemeAccent( savedThemeAccent );
+	}, [ savedThemeAccent ] );
+	useEffect( () => {
+		setDraftThemeAccentFg( savedThemeAccentFg );
+	}, [ savedThemeAccentFg ] );
+
+	const savedHasTheme = Boolean(
+		savedThemeBackground ||
+			savedThemeForeground ||
+			savedThemeAccent ||
+			savedThemeAccentFg
+	);
+	const [ draftHasTheme, setDraftHasTheme ] = useState( savedHasTheme );
+	useEffect( () => {
+		setDraftHasTheme( savedHasTheme );
+	}, [ savedHasTheme ] );
+
+	const isPublicationDirty =
+		draftName !== savedName ||
+		draftDescription !== savedDescription ||
+		( draftIconId || null ) !== ( savedIconId || null ) ||
+		draftHasTheme !== savedHasTheme ||
+		( draftHasTheme &&
+			( draftThemeBackground !== savedThemeBackground ||
+				draftThemeForeground !== savedThemeForeground ||
+				draftThemeAccent !== savedThemeAccent ||
+				draftThemeAccentFg !== savedThemeAccentFg ) );
+
+	const handleToggleTheme = ( isOn ) => {
+		setDraftHasTheme( isOn );
+		if ( isOn ) {
+			// Seed sensible defaults for any slot that's still empty.
+			if ( ! draftThemeBackground ) setDraftThemeBackground( '#ffffff' );
+			if ( ! draftThemeForeground ) setDraftThemeForeground( '#111111' );
+			if ( ! draftThemeAccent ) setDraftThemeAccent( '#0073aa' );
+			if ( ! draftThemeAccentFg ) setDraftThemeAccentFg( '#ffffff' );
+		}
+		// Leave drafts populated when toggling off so flipping back on
+		// restores the user's last picks. The save handler gates on draftHasTheme.
+	};
+
+	const handleUpdatePublication = () => {
+		const next = {};
+		if ( draftName.trim() !== '' ) {
+			next.name = draftName;
+		}
+		if ( draftDescription.trim() !== '' ) {
+			next.description = draftDescription;
+		}
+		if ( draftIconId ) {
+			next.icon_id = Number( draftIconId );
+		}
+		if ( draftHasTheme ) {
+			if ( draftThemeBackground.trim() !== '' ) {
+				next.theme_background = draftThemeBackground;
+			}
+			if ( draftThemeForeground.trim() !== '' ) {
+				next.theme_foreground = draftThemeForeground;
+			}
+			if ( draftThemeAccent.trim() !== '' ) {
+				next.theme_accent = draftThemeAccent;
+			}
+			if ( draftThemeAccentFg.trim() !== '' ) {
+				next.theme_accent_foreground = draftThemeAccentFg;
+			}
+		}
+		savePublicationOverrides( next );
+	};
+
+	const openIconPicker = () => {
+		if ( ! window.wp?.media ) {
+			return;
+		}
+		const frame = window.wp.media( {
+			title: __( 'Select publication icon', 'autoblue' ),
+			button: { text: __( 'Use this icon', 'autoblue' ) },
+			library: { type: 'image' },
+			multiple: false,
+		} );
+		frame.on( 'select', () => {
+			const attachment = frame
+				.state()
+				.get( 'selection' )
+				.first()
+				.toJSON();
+			setDraftIconId( attachment.id );
+			setDraftIconUrl(
+				attachment.sizes?.thumbnail?.url ||
+					attachment.sizes?.medium?.url ||
+					attachment.url ||
+					''
+			);
+		} );
+		frame.open();
+	};
+
+	const handleRemoveIcon = () => {
+		setDraftIconId( null );
+		setDraftIconUrl( '' );
+	};
+
+	const currentIconUrl =
+		draftIconUrl || standardSitePublication.siteIconUrl || '';
+
+	const themePalette = [
+		{
+			slug: 'background',
+			name: __( 'Background', 'autoblue' ),
+			color: draftThemeBackground || 'transparent',
+		},
+		{
+			slug: 'foreground',
+			name: __( 'Foreground', 'autoblue' ),
+			color: draftThemeForeground || 'transparent',
+		},
+		{
+			slug: 'accent',
+			name: __( 'Accent', 'autoblue' ),
+			color: draftThemeAccent || 'transparent',
+		},
+		{
+			slug: 'accent_foreground',
+			name: __( 'Accent foreground', 'autoblue' ),
+			color: draftThemeAccentFg || 'transparent',
+		},
+	];
+
+	const themeSetters = {
+		background: setDraftThemeBackground,
+		foreground: setDraftThemeForeground,
+		accent: setDraftThemeAccent,
+		accent_foreground: setDraftThemeAccentFg,
+	};
+
+	const handleThemeChange = ( nextPalette ) => {
+		if ( ! Array.isArray( nextPalette ) ) return;
+		nextPalette.forEach( ( entry ) => {
+			const setter = themeSetters[ entry.slug ];
+			if ( ! setter ) return;
+			const raw = entry.color || '';
+			// Transparent (our sentinel for "no override") maps back to empty.
+			setter( raw === 'transparent' ? '' : raw );
+		} );
+	};
 
 	return (
 		<>
@@ -100,6 +300,245 @@ const Settings = () => {
 									</VStack>
 								) }
 							</VStack>
+						</CardBody>
+					</Card>
+				</BaseControl>
+			) }
+			{ hasAccounts && (
+				<BaseControl
+					__nextHasNoMarginBottom
+					label={ __( 'standard.site', 'autoblue' ) }
+					id="autoblue-standard-site"
+				>
+					<Card>
+						<CardBody className={ styles.card }>
+							{ ! isRootInstall ? (
+								<Notice
+									status="info"
+									isDismissible={ false }
+								>
+									{ __(
+										'standard.site requires WordPress to be installed at your domain root. This install lives in a subdirectory, so the feature is unavailable.',
+										'autoblue'
+									) }
+								</Notice>
+							) : (
+								<VStack spacing={ 3 }>
+									{ isLoadingStandardSite ? (
+										<Spinner />
+									) : (
+										<SettingToggle
+											label={ __(
+												'Publish posts as standard.site documents',
+												'autoblue'
+											) }
+											help={ __(
+												'Also writes a site.standard.document record to your PDS for every post shared to Bluesky, so other AT-aware readers can discover it.',
+												'autoblue'
+											) }
+											checked={ isStandardSiteEnabled }
+											onChange={ setIsStandardSiteEnabled }
+										/>
+									) }
+									{ isStandardSiteEnabled && (
+										<VStack spacing={ 3 }>
+											<TextControl
+												__nextHasNoMarginBottom
+												label={ __(
+													'Publication name',
+													'autoblue'
+												) }
+												value={ draftName }
+												placeholder={
+													standardSitePublication.siteName ||
+													''
+												}
+												help={ __(
+													'Leave empty to use the WordPress site title.',
+													'autoblue'
+												) }
+												onChange={ setDraftName }
+											/>
+											<TextareaControl
+												__nextHasNoMarginBottom
+												label={ __(
+													'Publication description',
+													'autoblue'
+												) }
+												value={ draftDescription }
+												placeholder={
+													standardSitePublication.siteDesc ||
+													''
+												}
+												help={ __(
+													'Leave empty to use the WordPress site tagline.',
+													'autoblue'
+												) }
+												onChange={ setDraftDescription }
+											/>
+											<TextControl
+												__nextHasNoMarginBottom
+												label={ __(
+													'Publication URL',
+													'autoblue'
+												) }
+												value={
+													standardSitePublication.url ||
+													''
+												}
+												readOnly
+											/>
+											<div className={ styles.split }>
+												<BaseControl
+													__nextHasNoMarginBottom
+													label={ __(
+														'Publication icon',
+														'autoblue'
+													) }
+													help={
+														draftIconId
+															? __(
+																	'Custom icon set. Remove to fall back to the WordPress site icon.',
+																	'autoblue'
+															  )
+															: __(
+																	'Falls back to the WordPress site icon. Should be at least 256×256.',
+																	'autoblue'
+															  )
+													}
+													id="autoblue-publication-icon"
+												>
+													<HStack
+														spacing={ 3 }
+														alignment="left"
+													>
+														{ currentIconUrl ? (
+															<img
+																src={
+																	currentIconUrl
+																}
+																alt=""
+																className={
+																	styles.iconPreview
+																}
+															/>
+														) : (
+															<div
+																className={
+																	styles.iconPlaceholder
+																}
+															/>
+														) }
+														<Button
+															variant="secondary"
+															onClick={
+																openIconPicker
+															}
+														>
+															{ draftIconId
+																? __(
+																		'Replace icon',
+																		'autoblue'
+																  )
+																: __(
+																		'Choose icon',
+																		'autoblue'
+																  ) }
+														</Button>
+														{ draftIconId && (
+															<Button
+																variant="tertiary"
+																isDestructive
+																onClick={
+																	handleRemoveIcon
+																}
+															>
+																{ __(
+																	'Remove',
+																	'autoblue'
+																) }
+															</Button>
+														) }
+													</HStack>
+												</BaseControl>
+												<BaseControl
+													__nextHasNoMarginBottom
+													label={ __(
+														'Publication colors',
+														'autoblue'
+													) }
+													id="autoblue-publication-colors"
+												>
+													<VStack spacing={ 3 }>
+														<ToggleControl
+															__nextHasNoMarginBottom
+															label={ __(
+																'Customize publication colors',
+																'autoblue'
+															) }
+															checked={
+																draftHasTheme
+															}
+															onChange={
+																handleToggleTheme
+															}
+														/>
+														{ draftHasTheme && (
+															<>
+																<div
+																	className={
+																		styles.palette
+																	}
+																>
+																	<PaletteEdit
+																		colors={
+																			themePalette
+																		}
+																		onChange={
+																			handleThemeChange
+																		}
+																		canOnlyChangeValues
+																		paletteLabel=""
+																		popoverProps={ {
+																			offset: 8,
+																			placement:
+																				'bottom-start',
+																		} }
+																	/>
+																</div>
+																<Text variant="muted">
+																	{ __(
+																		'Theme colors are used by standard.site readers to style your publication.',
+																		'autoblue'
+																	) }
+																</Text>
+															</>
+														) }
+													</VStack>
+												</BaseControl>
+											</div>
+											<HStack alignment="left">
+												<Button
+													variant="primary"
+													onClick={
+														handleUpdatePublication
+													}
+													disabled={
+														! isPublicationDirty ||
+														isSaving
+													}
+												>
+													{ __(
+														'Update publication',
+														'autoblue'
+													) }
+												</Button>
+												{ isSaving && <Spinner /> }
+											</HStack>
+										</VStack>
+									) }
+								</VStack>
+							) }
 						</CardBody>
 					</Card>
 				</BaseControl>

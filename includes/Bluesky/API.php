@@ -254,6 +254,108 @@ class API {
 	}
 
 	/**
+	 * List records in a collection via com.atproto.repo.listRecords.
+	 *
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function list_records( string $repo, string $collection, string $access_token, ?string $cursor = null, int $limit = 100 ) {
+		if ( ! $repo || ! $collection || ! $access_token ) {
+			return new \WP_Error( 'autoblue_invalid_list_records_args', __( 'Repo, collection, and access token are required.', 'autoblue' ) );
+		}
+
+		$pds_endpoint = $this->resolve_pds_endpoint( $repo );
+
+		if ( is_wp_error( $pds_endpoint ) ) {
+			return $pds_endpoint;
+		}
+
+		$body = [
+			'repo'       => $repo,
+			'collection' => $collection,
+			'limit'      => $limit,
+		];
+
+		if ( $cursor ) {
+			$body['cursor'] = $cursor;
+		}
+
+		return $this->send_request(
+			[
+				'endpoint' => 'com.atproto.repo.listRecords',
+				'method'   => 'GET',
+				'headers'  => [
+					'Authorization' => 'Bearer ' . $access_token,
+				],
+				'body'     => $body,
+				'base_url' => $pds_endpoint,
+			]
+		);
+	}
+
+	/**
+	 * Create-or-update a record at a known rkey via com.atproto.repo.putRecord.
+	 *
+	 * @param array<string, mixed> $record Must include repo, collection, rkey, record.
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function put_record( array $record, string $access_token, string $did ) {
+		if ( ! $record || ! $access_token ) {
+			return new \WP_Error( 'autoblue_invalid_record_or_access_token', __( 'Invalid record or access token.', 'autoblue' ) );
+		}
+
+		$pds_endpoint = $this->resolve_pds_endpoint( $did );
+
+		if ( is_wp_error( $pds_endpoint ) ) {
+			return $pds_endpoint;
+		}
+
+		return $this->send_request(
+			[
+				'endpoint' => 'com.atproto.repo.putRecord',
+				'method'   => 'POST',
+				'headers'  => [
+					'Authorization' => 'Bearer ' . $access_token,
+				],
+				'body'     => $record,
+				'base_url' => $pds_endpoint,
+			]
+		);
+	}
+
+	/**
+	 * Apply a batch of writes atomically via com.atproto.repo.applyWrites.
+	 *
+	 * @param array<int,array<string,mixed>> $writes
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function apply_writes( array $writes, string $access_token, string $did ) {
+		if ( empty( $writes ) || ! $access_token || ! $did ) {
+			return new \WP_Error( 'autoblue_invalid_apply_writes_args', __( 'Writes, access token, and DID are required.', 'autoblue' ) );
+		}
+
+		$pds_endpoint = $this->resolve_pds_endpoint( $did );
+
+		if ( is_wp_error( $pds_endpoint ) ) {
+			return $pds_endpoint;
+		}
+
+		return $this->send_request(
+			[
+				'endpoint' => 'com.atproto.repo.applyWrites',
+				'method'   => 'POST',
+				'headers'  => [
+					'Authorization' => 'Bearer ' . $access_token,
+				],
+				'body'     => [
+					'repo'   => $did,
+					'writes' => $writes,
+				],
+				'base_url' => $pds_endpoint,
+			]
+		);
+	}
+
+	/**
 	 * @return array<string,mixed>|\WP_Error
 	 */
 	public function upload_blob( string $blob, string $mime_type, string $access_token, string $did ) {

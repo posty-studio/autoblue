@@ -14,6 +14,16 @@ const useSettings = () => {
 		'site',
 		'autoblue_enabled_post_types'
 	);
+	const [ standardSiteEnabled, setStandardSiteEnabledFn ] = useEntityProp(
+		'root',
+		'site',
+		'autoblue_publish_documents_enabled'
+	);
+	const [ publicationOverrides, setPublicationOverridesFn ] = useEntityProp(
+		'root',
+		'site',
+		'autoblue_publication_overrides'
+	);
 	const { saveEditedEntityRecord } = useDispatch( 'core' );
 	const { createSuccessNotice, removeNotice } = useDispatch( noticesStore );
 
@@ -64,6 +74,42 @@ const useSettings = () => {
 		} catch ( error ) {}
 	};
 
+	const setIsStandardSiteEnabled = async ( value ) => {
+		if ( isSaving ) {
+			return;
+		}
+		try {
+			setStandardSiteEnabledFn( value );
+			await saveEditedEntityRecord( 'root', 'site' );
+		} catch ( error ) {}
+	};
+
+	const resolvedOverrides =
+		publicationOverrides && typeof publicationOverrides === 'object'
+			? publicationOverrides
+			: {};
+
+	const savePublicationOverrides = async ( next ) => {
+		if ( isSaving ) {
+			return;
+		}
+		try {
+			setPublicationOverridesFn( next );
+			await saveEditedEntityRecord( 'root', 'site' );
+
+			const notice = await createSuccessNotice(
+				__( 'Publication updated.', 'autoblue' ),
+				{ type: 'snackbar' }
+			);
+			setTimeout( () => {
+				removeNotice( notice.notice.id );
+			}, 2000 );
+		} catch ( error ) {}
+	};
+
+	const standardSiteInitial =
+		autoblue?.initialState?.settings?.standardSite || {};
+
 	return {
 		isEnabled:
 			isEnabled !== undefined && isEnabled !== null
@@ -75,6 +121,13 @@ const useSettings = () => {
 		availablePostTypes:
 			autoblue?.initialState?.settings?.availablePostTypes || [],
 		togglePostType,
+		isStandardSiteEnabled: !! standardSiteEnabled,
+		isLoadingStandardSite: standardSiteEnabled === undefined,
+		setIsStandardSiteEnabled,
+		publicationOverrides: resolvedOverrides,
+		savePublicationOverrides,
+		standardSitePublication: standardSiteInitial.publication || {},
+		isRootInstall: standardSiteInitial.isRootInstall !== false,
 		isSaving,
 	};
 };

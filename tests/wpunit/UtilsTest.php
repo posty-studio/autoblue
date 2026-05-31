@@ -25,8 +25,41 @@ class UtilsTest extends WPTestCase {
 		$this->assertSame( [ 'post' ], Utils::get_enabled_post_types() );
 	}
 
+	public function test_is_root_install_true_for_root(): void {
+		// Default test install is at root.
+		$this->assertTrue( Utils::is_root_install() );
+	}
+
+	public function test_is_standard_site_enabled_requires_global_toggle(): void {
+		update_option(
+			'autoblue_connections',
+			[
+				[
+					'did'         => 'did:plc:abc',
+					'access_jwt'  => 'a',
+					'refresh_jwt' => 'r',
+				],
+			]
+		);
+
+		delete_option( 'autoblue_publish_documents_enabled' );
+		$this->assertFalse( Utils::is_standard_site_enabled() );
+
+		update_option( 'autoblue_publish_documents_enabled', true );
+		$this->assertTrue( Utils::is_standard_site_enabled() );
+	}
+
+	public function test_is_standard_site_enabled_requires_a_connection(): void {
+		update_option( 'autoblue_publish_documents_enabled', true );
+		update_option( 'autoblue_connections', [] );
+
+		$this->assertFalse( Utils::is_standard_site_enabled() );
+	}
+
 	protected function tearDown(): void {
 		delete_option( 'autoblue_enabled_post_types' );
+		delete_option( 'autoblue_publish_documents_enabled' );
+		delete_option( 'autoblue_connections' );
 		parent::tearDown();
 	}
 }

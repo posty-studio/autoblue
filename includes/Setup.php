@@ -11,12 +11,15 @@ class Setup {
 		( new PostHandler() )->register_hooks();
 		( new ConnectionsManager() )->register_hooks();
 		( new Logging\Setup() )->register_hooks();
+		( new Standard\Publication() )->register_hooks();
+		( new Standard\Verification() )->register_hooks();
 		( new CLI\Commands() )->register_commands();
 
 		add_action( 'rest_api_init', [ new Endpoints\LogsController(), 'register_routes' ] );
 		add_action( 'rest_api_init', [ new Endpoints\SearchController(), 'register_routes' ] );
 		add_action( 'rest_api_init', [ new Endpoints\AccountController(), 'register_routes' ] );
 		add_action( 'rest_api_init', [ new Endpoints\ConnectionsController(), 'register_routes' ] );
+		add_action( 'rest_api_init', [ new Endpoints\StandardRecordsController(), 'register_routes' ] );
 	}
 
 	public static function activate(): void {
