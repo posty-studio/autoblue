@@ -9,6 +9,7 @@ import {
 	Spinner,
 	TextControl,
 	TextareaControl,
+	ToggleControl,
 	__experimentalHStack as HStack,
 	__experimentalPaletteEdit as PaletteEdit,
 	__experimentalText as Text,
@@ -87,14 +88,40 @@ const Settings = () => {
 		setDraftThemeAccentFg( savedThemeAccentFg );
 	}, [ savedThemeAccentFg ] );
 
+	const savedHasTheme = Boolean(
+		savedThemeBackground ||
+			savedThemeForeground ||
+			savedThemeAccent ||
+			savedThemeAccentFg
+	);
+	const [ draftHasTheme, setDraftHasTheme ] = useState( savedHasTheme );
+	useEffect( () => {
+		setDraftHasTheme( savedHasTheme );
+	}, [ savedHasTheme ] );
+
 	const isPublicationDirty =
 		draftName !== savedName ||
 		draftDescription !== savedDescription ||
 		( draftIconId || null ) !== ( savedIconId || null ) ||
-		draftThemeBackground !== savedThemeBackground ||
-		draftThemeForeground !== savedThemeForeground ||
-		draftThemeAccent !== savedThemeAccent ||
-		draftThemeAccentFg !== savedThemeAccentFg;
+		draftHasTheme !== savedHasTheme ||
+		( draftHasTheme &&
+			( draftThemeBackground !== savedThemeBackground ||
+				draftThemeForeground !== savedThemeForeground ||
+				draftThemeAccent !== savedThemeAccent ||
+				draftThemeAccentFg !== savedThemeAccentFg ) );
+
+	const handleToggleTheme = ( isOn ) => {
+		setDraftHasTheme( isOn );
+		if ( isOn ) {
+			// Seed sensible defaults for any slot that's still empty.
+			if ( ! draftThemeBackground ) setDraftThemeBackground( '#ffffff' );
+			if ( ! draftThemeForeground ) setDraftThemeForeground( '#111111' );
+			if ( ! draftThemeAccent ) setDraftThemeAccent( '#0073aa' );
+			if ( ! draftThemeAccentFg ) setDraftThemeAccentFg( '#ffffff' );
+		}
+		// Leave drafts populated when toggling off so flipping back on
+		// restores the user's last picks. The save handler gates on draftHasTheme.
+	};
 
 	const handleUpdatePublication = () => {
 		const next = {};
@@ -107,17 +134,19 @@ const Settings = () => {
 		if ( draftIconId ) {
 			next.icon_id = Number( draftIconId );
 		}
-		if ( draftThemeBackground.trim() !== '' ) {
-			next.theme_background = draftThemeBackground;
-		}
-		if ( draftThemeForeground.trim() !== '' ) {
-			next.theme_foreground = draftThemeForeground;
-		}
-		if ( draftThemeAccent.trim() !== '' ) {
-			next.theme_accent = draftThemeAccent;
-		}
-		if ( draftThemeAccentFg.trim() !== '' ) {
-			next.theme_accent_foreground = draftThemeAccentFg;
+		if ( draftHasTheme ) {
+			if ( draftThemeBackground.trim() !== '' ) {
+				next.theme_background = draftThemeBackground;
+			}
+			if ( draftThemeForeground.trim() !== '' ) {
+				next.theme_foreground = draftThemeForeground;
+			}
+			if ( draftThemeAccent.trim() !== '' ) {
+				next.theme_accent = draftThemeAccent;
+			}
+			if ( draftThemeAccentFg.trim() !== '' ) {
+				next.theme_accent_foreground = draftThemeAccentFg;
+			}
 		}
 		savePublicationOverrides( next );
 	};
@@ -444,25 +473,41 @@ const Settings = () => {
 													readOnly
 												/>
 											) }
-											<PaletteEdit
-												colors={ themePalette }
-												onChange={ handleThemeChange }
-												canOnlyChangeValues
-												paletteLabel={ __(
-													'Theme colors',
+											<ToggleControl
+												__nextHasNoMarginBottom
+												label={ __(
+													'Customize publication colors',
 													'autoblue'
 												) }
-												popoverProps={ {
-													offset: 8,
-													placement: 'bottom-start',
-												} }
+												checked={ draftHasTheme }
+												onChange={ handleToggleTheme }
 											/>
-											<Text variant="muted">
-												{ __(
-													'Theme colors are used by standard.site readers to style your publication.',
-													'autoblue'
-												) }
-											</Text>
+											{ draftHasTheme && (
+												<>
+													<PaletteEdit
+														colors={ themePalette }
+														onChange={
+															handleThemeChange
+														}
+														canOnlyChangeValues
+														paletteLabel={ __(
+															'Theme colors',
+															'autoblue'
+														) }
+														popoverProps={ {
+															offset: 8,
+															placement:
+																'bottom-start',
+														} }
+													/>
+													<Text variant="muted">
+														{ __(
+															'Theme colors are used by standard.site readers to style your publication.',
+															'autoblue'
+														) }
+													</Text>
+												</>
+											) }
 											<HStack alignment="left">
 												<Button
 													variant="primary"
