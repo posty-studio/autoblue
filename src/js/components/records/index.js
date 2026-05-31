@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { __ } from '@wordpress/i18n';
 import { useEffect, useState, useCallback } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
@@ -14,7 +15,7 @@ import {
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import { update } from '@wordpress/icons';
+import { RefreshIcon } from '../../icons';
 import styles from './styles.module.scss';
 
 const extractDid = ( atUri = '' ) => {
@@ -155,15 +156,17 @@ const Records = () => {
 				className={ styles.toolbar }
 			>
 				<Button
-					variant="secondary"
-					icon={ update }
+					label={ __( 'Refresh records', 'autoblue' ) }
 					onClick={ handleRefresh }
 					disabled={ isRefreshing }
-				>
-					{ isRefreshing
-						? __( 'Refreshing…', 'autoblue' )
-						: __( 'Refresh', 'autoblue' ) }
-				</Button>
+					accessibleWhenDisabled
+					className={ clsx( {
+						[ styles.refresh ]: true,
+						[ styles.refreshing ]: isRefreshing,
+					} ) }
+					icon={ RefreshIcon }
+					size="compact"
+				/>
 			</HStack>
 
 			<BaseControl
