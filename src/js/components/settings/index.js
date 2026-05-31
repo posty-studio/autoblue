@@ -18,6 +18,7 @@ import {
 	useEffect,
 	useState,
 } from '@wordpress/element';
+import { MediaUpload, MediaUploadCheck } from '@wordpress/media-utils';
 import NoAccountsPlaceholder from './../no-accounts-placeholder';
 import AccountList from './../account-list';
 import SettingToggle from './../setting-toggle';
@@ -46,6 +47,7 @@ const Settings = () => {
 
 	const savedName = publicationOverrides.name ?? '';
 	const savedDescription = publicationOverrides.description ?? '';
+	const savedIconId = publicationOverrides.icon_id ?? null;
 	const savedThemeBackground = publicationOverrides.theme_background ?? '';
 	const savedThemeForeground = publicationOverrides.theme_foreground ?? '';
 	const savedThemeAccent = publicationOverrides.theme_accent ?? '';
@@ -53,6 +55,10 @@ const Settings = () => {
 
 	const [ draftName, setDraftName ] = useState( savedName );
 	const [ draftDescription, setDraftDescription ] = useState( savedDescription );
+	const [ draftIconId, setDraftIconId ] = useState( savedIconId );
+	const [ draftIconUrl, setDraftIconUrl ] = useState(
+		standardSitePublication.iconOverrideUrl || ''
+	);
 	const [ draftThemeBackground, setDraftThemeBackground ] = useState( savedThemeBackground );
 	const [ draftThemeForeground, setDraftThemeForeground ] = useState( savedThemeForeground );
 	const [ draftThemeAccent, setDraftThemeAccent ] = useState( savedThemeAccent );
@@ -65,6 +71,9 @@ const Settings = () => {
 	useEffect( () => {
 		setDraftDescription( savedDescription );
 	}, [ savedDescription ] );
+	useEffect( () => {
+		setDraftIconId( savedIconId );
+	}, [ savedIconId ] );
 	useEffect( () => {
 		setDraftThemeBackground( savedThemeBackground );
 	}, [ savedThemeBackground ] );
@@ -81,6 +90,7 @@ const Settings = () => {
 	const isPublicationDirty =
 		draftName !== savedName ||
 		draftDescription !== savedDescription ||
+		( draftIconId || null ) !== ( savedIconId || null ) ||
 		draftThemeBackground !== savedThemeBackground ||
 		draftThemeForeground !== savedThemeForeground ||
 		draftThemeAccent !== savedThemeAccent ||
@@ -93,6 +103,9 @@ const Settings = () => {
 		}
 		if ( draftDescription.trim() !== '' ) {
 			next.description = draftDescription;
+		}
+		if ( draftIconId ) {
+			next.icon_id = Number( draftIconId );
 		}
 		if ( draftThemeBackground.trim() !== '' ) {
 			next.theme_background = draftThemeBackground;
@@ -108,6 +121,19 @@ const Settings = () => {
 		}
 		savePublicationOverrides( next );
 	};
+
+	const handleSelectIcon = ( media ) => {
+		setDraftIconId( media.id );
+		setDraftIconUrl( media.url || '' );
+	};
+
+	const handleRemoveIcon = () => {
+		setDraftIconId( null );
+		setDraftIconUrl( '' );
+	};
+
+	const currentIconUrl =
+		draftIconUrl || standardSitePublication.siteIconUrl || '';
 
 	return (
 		<>
@@ -258,6 +284,96 @@ const Settings = () => {
 												) }
 												onChange={ setDraftDescription }
 											/>
+											<BaseControl
+												__nextHasNoMarginBottom
+												label={ __(
+													'Publication icon',
+													'autoblue'
+												) }
+												help={
+													draftIconId
+														? __(
+																'Custom icon set. Remove to fall back to the WordPress site icon.',
+																'autoblue'
+														  )
+														: __(
+																'Falls back to the WordPress site icon. Should be at least 256×256.',
+																'autoblue'
+														  )
+												}
+												id="autoblue-publication-icon"
+											>
+												<HStack
+													spacing={ 3 }
+													alignment="left"
+												>
+													{ currentIconUrl ? (
+														<img
+															src={
+																currentIconUrl
+															}
+															alt=""
+															className={
+																styles.iconPreview
+															}
+														/>
+													) : (
+														<div
+															className={
+																styles.iconPlaceholder
+															}
+														/>
+													) }
+													<MediaUploadCheck>
+														<MediaUpload
+															onSelect={
+																handleSelectIcon
+															}
+															allowedTypes={ [
+																'image',
+															] }
+															value={
+																draftIconId ||
+																undefined
+															}
+															render={ ( {
+																open,
+															} ) => (
+																<Button
+																	variant="secondary"
+																	onClick={
+																		open
+																	}
+																>
+																	{ draftIconId
+																		? __(
+																				'Replace icon',
+																				'autoblue'
+																		  )
+																		: __(
+																				'Choose icon',
+																				'autoblue'
+																		  ) }
+																</Button>
+															) }
+														/>
+													</MediaUploadCheck>
+													{ draftIconId && (
+														<Button
+															variant="tertiary"
+															isDestructive
+															onClick={
+																handleRemoveIcon
+															}
+														>
+															{ __(
+																'Remove',
+																'autoblue'
+															) }
+														</Button>
+													) }
+												</HStack>
+											</BaseControl>
 											<TextControl
 												__nextHasNoMarginBottom
 												label={ __(

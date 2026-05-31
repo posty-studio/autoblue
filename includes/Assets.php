@@ -78,6 +78,7 @@ class Assets {
 			return;
 		}
 
+		wp_enqueue_media();
 		wp_enqueue_style( 'wp-components' );
 		wp_enqueue_style( 'dataviews' );
 		$this->enqueue_script(
@@ -109,6 +110,10 @@ class Assets {
 		];
 
 		$publication_record = get_option( 'autoblue_publication_record', [] );
+		$overrides          = get_option( 'autoblue_publication_overrides', [] );
+		$override_icon_id   = is_array( $overrides ) && ! empty( $overrides['icon_id'] ) ? (int) $overrides['icon_id'] : 0;
+		$override_icon_url  = $override_icon_id > 0 ? (string) wp_get_attachment_image_url( $override_icon_id, 'thumbnail' ) : '';
+		$site_icon_url      = (string) get_site_icon_url( 128 );
 
 		return [
 			'accounts' => [
@@ -120,10 +125,12 @@ class Assets {
 				'standardSite'       => [
 					'isRootInstall' => Utils::is_root_install(),
 					'publication'   => [
-						'url'          => untrailingslashit( home_url( '/' ) ),
-						'siteName'     => get_bloginfo( 'name' ),
-						'siteDesc'     => get_bloginfo( 'description' ),
-						'publishedUri' => isset( $publication_record['uri'] ) ? (string) $publication_record['uri'] : null,
+						'url'             => untrailingslashit( home_url( '/' ) ),
+						'siteName'        => get_bloginfo( 'name' ),
+						'siteDesc'        => get_bloginfo( 'description' ),
+						'siteIconUrl'     => $site_icon_url,
+						'iconOverrideUrl' => $override_icon_url,
+						'publishedUri'    => isset( $publication_record['uri'] ) ? (string) $publication_record['uri'] : null,
 					],
 				],
 			],
