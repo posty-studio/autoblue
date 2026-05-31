@@ -113,7 +113,8 @@ class Assets {
 				'items' => $connections,
 			],
 			'settings' => [
-				'enabled' => get_option( 'autoblue_enabled', false ),
+				'enabled'            => get_option( 'autoblue_enabled', false ),
+				'availablePostTypes' => Utils::get_available_post_types(),
 			],
 			'logs'     => [
 				'items'      => $logs['data'],

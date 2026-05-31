@@ -82,7 +82,7 @@ class Comments {
 
 		$post = get_post( $post_id );
 
-		if ( ! $post || ! in_array( $post->post_type, [ 'post' ], true ) ) {
+		if ( ! $post || ! in_array( $post->post_type, Utils::get_enabled_post_types(), true ) ) {
 			return false;
 		}
 

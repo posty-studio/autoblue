@@ -1,4 +1,5 @@
 import { store as editorStore } from '@wordpress/editor';
+import { store as coreStore } from '@wordpress/core-data';
 import { useSelect } from '@wordpress/data';
 import { useState, useEffect } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
@@ -17,19 +18,24 @@ const useShares = () => {
 	const [ pollCount, setPollCount ] = useState( 0 );
 
 	const postData = useSelect( ( select ) => {
-		const { getCurrentPostAttribute, getCurrentPostId } =
+		const { getCurrentPostAttribute, getCurrentPostId, getCurrentPostType } =
 			select( editorStore );
 		const meta = getCurrentPostAttribute( 'meta' ) || {};
+		const postType = getCurrentPostType();
+		const postTypeObject = postType
+			? select( coreStore ).getPostType( postType )
+			: null;
 
 		return {
 			isSharingEnabled: meta?.autoblue_enabled || false,
 			shares: meta?.autoblue_shares || [],
 			postId: getCurrentPostId(),
+			restBase: postTypeObject?.rest_base || 'posts',
 		};
 	}, [] );
 
 	useEffect( () => {
-		const { postId, shares } = postData;
+		const { postId, restBase, shares } = postData;
 		const hasExistingShares =
 			shares.length > 0 || polledMeta?.autoblue_shares?.length > 0;
 
@@ -40,7 +46,7 @@ const useShares = () => {
 		const pollForUpdates = async () => {
 			try {
 				const response = await apiFetch( {
-					path: `/wp/v2/posts/${ postId }`,
+					path: `/wp/v2/${ restBase }/${ postId }`,
 					method: 'GET',
 				} );
 

@@ -4,21 +4,30 @@ import {
 	PluginPostPublishPanel,
 	PluginDocumentSettingPanel,
 } from '@wordpress/editor';
-import { select } from '@wordpress/data';
+import { useSelect } from '@wordpress/data';
+import { useEntityProp } from '@wordpress/core-data';
 import { LogoImage } from './icons';
 import SharePanel from './components/share-panel';
 import PublishedPostPanel from './components/published-post-panel';
 
-// TODO: Add support for other post types.
-const ENABLED_POST_TYPES = [ 'post' ];
-
-const isEnabled = () => {
-	const currentPostType = select( 'core/editor' ).getCurrentPostType();
-	return ENABLED_POST_TYPES.includes( currentPostType );
+const useIsEnabled = () => {
+	const currentPostType = useSelect(
+		( select ) => select( 'core/editor' ).getCurrentPostType(),
+		[]
+	);
+	const [ enabledPostTypes ] = useEntityProp(
+		'root',
+		'site',
+		'autoblue_enabled_post_types'
+	);
+	const resolved = Array.isArray( enabledPostTypes )
+		? enabledPostTypes
+		: [ 'post' ];
+	return resolved.includes( currentPostType );
 };
 
 const Panel = () => {
-	if ( ! isEnabled() ) {
+	if ( ! useIsEnabled() ) {
 		return null;
 	}
 
@@ -34,7 +43,7 @@ const Panel = () => {
 };
 
 const PrePublishSharePanel = () => {
-	if ( ! isEnabled() ) {
+	if ( ! useIsEnabled() ) {
 		return null;
 	}
 
@@ -50,7 +59,7 @@ const PrePublishSharePanel = () => {
 };
 
 const PostPublishSharePanel = () => {
-	if ( ! isEnabled() ) {
+	if ( ! useIsEnabled() ) {
 		return null;
 	}
 

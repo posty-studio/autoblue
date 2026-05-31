@@ -9,6 +9,11 @@ const useSettings = () => {
 		'site',
 		'autoblue_enabled'
 	);
+	const [ enabledPostTypes, setEnabledPostTypesFn ] = useEntityProp(
+		'root',
+		'site',
+		'autoblue_enabled_post_types'
+	);
 	const { saveEditedEntityRecord } = useDispatch( 'core' );
 	const { createSuccessNotice, removeNotice } = useDispatch( noticesStore );
 
@@ -42,12 +47,34 @@ const useSettings = () => {
 		} catch ( error ) {}
 	};
 
+	const resolvedEnabledPostTypes = Array.isArray( enabledPostTypes )
+		? enabledPostTypes
+		: [ 'post' ];
+
+	const togglePostType = async ( slug, checked ) => {
+		if ( isSaving ) {
+			return;
+		}
+		const next = checked
+			? Array.from( new Set( [ ...resolvedEnabledPostTypes, slug ] ) )
+			: resolvedEnabledPostTypes.filter( ( s ) => s !== slug );
+		try {
+			setEnabledPostTypesFn( next );
+			await saveEditedEntityRecord( 'root', 'site' );
+		} catch ( error ) {}
+	};
+
 	return {
 		isEnabled:
 			isEnabled !== undefined && isEnabled !== null
 				? isEnabled
 				: autoblue?.initialState?.settings?.enabled, // TODO: Add to store.
 		setIsEnabled,
+		enabledPostTypes: resolvedEnabledPostTypes,
+		isLoadingPostTypes: enabledPostTypes === undefined,
+		availablePostTypes:
+			autoblue?.initialState?.settings?.availablePostTypes || [],
+		togglePostType,
 		isSaving,
 	};
 };
