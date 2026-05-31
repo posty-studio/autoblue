@@ -121,7 +121,7 @@ const SharePanel = () => {
 				<ToggleControl
 					__nextHasNoMarginBottom
 					label={ __(
-						'Also publish as a standard.site document',
+						'Publish as a standard.site document',
 						'autoblue'
 					) }
 					help={
