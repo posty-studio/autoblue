@@ -116,6 +116,75 @@ class Document {
 	}
 
 	/**
+	 * Back-fill bskyPostRef onto an already-published document.
+	 *
+	 * Called after the Bluesky post lands so we can point the document at
+	 * its corresponding bsky post (useful for comment threading and
+	 * reverse navigation in standard.site-aware readers).
+	 *
+	 * @param array{uri:string,cid:string} $bsky_post_ref
+	 * @param array<string,mixed>|null     $cover_blob_ref Reused so coverImage stays intact.
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function update_bsky_ref( int $post_id, array $bsky_post_ref, ?array $cover_blob_ref = null ) {
+		$post = get_post( $post_id );
+		if ( ! $post ) {
+			return new \WP_Error( 'autoblue_document_post_not_found', __( 'Post not found.', 'autoblue' ) );
+		}
+
+		$stored = get_post_meta( $post_id, self::META_KEY, true );
+		if ( ! is_array( $stored ) || empty( $stored['rkey'] ) ) {
+			return new \WP_Error( 'autoblue_document_not_published', __( 'Document not yet published.', 'autoblue' ) );
+		}
+
+		$publication_uri = $this->publication->get_uri();
+		if ( ! $publication_uri ) {
+			return new \WP_Error( 'autoblue_publication_missing', __( 'Publication unavailable.', 'autoblue' ) );
+		}
+
+		$connection = $this->get_active_connection();
+		if ( is_wp_error( $connection ) ) {
+			return $connection;
+		}
+
+		$record = $this->build_record( $post, $publication_uri, $bsky_post_ref, $cover_blob_ref );
+
+		$response = $this->api_client->put_record(
+			[
+				'repo'       => $connection['did'],
+				'collection' => self::COLLECTION,
+				'rkey'       => $stored['rkey'],
+				'record'     => $record,
+			],
+			$connection['access_jwt'],
+			$connection['did']
+		);
+
+		if ( is_wp_error( $response ) ) {
+			$this->log->error(
+				__( 'Failed to back-fill bskyPostRef on standard.site document for post `{post_title}` with ID `{post_id}`: {message}', 'autoblue' ),
+				[
+					'post_id'    => $post_id,
+					'post_title' => $post->post_title,
+					'message'    => $response->get_error_message(),
+				]
+			);
+			return $response;
+		}
+
+		update_post_meta(
+			$post_id,
+			self::META_KEY,
+			array_merge(
+				$stored,
+				[ 'cid' => (string) ( $response['cid'] ?? $stored['cid'] ) ]
+			)
+		);
+
+		return $response;
+	}
+
+	/**
 	 * @param \WP_Post                              $post
 	 * @param string                                $publication_uri
 	 * @param array{uri:string,cid:string}|null     $bsky_post_ref
