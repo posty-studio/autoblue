@@ -37,9 +37,11 @@ class Document {
 	 *        the bsky post can embed it via app.bsky.embed.record).
 	 * @param array<string,mixed>|null              $cover_blob_ref
 	 *        Optional reusable blob ref from the bsky post upload.
+	 * @param array<string,mixed>|null              $connection
+	 *        Optional already-refreshed connection.
 	 * @return array<string,mixed>|\WP_Error
 	 */
-	public function publish( int $post_id, ?array $bsky_post_ref, ?array $cover_blob_ref = null ) {
+	public function publish( int $post_id, ?array $bsky_post_ref, ?array $cover_blob_ref = null, ?array $connection = null ) {
 		$post = get_post( $post_id );
 		if ( ! $post ) {
 			return new \WP_Error( 'autoblue_document_post_not_found', __( 'Post not found.', 'autoblue' ) );
@@ -49,7 +51,14 @@ class Document {
 			return new \WP_Error( 'autoblue_document_invalid_bsky_ref', __( 'A Bluesky post URI and CID are required.', 'autoblue' ) );
 		}
 
-		$publication_uri = $this->publication->ensure_exists();
+		if ( null === $connection ) {
+			$connection = $this->get_active_connection();
+			if ( is_wp_error( $connection ) ) {
+				return $connection;
+			}
+		}
+
+		$publication_uri = $this->publication->ensure_exists_for_connection( $connection );
 		if ( is_wp_error( $publication_uri ) ) {
 			$this->log->error(
 				__( 'Skipping standard.site document for post `{post_title}` with ID `{post_id}`: publication unavailable.', 'autoblue' ),
@@ -62,19 +71,12 @@ class Document {
 			return $publication_uri;
 		}
 
-		$connection = $this->get_active_connection();
-		if ( is_wp_error( $connection ) ) {
-			return $connection;
-		}
-
 		$record = $this->build_record( $post, $publication_uri, $bsky_post_ref, $cover_blob_ref );
-		$rkey   = $this->get_rkey( $post_id );
 
 		$response = $this->api_client->create_record(
 			[
 				'repo'       => $connection['did'],
 				'collection' => self::COLLECTION,
-				'rkey'       => $rkey,
 				'record'     => $record,
 			],
 			$connection['access_jwt'],
@@ -97,7 +99,13 @@ class Document {
 			return new \WP_Error( 'autoblue_invalid_document_response', __( 'Document record was created but no URI was returned.', 'autoblue' ) );
 		}
 
-		$stored = $this->store_meta( $post_id, $response, $rkey );
+		$stored = [
+			'uri'  => (string) $response['uri'],
+			'cid'  => (string) ( $response['cid'] ?? '' ),
+			'rkey' => $this->extract_rkey( (string) $response['uri'] ),
+		];
+
+		update_post_meta( $post_id, self::META_KEY, $stored );
 
 		$this->log->success(
 			__( 'Published standard.site document for post `{post_title}` with ID `{post_id}` at {uri}.', 'autoblue' ),
@@ -109,67 +117,6 @@ class Document {
 		);
 
 		return $stored;
-	}
-
-	/**
-	 * Prepare the document record for an external batch write.
-	 *
-	 * @param array{uri:string,cid:string}|null $bsky_post_ref
-	 * @param array<string,mixed>|null          $cover_blob_ref
-	 * @return array{rkey:string,record:array<string,mixed>}|\WP_Error
-	 */
-	public function prepare_record( int $post_id, string $publication_uri, ?array $bsky_post_ref, ?array $cover_blob_ref = null ) {
-		$post = get_post( $post_id );
-		if ( ! $post ) {
-			return new \WP_Error( 'autoblue_document_post_not_found', __( 'Post not found.', 'autoblue' ) );
-		}
-
-		if ( null !== $bsky_post_ref && ( empty( $bsky_post_ref['uri'] ) || empty( $bsky_post_ref['cid'] ) ) ) {
-			return new \WP_Error( 'autoblue_document_invalid_bsky_ref', __( 'A Bluesky post URI and CID are required.', 'autoblue' ) );
-		}
-
-		return [
-			'rkey'   => $this->get_rkey( $post_id ),
-			'record' => $this->build_record( $post, $publication_uri, $bsky_post_ref, $cover_blob_ref ),
-		];
-	}
-
-	/**
-	 * Persist document metadata from a PDS write response.
-	 *
-	 * @param array<string,mixed> $response
-	 * @return array{uri:string,cid:string,rkey:string}
-	 */
-	public function store_meta( int $post_id, array $response, ?string $rkey = null ): array {
-		$uri    = (string) ( $response['uri'] ?? '' );
-		$stored = [
-			'uri'  => $uri,
-			'cid'  => (string) ( $response['cid'] ?? '' ),
-			'rkey' => $rkey ?: $this->extract_rkey( $uri ),
-		];
-
-		update_post_meta( $post_id, self::META_KEY, $stored );
-
-		return $stored;
-	}
-
-	public function get_rkey( int $post_id ): string {
-		$stored = get_post_meta( $post_id, self::META_KEY, true );
-		if ( is_array( $stored ) && ! empty( $stored['rkey'] ) ) {
-			return (string) $stored['rkey'];
-		}
-
-		$rkey = 'ab' . strtolower( str_replace( '-', '', wp_generate_uuid4() ) );
-		update_post_meta(
-			$post_id,
-			self::META_KEY,
-			array_merge(
-				is_array( $stored ) ? $stored : [],
-				[ 'rkey' => $rkey ]
-			)
-		);
-
-		return $rkey;
 	}
 
 	/**

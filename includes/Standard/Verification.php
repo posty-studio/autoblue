@@ -16,6 +16,7 @@ class Verification {
 	public function register_hooks(): void {
 		add_action( 'parse_request', [ $this, 'maybe_serve_well_known' ] );
 		add_action( 'wp_head', [ $this, 'inject_document_link' ] );
+		add_action( 'wp_head', [ $this, 'inject_publication_link' ] );
 	}
 
 	public function maybe_serve_well_known(): void {
@@ -64,6 +65,34 @@ class Verification {
 		printf(
 			'<link rel="site.standard.document" href="%s" />' . "\n",
 			esc_attr( (string) $document['uri'] )
+		);
+	}
+
+	public function inject_publication_link(): void {
+		if ( ! is_front_page() && ! is_singular() ) {
+			return;
+		}
+
+		if ( ! is_front_page() && is_singular() ) {
+			$post_id = get_queried_object_id();
+			if ( ! $post_id ) {
+				return;
+			}
+
+			$post_type = get_post_type( $post_id );
+			if ( ! $post_type || ! in_array( $post_type, Utils::get_enabled_post_types(), true ) ) {
+				return;
+			}
+		}
+
+		$uri = ( new Publication() )->get_uri();
+		if ( ! $uri ) {
+			return;
+		}
+
+		printf(
+			'<link rel="site.standard.publication" href="%s" />' . "\n",
+			esc_attr( $uri )
 		);
 	}
 
