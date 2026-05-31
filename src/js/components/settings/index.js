@@ -1,6 +1,7 @@
 import { __ } from '@wordpress/i18n';
 import {
 	BaseControl,
+	Button,
 	Card,
 	CardBody,
 	CheckboxControl,
@@ -8,10 +9,15 @@ import {
 	Spinner,
 	TextControl,
 	TextareaControl,
+	__experimentalHStack as HStack,
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import { createInterpolateElement } from '@wordpress/element';
+import {
+	createInterpolateElement,
+	useEffect,
+	useState,
+} from '@wordpress/element';
 import NoAccountsPlaceholder from './../no-accounts-placeholder';
 import AccountList from './../account-list';
 import SettingToggle from './../setting-toggle';
@@ -32,10 +38,39 @@ const Settings = () => {
 		isLoadingStandardSite,
 		setIsStandardSiteEnabled,
 		publicationOverrides,
-		setPublicationOverride,
+		savePublicationOverrides,
 		standardSitePublication,
 		isRootInstall,
+		isSaving,
 	} = useSettings();
+
+	const savedName = publicationOverrides.name ?? '';
+	const savedDescription = publicationOverrides.description ?? '';
+
+	const [ draftName, setDraftName ] = useState( savedName );
+	const [ draftDescription, setDraftDescription ] = useState( savedDescription );
+
+	// Re-sync drafts when the saved overrides change (initial load + after our own save).
+	useEffect( () => {
+		setDraftName( savedName );
+	}, [ savedName ] );
+	useEffect( () => {
+		setDraftDescription( savedDescription );
+	}, [ savedDescription ] );
+
+	const isPublicationDirty =
+		draftName !== savedName || draftDescription !== savedDescription;
+
+	const handleUpdatePublication = () => {
+		const next = {};
+		if ( draftName.trim() !== '' ) {
+			next.name = draftName;
+		}
+		if ( draftDescription.trim() !== '' ) {
+			next.description = draftDescription;
+		}
+		savePublicationOverrides( next );
+	};
 
 	return (
 		<>
@@ -158,9 +193,7 @@ const Settings = () => {
 													'Publication name',
 													'autoblue'
 												) }
-												value={
-													publicationOverrides.name ?? ''
-												}
+												value={ draftName }
 												placeholder={
 													standardSitePublication.siteName ||
 													''
@@ -169,12 +202,7 @@ const Settings = () => {
 													'Leave empty to use the WordPress site title.',
 													'autoblue'
 												) }
-												onChange={ ( value ) =>
-													setPublicationOverride(
-														'name',
-														value
-													)
-												}
+												onChange={ setDraftName }
 											/>
 											<TextareaControl
 												__nextHasNoMarginBottom
@@ -182,10 +210,7 @@ const Settings = () => {
 													'Publication description',
 													'autoblue'
 												) }
-												value={
-													publicationOverrides.description ??
-													''
-												}
+												value={ draftDescription }
 												placeholder={
 													standardSitePublication.siteDesc ||
 													''
@@ -194,12 +219,7 @@ const Settings = () => {
 													'Leave empty to use the WordPress site tagline.',
 													'autoblue'
 												) }
-												onChange={ ( value ) =>
-													setPublicationOverride(
-														'description',
-														value
-													)
-												}
+												onChange={ setDraftDescription }
 											/>
 											<TextControl
 												__nextHasNoMarginBottom
@@ -226,6 +246,24 @@ const Settings = () => {
 													readOnly
 												/>
 											) }
+											<HStack alignment="left">
+												<Button
+													variant="primary"
+													onClick={
+														handleUpdatePublication
+													}
+													disabled={
+														! isPublicationDirty ||
+														isSaving
+													}
+												>
+													{ __(
+														'Update publication',
+														'autoblue'
+													) }
+												</Button>
+												{ isSaving && <Spinner /> }
+											</HStack>
 										</VStack>
 									) }
 								</VStack>

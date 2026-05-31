@@ -89,19 +89,21 @@ const useSettings = () => {
 			? publicationOverrides
 			: {};
 
-	const setPublicationOverride = async ( key, value ) => {
+	const savePublicationOverrides = async ( next ) => {
 		if ( isSaving ) {
 			return;
-		}
-		const next = { ...resolvedOverrides };
-		if ( value === null || value === '' ) {
-			delete next[ key ];
-		} else {
-			next[ key ] = value;
 		}
 		try {
 			setPublicationOverridesFn( next );
 			await saveEditedEntityRecord( 'root', 'site' );
+
+			const notice = await createSuccessNotice(
+				__( 'Publication updated.', 'autoblue' ),
+				{ type: 'snackbar' }
+			);
+			setTimeout( () => {
+				removeNotice( notice.notice.id );
+			}, 2000 );
 		} catch ( error ) {}
 	};
 
@@ -123,7 +125,7 @@ const useSettings = () => {
 		isLoadingStandardSite: standardSiteEnabled === undefined,
 		setIsStandardSiteEnabled,
 		publicationOverrides: resolvedOverrides,
-		setPublicationOverride,
+		savePublicationOverrides,
 		standardSitePublication: standardSiteInitial.publication || {},
 		isRootInstall: standardSiteInitial.isRootInstall !== false,
 		isSaving,
