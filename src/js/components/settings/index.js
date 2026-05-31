@@ -161,22 +161,22 @@ const Settings = () => {
 		{
 			slug: 'background',
 			name: __( 'Background', 'autoblue' ),
-			color: draftThemeBackground || '#ffffff',
+			color: draftThemeBackground,
 		},
 		{
 			slug: 'foreground',
 			name: __( 'Foreground', 'autoblue' ),
-			color: draftThemeForeground || '#111111',
+			color: draftThemeForeground,
 		},
 		{
 			slug: 'accent',
 			name: __( 'Accent', 'autoblue' ),
-			color: draftThemeAccent || '#0073aa',
+			color: draftThemeAccent,
 		},
 		{
 			slug: 'accent_foreground',
 			name: __( 'Accent foreground', 'autoblue' ),
-			color: draftThemeAccentFg || '#ffffff',
+			color: draftThemeAccentFg,
 		},
 	];
 
