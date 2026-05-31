@@ -66,41 +66,55 @@ class BlueskyTest extends WPTestCase {
 		$this->bluesky->share_to_bluesky( $post_id );
 	}
 
-	public function test_standard_site_share_uses_atomic_apply_writes_and_document_strong_ref() {
+	public function test_standard_site_share_writes_document_before_bluesky_post_with_associated_refs() {
 		$post_id = $this->create_test_post( self::ORIGINAL_MESSAGE );
 		$this->enable_standard_site_for_post( $post_id );
 
 		$this->log_mock->shouldReceive( 'success' );
-		$this->api_mock->shouldReceive( 'apply_writes' )
+		$this->api_mock->shouldReceive( 'create_record' )
 			->once()
+			->ordered()
 			->withArgs(
 				static function ( $writes ) {
-					return count( $writes ) === 2
-						&& $writes[0]['collection'] === 'app.bsky.feed.post'
-						&& $writes[1]['collection'] === 'site.standard.document'
-						&& ! isset( $writes[0]['value']['embed']['external']['associatedRefs'] )
-						&& ! isset( $writes[1]['value']['bskyPostRef'] );
+					return $writes['collection'] === 'site.standard.document'
+						&& ! isset( $writes['rkey'] )
+						&& ! isset( $writes['record']['bskyPostRef'] );
 				}
 			)
 			->andReturn(
 				[
-					'results' => [
-						[
-							'uri' => 'at://mock-did/app.bsky.feed.post/bsky123',
-							'cid' => 'bsky-cid',
-						],
-						[
-							'uri' => 'at://mock-did/site.standard.document/doc123',
-							'cid' => 'doc-cid',
-						],
-					],
+					'uri' => 'at://mock-did/site.standard.document/doc123',
+					'cid' => 'doc-cid',
+				]
+			);
+		$this->api_mock->shouldReceive( 'create_record' )
+			->once()
+			->ordered()
+			->withArgs(
+				static function ( $body ) {
+					$refs = $body['record']['embed']['external']['associatedRefs'] ?? [];
+
+					return $body['collection'] === 'app.bsky.feed.post'
+						&& count( $refs ) === 2
+						&& $refs[0]['uri'] === 'at://mock-did/site.standard.document/doc123'
+						&& $refs[0]['cid'] === 'doc-cid'
+						&& $refs[1]['uri'] === 'at://mock-did/site.standard.publication/pub123'
+						&& $refs[1]['cid'] === 'pub-cid';
+				}
+			)
+			->andReturn(
+				[
+					'uri' => 'at://mock-did/app.bsky.feed.post/bsky123',
+					'cid' => 'bsky-cid',
 				]
 			);
 		$this->api_mock->shouldReceive( 'put_record' )
 			->once()
+			->ordered()
 			->withArgs(
 				static function ( $body ) {
 					return $body['collection'] === 'site.standard.document'
+						&& $body['rkey'] === 'doc123'
 						&& $body['record']['bskyPostRef']['uri'] === 'at://mock-did/app.bsky.feed.post/bsky123'
 						&& $body['record']['bskyPostRef']['cid'] === 'bsky-cid';
 				}
@@ -117,24 +131,44 @@ class BlueskyTest extends WPTestCase {
 
 		$this->assertSame( 'at://mock-did/app.bsky.feed.post/bsky123', $share['uri'] );
 		$this->assertSame( 'at://mock-did/site.standard.document/doc123', $doc['uri'] );
-		$this->assertSame( 'doc-cid-with-bsky-ref', $doc['cid'] );
 	}
 
-	public function test_standard_site_apply_writes_failure_does_not_store_document_uri() {
+	public function test_standard_site_bluesky_failure_leaves_created_document_for_retry_or_cleanup() {
 		$post_id = $this->create_test_post( self::ORIGINAL_MESSAGE );
 		$this->enable_standard_site_for_post( $post_id );
 
 		$this->log_mock->shouldReceive( 'error' )->once();
-		$this->api_mock->shouldReceive( 'apply_writes' )
+		$this->log_mock->shouldReceive( 'success' )->once();
+		$this->api_mock->shouldReceive( 'create_record' )
 			->once()
-			->andReturn( new \WP_Error( 'mock_apply_writes_failed', 'No records were written.' ) );
+			->ordered()
+			->withArgs(
+				static function ( $body ) {
+					return $body['collection'] === 'site.standard.document';
+				}
+			)
+			->andReturn(
+				[
+					'uri' => 'at://mock-did/site.standard.document/doc123',
+					'cid' => 'doc-cid',
+				]
+			);
+		$this->api_mock->shouldReceive( 'create_record' )
+			->once()
+			->ordered()
+			->withArgs(
+				static function ( $body ) {
+					return $body['collection'] === 'app.bsky.feed.post';
+				}
+			)
+			->andReturn( new \WP_Error( 'mock_bsky_create_failed', 'Bluesky post was not written.' ) );
 		$this->api_mock->shouldReceive( 'put_record' )->never();
 
 		$this->assertFalse( $this->bluesky->share_to_bluesky( $post_id ) );
 
 		$doc = get_post_meta( $post_id, 'autoblue_document', true );
 		$this->assertIsArray( $doc );
-		$this->assertArrayNotHasKey( 'uri', $doc );
+		$this->assertSame( 'at://mock-did/site.standard.document/doc123', $doc['uri'] );
 	}
 
 	private function create_test_post( string $original_message ): int {

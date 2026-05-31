@@ -63,4 +63,54 @@ class VerificationTest extends WPTestCase {
 
 		$this->assertSame( '', $output );
 	}
+
+	public function test_inject_publication_link_renders_on_singular_with_publication(): void {
+		$post_id = wp_insert_post(
+			[
+				'post_title'   => 'Article',
+				'post_content' => 'Body',
+				'post_status'  => 'publish',
+				'post_type'    => 'post',
+			]
+		);
+		update_option(
+			'autoblue_publication_record',
+			[
+				'uri' => 'at://did:plc:testuser/site.standard.publication/pub123',
+			]
+		);
+
+		$this->go_to( get_permalink( $post_id ) );
+
+		ob_start();
+		( new Verification() )->inject_publication_link();
+		$output = ob_get_clean();
+
+		$this->assertStringContainsString( 'rel="site.standard.publication"', $output );
+		$this->assertStringContainsString( 'at://did:plc:testuser/site.standard.publication/pub123', $output );
+	}
+
+	public function test_inject_publication_link_skipped_without_publication(): void {
+		$post_id = wp_insert_post(
+			[
+				'post_title'   => 'Article',
+				'post_content' => 'Body',
+				'post_status'  => 'publish',
+				'post_type'    => 'post',
+			]
+		);
+
+		$this->go_to( get_permalink( $post_id ) );
+
+		ob_start();
+		( new Verification() )->inject_publication_link();
+		$output = ob_get_clean();
+
+		$this->assertSame( '', $output );
+	}
+
+	protected function tearDown(): void {
+		delete_option( 'autoblue_publication_record' );
+		parent::tearDown();
+	}
 }
