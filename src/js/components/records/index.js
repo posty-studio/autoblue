@@ -172,7 +172,7 @@ const Records = () => {
 				id="autoblue-records-publication"
 			>
 				<Card>
-					<CardBody>
+					<CardBody className={ styles.card }>
 						{ publication ? (
 							<div className={ styles.row }>
 								{ publicationIconUrl && (
@@ -229,7 +229,7 @@ const Records = () => {
 			>
 				{ documents.length === 0 ? (
 					<Card>
-						<CardBody>
+						<CardBody className={ styles.card }>
 							<Text variant="muted">
 								{ __(
 									'No document records on the PDS yet.',
@@ -251,7 +251,7 @@ const Records = () => {
 							);
 							return (
 								<Card key={ doc.uri }>
-									<CardBody>
+									<CardBody className={ styles.card }>
 										<div className={ styles.row }>
 											{ coverUrl && (
 												<img

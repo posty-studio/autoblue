@@ -43,3 +43,11 @@
 .toolbar {
 	margin-bottom: 8px;
 }
+
+.card.card {
+	padding: 20px;
+
+	@media screen and (max-width: 500px) {
+		padding: 10px;
+	}
+}
