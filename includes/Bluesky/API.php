@@ -323,6 +323,39 @@ class API {
 	}
 
 	/**
+	 * Apply a batch of writes atomically via com.atproto.repo.applyWrites.
+	 *
+	 * @param array<int,array<string,mixed>> $writes
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function apply_writes( array $writes, string $access_token, string $did ) {
+		if ( empty( $writes ) || ! $access_token || ! $did ) {
+			return new \WP_Error( 'autoblue_invalid_apply_writes_args', __( 'Writes, access token, and DID are required.', 'autoblue' ) );
+		}
+
+		$pds_endpoint = $this->resolve_pds_endpoint( $did );
+
+		if ( is_wp_error( $pds_endpoint ) ) {
+			return $pds_endpoint;
+		}
+
+		return $this->send_request(
+			[
+				'endpoint' => 'com.atproto.repo.applyWrites',
+				'method'   => 'POST',
+				'headers'  => [
+					'Authorization' => 'Bearer ' . $access_token,
+				],
+				'body'     => [
+					'repo'   => $did,
+					'writes' => $writes,
+				],
+				'base_url' => $pds_endpoint,
+			]
+		);
+	}
+
+	/**
 	 * @return array<string,mixed>|\WP_Error
 	 */
 	public function upload_blob( string $blob, string $mime_type, string $access_token, string $did ) {

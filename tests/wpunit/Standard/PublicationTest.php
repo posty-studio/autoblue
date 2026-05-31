@@ -49,7 +49,7 @@ class PublicationTest extends WPTestCase {
 			'autoblue_publication_overrides',
 			[
 				'name' => 'Custom Publication',
-				// description not overridden
+					// Description not overridden.
 			]
 		);
 

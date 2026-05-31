@@ -180,17 +180,17 @@ class Bluesky {
 			$body['record']['embed']['external']['thumb'] = $image_blob;
 		}
 
-		// If standard.site publishing is on for this post, write the document FIRST
-		// (so we know its URI + CID) and attach strongRefs to the bsky post's
-		// external embed via associatedRefs. The bsky post still looks like a
-		// normal link card to Bluesky users; standard.site-aware clients can
-		// follow the refs to the document and publication records.
-		$associated_refs = $this->build_associated_refs( $post_id, is_array( $image_blob ) ? $image_blob : null );
-		if ( ! empty( $associated_refs ) ) {
-			$body['record']['embed']['external']['associatedRefs'] = $associated_refs;
+		if ( $this->should_publish_document_for( $post_id ) ) {
+			$response = $this->create_post_with_document(
+				$post_id,
+				$post,
+				$connection,
+				$body['record'],
+				is_array( $image_blob ) ? $image_blob : null
+			);
+		} else {
+			$response = $this->api_client->create_record( $body, $connection['access_jwt'], $connection['did'] );
 		}
-
-		$response = $this->api_client->create_record( $body, $connection['access_jwt'], $connection['did'] );
 
 		if ( is_wp_error( $response ) ) {
 			$this->log->error(
@@ -227,18 +227,6 @@ class Bluesky {
 			]
 		);
 
-		// Back-fill bskyPostRef on the document now that we know the bsky post's URI/CID.
-		if ( ! empty( $associated_refs ) && ! empty( $response['uri'] ) && ! empty( $response['cid'] ) ) {
-			( new Standard\Document( $this->api_client, $this->log ) )->update_bsky_ref(
-				$post_id,
-				[
-					'uri' => (string) $response['uri'],
-					'cid' => (string) $response['cid'],
-				],
-				is_array( $image_blob ) ? $image_blob : null
-			);
-		}
-
 		return $share;
 	}
 
@@ -254,44 +242,91 @@ class Bluesky {
 	}
 
 	/**
-	 * If standard.site is enabled for this post, ensure the publication record
-	 * exists, write the document record (without bskyPostRef — we don't have
-	 * the bsky URI yet), and return strongRefs for both so the bsky post can
-	 * attach them via embed.external.associatedRefs.
+	 * Create the Bluesky post and standard.site document in one atomic write.
 	 *
-	 * @param array<string,mixed>|null $image_blob Optional reusable cover image blob.
-	 * @return array<int,array<string,mixed>>
+	 * The initial document cannot include bskyPostRef because the Bluesky post
+	 * CID is only known after the write. Once the atomic create succeeds, we
+	 * update the document with the document-side strongRef. The Bluesky post does
+	 * not point back at the document, avoiding an unstable CID cycle.
+	 *
+	 * @param array<string,mixed>      $connection
+	 * @param array<string,mixed>      $bsky_record
+	 * @param array<string,mixed>|null $image_blob
+	 * @return array<string,mixed>|\WP_Error
 	 */
-	private function build_associated_refs( int $post_id, ?array $image_blob ): array {
-		if ( ! $this->should_publish_document_for( $post_id ) ) {
-			return [];
+	private function create_post_with_document( int $post_id, \WP_Post $post, array $connection, array $bsky_record, ?array $image_blob ) {
+		$publication     = new Standard\Publication( $this->api_client, $this->log );
+		$publication_uri = $publication->ensure_exists_for_connection( $connection );
+		if ( is_wp_error( $publication_uri ) ) {
+			return $publication_uri;
 		}
 
-		$document    = new Standard\Document( $this->api_client, $this->log );
-		$publication = new Standard\Publication( $this->api_client, $this->log );
-
-		$doc_ref = $document->publish( $post_id, null, $image_blob );
-		if ( is_wp_error( $doc_ref ) || empty( $doc_ref['uri'] ) || empty( $doc_ref['cid'] ) ) {
-			return [];
+		$document = new Standard\Document( $this->api_client, $this->log, $publication );
+		$prepared = $document->prepare_record( $post_id, (string) $publication_uri, null, $image_blob );
+		if ( is_wp_error( $prepared ) ) {
+			return $prepared;
 		}
 
-		$refs = [
+		$result = $this->api_client->apply_writes(
 			[
-				'$type' => 'com.atproto.repo.strongRef',
-				'uri'   => $doc_ref['uri'],
-				'cid'   => $doc_ref['cid'],
+				[
+					'$type'      => 'com.atproto.repo.applyWrites#create',
+					'collection' => 'app.bsky.feed.post',
+					'rkey'       => $this->generate_rkey(),
+					'value'      => $bsky_record,
+				],
+				[
+					'$type'      => 'com.atproto.repo.applyWrites#create',
+					'collection' => 'site.standard.document',
+					'rkey'       => $prepared['rkey'],
+					'value'      => $prepared['record'],
+				],
 			],
-		];
+			$connection['access_jwt'],
+			$connection['did']
+		);
 
-		$pub_ref = $publication->get_strongref();
-		if ( $pub_ref ) {
-			$refs[] = [
-				'$type' => 'com.atproto.repo.strongRef',
-				'uri'   => $pub_ref['uri'],
-				'cid'   => $pub_ref['cid'],
-			];
+		if ( is_wp_error( $result ) ) {
+			return $result;
 		}
 
-		return $refs;
+		$bsky_result = $result['results'][0] ?? [];
+		$doc_result  = $result['results'][1] ?? [];
+		if ( empty( $bsky_result['uri'] ) || empty( $bsky_result['cid'] ) || empty( $doc_result['uri'] ) || empty( $doc_result['cid'] ) ) {
+			return new \WP_Error( 'autoblue_invalid_apply_writes_response', __( 'The PDS did not return complete Bluesky and document record refs.', 'autoblue' ) );
+		}
+
+		$document->store_meta( $post_id, $doc_result, $prepared['rkey'] );
+
+		$update = $document->update_bsky_ref(
+			$post_id,
+			[
+				'uri' => (string) $bsky_result['uri'],
+				'cid' => (string) $bsky_result['cid'],
+			],
+			$image_blob,
+			$connection
+		);
+
+		if ( is_wp_error( $update ) ) {
+			$this->log->error(
+				__( 'Failed to add bskyPostRef to standard.site document for post `{post_title}` with ID `{post_id}`: {message}', 'autoblue' ),
+				[
+					'post_id'    => $post_id,
+					'post_title' => $post->post_title,
+					'message'    => $update->get_error_message(),
+				]
+			);
+		}
+
+		return [
+			'uri'         => (string) $bsky_result['uri'],
+			'cid'         => (string) $bsky_result['cid'],
+			'applyWrites' => $result,
+		];
+	}
+
+	private function generate_rkey(): string {
+		return 'ab' . strtolower( str_replace( '-', '', wp_generate_uuid4() ) );
 	}
 }

@@ -66,6 +66,77 @@ class BlueskyTest extends WPTestCase {
 		$this->bluesky->share_to_bluesky( $post_id );
 	}
 
+	public function test_standard_site_share_uses_atomic_apply_writes_and_document_strong_ref() {
+		$post_id = $this->create_test_post( self::ORIGINAL_MESSAGE );
+		$this->enable_standard_site_for_post( $post_id );
+
+		$this->log_mock->shouldReceive( 'success' );
+		$this->api_mock->shouldReceive( 'apply_writes' )
+			->once()
+			->withArgs(
+				static function ( $writes ) {
+					return count( $writes ) === 2
+						&& $writes[0]['collection'] === 'app.bsky.feed.post'
+						&& $writes[1]['collection'] === 'site.standard.document'
+						&& ! isset( $writes[0]['value']['embed']['external']['associatedRefs'] )
+						&& ! isset( $writes[1]['value']['bskyPostRef'] );
+				}
+			)
+			->andReturn(
+				[
+					'results' => [
+						[
+							'uri' => 'at://mock-did/app.bsky.feed.post/bsky123',
+							'cid' => 'bsky-cid',
+						],
+						[
+							'uri' => 'at://mock-did/site.standard.document/doc123',
+							'cid' => 'doc-cid',
+						],
+					],
+				]
+			);
+		$this->api_mock->shouldReceive( 'put_record' )
+			->once()
+			->withArgs(
+				static function ( $body ) {
+					return $body['collection'] === 'site.standard.document'
+						&& $body['record']['bskyPostRef']['uri'] === 'at://mock-did/app.bsky.feed.post/bsky123'
+						&& $body['record']['bskyPostRef']['cid'] === 'bsky-cid';
+				}
+			)
+			->andReturn(
+				[
+					'uri' => 'at://mock-did/site.standard.document/doc123',
+					'cid' => 'doc-cid-with-bsky-ref',
+				]
+			);
+
+		$share = $this->bluesky->share_to_bluesky( $post_id );
+		$doc   = get_post_meta( $post_id, 'autoblue_document', true );
+
+		$this->assertSame( 'at://mock-did/app.bsky.feed.post/bsky123', $share['uri'] );
+		$this->assertSame( 'at://mock-did/site.standard.document/doc123', $doc['uri'] );
+		$this->assertSame( 'doc-cid-with-bsky-ref', $doc['cid'] );
+	}
+
+	public function test_standard_site_apply_writes_failure_does_not_store_document_uri() {
+		$post_id = $this->create_test_post( self::ORIGINAL_MESSAGE );
+		$this->enable_standard_site_for_post( $post_id );
+
+		$this->log_mock->shouldReceive( 'error' )->once();
+		$this->api_mock->shouldReceive( 'apply_writes' )
+			->once()
+			->andReturn( new \WP_Error( 'mock_apply_writes_failed', 'No records were written.' ) );
+		$this->api_mock->shouldReceive( 'put_record' )->never();
+
+		$this->assertFalse( $this->bluesky->share_to_bluesky( $post_id ) );
+
+		$doc = get_post_meta( $post_id, 'autoblue_document', true );
+		$this->assertIsArray( $doc );
+		$this->assertArrayNotHasKey( 'uri', $doc );
+	}
+
 	private function create_test_post( string $original_message ): int {
 		return wp_insert_post(
 			[
@@ -93,8 +164,26 @@ class BlueskyTest extends WPTestCase {
 			);
 	}
 
+	private function enable_standard_site_for_post( int $post_id ): void {
+		update_option( 'autoblue_publish_documents_enabled', true );
+		update_option( 'autoblue_connections', [ self::MOCK_CONNECTION ] );
+		update_option(
+			'autoblue_publication_record',
+			[
+				'did'  => self::MOCK_CONNECTION['did'],
+				'uri'  => 'at://mock-did/site.standard.publication/pub123',
+				'cid'  => 'pub-cid',
+				'rkey' => 'pub123',
+			]
+		);
+		update_post_meta( $post_id, 'autoblue_publish_document', true );
+	}
+
 	protected function tearDown(): void {
 		remove_all_filters( 'autoblue/share_message' );
+		delete_option( 'autoblue_publish_documents_enabled' );
+		delete_option( 'autoblue_connections' );
+		delete_option( 'autoblue_publication_record' );
 		Mockery::close();
 		parent::tearDown();
 	}

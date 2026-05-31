@@ -43,6 +43,8 @@ class Publication {
 	 * @param array<string,mixed> $connection
 	 */
 	public function maybe_adopt_existing( array $connection, bool $is_reconnect = false ): void {
+		unset( $is_reconnect );
+
 		if ( empty( $connection['did'] ) || empty( $connection['access_jwt'] ) ) {
 			return;
 		}
@@ -108,6 +110,17 @@ class Publication {
 			return $connection;
 		}
 
+		return $this->ensure_exists_for_connection( $connection );
+	}
+
+	/**
+	 * Return the publication AT-URI for an already-refreshed connection,
+	 * creating the record if missing.
+	 *
+	 * @param array<string,mixed> $connection
+	 * @return string|\WP_Error
+	 */
+	public function ensure_exists_for_connection( array $connection ) {
 		$stored = get_option( self::OPTION_KEY, [] );
 		if ( ! empty( $stored['uri'] ) && ! empty( $stored['did'] ) && $stored['did'] === $connection['did'] ) {
 			return $stored['uri'];
@@ -244,13 +257,13 @@ class Publication {
 	 * Build the inline site.standard.theme.basic value from hex overrides.
 	 *
 	 * @param array<string,mixed> $overrides
-	 * @return array<string,array<string,int>>|null
+	 * @return array<string,mixed>|null
 	 */
 	private function build_basic_theme( array $overrides ): ?array {
 		$mapping = [
-			'background'      => 'theme_background',
-			'foreground'      => 'theme_foreground',
-			'accent'          => 'theme_accent',
+			'background'       => 'theme_background',
+			'foreground'       => 'theme_foreground',
+			'accent'           => 'theme_accent',
 			'accentForeground' => 'theme_accent_foreground',
 		];
 
@@ -267,6 +280,7 @@ class Publication {
 	}
 
 	/**
+	 * @param mixed $hex
 	 * @return array{'$type':string,r:int,g:int,b:int}|null
 	 */
 	private function hex_to_rgb( $hex ): ?array {
@@ -282,9 +296,9 @@ class Publication {
 		}
 		return [
 			'$type' => 'site.standard.theme.color#rgb',
-			'r'     => hexdec( substr( $hex, 0, 2 ) ),
-			'g'     => hexdec( substr( $hex, 2, 2 ) ),
-			'b'     => hexdec( substr( $hex, 4, 2 ) ),
+			'r'     => (int) hexdec( substr( $hex, 0, 2 ) ),
+			'g'     => (int) hexdec( substr( $hex, 2, 2 ) ),
+			'b'     => (int) hexdec( substr( $hex, 4, 2 ) ),
 		];
 	}
 
@@ -356,6 +370,9 @@ class Publication {
 		return $connection;
 	}
 
+	/**
+	 * @param mixed $override
+	 */
 	private function resolve_string( $override, string $fallback ): string {
 		if ( is_string( $override ) && '' !== trim( $override ) ) {
 			return $override;
@@ -364,6 +381,7 @@ class Publication {
 	}
 
 	/**
+	 * @param mixed               $override_id
 	 * @param array<string,mixed> $connection
 	 * @return array<string,mixed>|null
 	 */
