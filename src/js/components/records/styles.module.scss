@@ -4,6 +4,11 @@
 	align-items: flex-start;
 }
 
+.meta {
+	min-width: 0;
+	flex: 1;
+}
+
 .icon {
 	width: 48px;
 	height: 48px;
@@ -20,4 +25,21 @@
 	object-fit: cover;
 	background: #f1f1f1;
 	flex-shrink: 0;
+}
+
+.links {
+	font-size: 12px;
+	margin-top: 4px;
+
+	a {
+		text-decoration: none;
+	}
+
+	a:hover {
+		text-decoration: underline;
+	}
+}
+
+.toolbar {
+	margin-bottom: 8px;
 }

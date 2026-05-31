@@ -1,6 +1,7 @@
 import { __ } from '@wordpress/i18n';
 import { useEffect, useState, useCallback } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
+import { dateI18n, humanTimeDiff } from '@wordpress/date';
 import {
 	BaseControl,
 	Button,
@@ -8,14 +9,21 @@ import {
 	CardBody,
 	Notice,
 	Spinner,
+	__experimentalHStack as HStack,
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
+import { update } from '@wordpress/icons';
 import styles from './styles.module.scss';
 
 const extractDid = ( atUri = '' ) => {
 	const match = atUri.match( /^at:\/\/(did:[^/]+)/ );
 	return match ? match[ 1 ] : '';
+};
+
+const extractRkey = ( atUri = '' ) => {
+	const parts = atUri.split( '/' );
+	return parts.length ? parts[ parts.length - 1 ] : '';
 };
 
 const blobThumbnailUrl = ( did, blob ) => {
@@ -24,12 +32,40 @@ const blobThumbnailUrl = ( did, blob ) => {
 	return `https://cdn.bsky.app/img/feed_thumbnail/plain/${ did }/${ cid }@jpeg`;
 };
 
+const pdslsUrl = ( atUri ) =>
+	atUri ? `https://pdsls.dev/${ atUri }` : null;
+
+const bskyPostUrl = ( bskyPostRef ) => {
+	const uri = bskyPostRef?.uri;
+	if ( ! uri ) return null;
+	const did = extractDid( uri );
+	const rkey = extractRkey( uri );
+	if ( ! did || ! rkey ) return null;
+	return `https://bsky.app/profile/${ did }/post/${ rkey }`;
+};
+
+const RelativeDate = ( { iso } ) => {
+	if ( ! iso ) return null;
+	const date = new Date( iso );
+	return (
+		<Text variant="muted">
+			<time
+				dateTime={ iso }
+				title={ dateI18n( 'F j, Y g:i a', date ) }
+			>
+				{ humanTimeDiff( date ) }
+			</time>
+		</Text>
+	);
+};
+
 const Records = () => {
 	const [ publication, setPublication ] = useState( null );
 	const [ documents, setDocuments ] = useState( [] );
 	const [ cursor, setCursor ] = useState( null );
 	const [ isLoading, setIsLoading ] = useState( true );
 	const [ isLoadingMore, setIsLoadingMore ] = useState( false );
+	const [ isRefreshing, setIsRefreshing ] = useState( false );
 	const [ error, setError ] = useState( null );
 
 	const fetchPage = useCallback( async ( nextCursor = '' ) => {
@@ -41,31 +77,37 @@ const Records = () => {
 		return apiFetch( { path } );
 	}, [] );
 
+	const loadFirstPage = useCallback( async () => {
+		try {
+			const response = await fetchPage( '' );
+			setPublication( response.publication ?? null );
+			setDocuments( response.documents ?? [] );
+			setCursor( response.cursor ?? null );
+			setError( null );
+		} catch ( e ) {
+			setError(
+				e?.message || __( 'Failed to load records.', 'autoblue' )
+			);
+		}
+	}, [ fetchPage ] );
+
 	useEffect( () => {
 		let cancelled = false;
 		( async () => {
-			try {
-				const response = await fetchPage( '' );
-				if ( cancelled ) return;
-				setPublication( response.publication ?? null );
-				setDocuments( response.documents ?? [] );
-				setCursor( response.cursor ?? null );
-			} catch ( e ) {
-				if ( cancelled ) return;
-				setError(
-					e?.message ||
-						__( 'Failed to load records.', 'autoblue' )
-				);
-			} finally {
-				if ( ! cancelled ) {
-					setIsLoading( false );
-				}
-			}
+			await loadFirstPage();
+			if ( ! cancelled ) setIsLoading( false );
 		} )();
 		return () => {
 			cancelled = true;
 		};
-	}, [ fetchPage ] );
+	}, [ loadFirstPage ] );
+
+	const handleRefresh = async () => {
+		if ( isRefreshing ) return;
+		setIsRefreshing( true );
+		await loadFirstPage();
+		setIsRefreshing( false );
+	};
 
 	const loadMore = async () => {
 		if ( ! cursor || isLoadingMore ) return;
@@ -107,6 +149,22 @@ const Records = () => {
 
 	return (
 		<>
+			<HStack
+				alignment="right"
+				className={ styles.toolbar }
+			>
+				<Button
+					variant="secondary"
+					icon={ update }
+					onClick={ handleRefresh }
+					disabled={ isRefreshing }
+				>
+					{ isRefreshing
+						? __( 'Refreshing…', 'autoblue' )
+						: __( 'Refresh', 'autoblue' ) }
+				</Button>
+			</HStack>
+
 			<BaseControl
 				__nextHasNoMarginBottom
 				label={ __( 'Publication', 'autoblue' ) }
@@ -123,7 +181,7 @@ const Records = () => {
 										alt=""
 									/>
 								) }
-								<VStack spacing={ 1 }>
+								<VStack spacing={ 1 } className={ styles.meta }>
 									<Text weight="600">
 										{ publication.value?.name ||
 											__( '(no name)', 'autoblue' ) }
@@ -133,9 +191,22 @@ const Records = () => {
 											{ publication.value.description }
 										</Text>
 									) }
-									<Text variant="muted">
-										{ publication.uri }
-									</Text>
+									<HStack
+										spacing={ 3 }
+										alignment="left"
+										className={ styles.links }
+									>
+										<a
+											href={ pdslsUrl( publication.uri ) }
+											target="_blank"
+											rel="noreferrer"
+										>
+											{ __(
+												'View raw',
+												'autoblue'
+											) }
+										</a>
+									</HStack>
 								</VStack>
 							</div>
 						) : (
@@ -172,12 +243,13 @@ const Records = () => {
 							<CardBody>
 								<VStack spacing={ 3 }>
 									{ documents.map( ( doc ) => {
-										const did = extractDid(
-											doc.uri ?? ''
-										);
+										const did = extractDid( doc.uri ?? '' );
 										const coverUrl = blobThumbnailUrl(
 											did,
 											doc.value?.coverImage
+										);
+										const bskyUrl = bskyPostUrl(
+											doc.value?.bskyPostRef
 										);
 										return (
 											<div
@@ -193,7 +265,10 @@ const Records = () => {
 														alt=""
 													/>
 												) }
-												<VStack spacing={ 1 }>
+												<VStack
+													spacing={ 1 }
+													className={ styles.meta }
+												>
 													<Text weight="600">
 														{ doc.value?.title ||
 															__(
@@ -210,17 +285,44 @@ const Records = () => {
 															}
 														</Text>
 													) }
-													<Text variant="muted">
-														{ doc.uri }
-													</Text>
-													{ doc.value
-														?.publishedAt && (
-														<Text variant="muted">
-															{ new Date(
-																doc.value.publishedAt
-															).toLocaleString() }
-														</Text>
-													) }
+													<RelativeDate
+														iso={
+															doc.value
+																?.publishedAt
+														}
+													/>
+													<HStack
+														spacing={ 3 }
+														alignment="left"
+														className={
+															styles.links
+														}
+													>
+														<a
+															href={ pdslsUrl(
+																doc.uri
+															) }
+															target="_blank"
+															rel="noreferrer"
+														>
+															{ __(
+																'View raw',
+																'autoblue'
+															) }
+														</a>
+														{ bskyUrl && (
+															<a
+																href={ bskyUrl }
+																target="_blank"
+																rel="noreferrer"
+															>
+																{ __(
+																	'View on Bluesky',
+																	'autoblue'
+																) }
+															</a>
+														) }
+													</HStack>
 												</VStack>
 											</div>
 										);
