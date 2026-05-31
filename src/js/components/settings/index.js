@@ -388,19 +388,6 @@ const Settings = () => {
 												}
 												readOnly
 											/>
-											{ standardSitePublication.publishedUri && (
-												<TextControl
-													__nextHasNoMarginBottom
-													label={ __(
-														'Publication record (AT-URI)',
-														'autoblue'
-													) }
-													value={
-														standardSitePublication.publishedUri
-													}
-													readOnly
-												/>
-											) }
 											<div className={ styles.split }>
 												<BaseControl
 													__nextHasNoMarginBottom
@@ -498,21 +485,27 @@ const Settings = () => {
 														/>
 														{ draftHasTheme && (
 															<>
-																<PaletteEdit
-																	colors={
-																		themePalette
+																<div
+																	className={
+																		styles.palette
 																	}
-																	onChange={
-																		handleThemeChange
-																	}
-																	canOnlyChangeValues
-																	paletteLabel=""
-																	popoverProps={ {
-																		offset: 8,
-																		placement:
-																			'bottom-start',
-																	} }
-																/>
+																>
+																	<PaletteEdit
+																		colors={
+																			themePalette
+																		}
+																		onChange={
+																			handleThemeChange
+																		}
+																		canOnlyChangeValues
+																		paletteLabel=""
+																		popoverProps={ {
+																			offset: 8,
+																			placement:
+																				'bottom-start',
+																		} }
+																	/>
+																</div>
 																<Text variant="muted">
 																	{ __(
 																		'Theme colors are used by standard.site readers to style your publication.',

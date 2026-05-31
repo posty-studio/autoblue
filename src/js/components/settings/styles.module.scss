@@ -31,3 +31,11 @@
 		min-width: 0;
 	}
 }
+
+.palette {
+	// Hide PaletteEdit's built-in header row (empty <h2> + 3-dot menu).
+	// canOnlyChangeValues makes the menu inert and the heading is empty.
+	> div > div:first-child {
+		display: none;
+	}
+}
