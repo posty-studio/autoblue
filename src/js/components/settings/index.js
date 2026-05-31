@@ -10,6 +10,7 @@ import {
 	TextControl,
 	TextareaControl,
 	__experimentalHStack as HStack,
+	__experimentalPaletteEdit as PaletteEdit,
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
@@ -155,6 +156,46 @@ const Settings = () => {
 
 	const currentIconUrl =
 		draftIconUrl || standardSitePublication.siteIconUrl || '';
+
+	const themePalette = [
+		{
+			slug: 'background',
+			name: __( 'Background', 'autoblue' ),
+			color: draftThemeBackground || '#ffffff',
+		},
+		{
+			slug: 'foreground',
+			name: __( 'Foreground', 'autoblue' ),
+			color: draftThemeForeground || '#111111',
+		},
+		{
+			slug: 'accent',
+			name: __( 'Accent', 'autoblue' ),
+			color: draftThemeAccent || '#0073aa',
+		},
+		{
+			slug: 'accent_foreground',
+			name: __( 'Accent foreground', 'autoblue' ),
+			color: draftThemeAccentFg || '#ffffff',
+		},
+	];
+
+	const themeSetters = {
+		background: setDraftThemeBackground,
+		foreground: setDraftThemeForeground,
+		accent: setDraftThemeAccent,
+		accent_foreground: setDraftThemeAccentFg,
+	};
+
+	const handleThemeChange = ( nextPalette ) => {
+		if ( ! Array.isArray( nextPalette ) ) return;
+		nextPalette.forEach( ( entry ) => {
+			const setter = themeSetters[ entry.slug ];
+			if ( setter ) {
+				setter( entry.color || '' );
+			}
+		} );
+	};
 
 	return (
 		<>
@@ -404,68 +445,23 @@ const Settings = () => {
 											) }
 											<Text variant="muted">
 												{ __(
-													'Theme colors are used by standard.site readers to style your publication. Leave blank to omit.',
+													'Theme colors are used by standard.site readers to style your publication.',
 													'autoblue'
 												) }
 											</Text>
-											<HStack spacing={ 3 } alignment="top">
-												<TextControl
-													__nextHasNoMarginBottom
-													label={ __(
-														'Background',
-														'autoblue'
-													) }
-													value={
-														draftThemeBackground
-													}
-													placeholder="#ffffff"
-													onChange={
-														setDraftThemeBackground
-													}
-												/>
-												<TextControl
-													__nextHasNoMarginBottom
-													label={ __(
-														'Foreground',
-														'autoblue'
-													) }
-													value={
-														draftThemeForeground
-													}
-													placeholder="#111111"
-													onChange={
-														setDraftThemeForeground
-													}
-												/>
-											</HStack>
-											<HStack spacing={ 3 } alignment="top">
-												<TextControl
-													__nextHasNoMarginBottom
-													label={ __(
-														'Accent',
-														'autoblue'
-													) }
-													value={ draftThemeAccent }
-													placeholder="#0073aa"
-													onChange={
-														setDraftThemeAccent
-													}
-												/>
-												<TextControl
-													__nextHasNoMarginBottom
-													label={ __(
-														'Accent foreground',
-														'autoblue'
-													) }
-													value={
-														draftThemeAccentFg
-													}
-													placeholder="#ffffff"
-													onChange={
-														setDraftThemeAccentFg
-													}
-												/>
-											</HStack>
+											<PaletteEdit
+												colors={ themePalette }
+												onChange={ handleThemeChange }
+												canOnlyChangeValues
+												paletteLabel={ __(
+													'Theme colors',
+													'autoblue'
+												) }
+												popoverProps={ {
+													offset: 8,
+													placement: 'bottom-start',
+												} }
+											/>
 											<HStack alignment="left">
 												<Button
 													variant="primary"
