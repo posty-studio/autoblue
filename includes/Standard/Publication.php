@@ -254,7 +254,7 @@ class Publication {
 			'accentForeground' => 'theme_accent_foreground',
 		];
 
-		$theme = [ '$type' => 'site.standard.theme.basic' ];
+		$theme = [];
 		foreach ( $mapping as $field => $key ) {
 			$rgb = $this->hex_to_rgb( $overrides[ $key ] ?? null );
 			if ( $rgb ) {
@@ -263,11 +263,11 @@ class Publication {
 		}
 
 		// Only return the theme if at least one colour was set.
-		return count( $theme ) > 1 ? $theme : null;
+		return ! empty( $theme ) ? $theme : null;
 	}
 
 	/**
-	 * @return array{r:int,g:int,b:int}|null
+	 * @return array{'$type':string,r:int,g:int,b:int}|null
 	 */
 	private function hex_to_rgb( $hex ): ?array {
 		if ( ! is_string( $hex ) ) {
@@ -281,9 +281,10 @@ class Publication {
 			return null;
 		}
 		return [
-			'r' => hexdec( substr( $hex, 0, 2 ) ),
-			'g' => hexdec( substr( $hex, 2, 2 ) ),
-			'b' => hexdec( substr( $hex, 4, 2 ) ),
+			'$type' => 'site.standard.theme.color#rgb',
+			'r'     => hexdec( substr( $hex, 0, 2 ) ),
+			'g'     => hexdec( substr( $hex, 2, 2 ) ),
+			'b'     => hexdec( substr( $hex, 4, 2 ) ),
 		];
 	}
 
