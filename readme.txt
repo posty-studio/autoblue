@@ -1,7 +1,7 @@
 === Autoblue ===
 Contributors: danielpost
 Tags: social, bluesky, auto, share, post
-Stable tag: 2.0.0
+Stable tag: 2.0.1
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 7.4
@@ -45,6 +45,9 @@ Currently, Autoblue only works in the block editor. It uses a lot of modern Word
 3. Keep track of everything that Autoblue does.
 
 == Changelog ==
+
+= 2.0.1 =
+* Fix: Restore enhanced standard.site Bluesky link cards by attaching document and publication references correctly.
 
 = 2.0.0 =
 * Feature: Publish posts as standard.site document records on your AT Protocol PDS.
