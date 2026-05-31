@@ -18,7 +18,6 @@ import {
 	useEffect,
 	useState,
 } from '@wordpress/element';
-import { MediaUpload, MediaUploadCheck } from '@wordpress/media-utils';
 import NoAccountsPlaceholder from './../no-accounts-placeholder';
 import AccountList from './../account-list';
 import SettingToggle from './../setting-toggle';
@@ -122,9 +121,31 @@ const Settings = () => {
 		savePublicationOverrides( next );
 	};
 
-	const handleSelectIcon = ( media ) => {
-		setDraftIconId( media.id );
-		setDraftIconUrl( media.url || '' );
+	const openIconPicker = () => {
+		if ( ! window.wp?.media ) {
+			return;
+		}
+		const frame = window.wp.media( {
+			title: __( 'Select publication icon', 'autoblue' ),
+			button: { text: __( 'Use this icon', 'autoblue' ) },
+			library: { type: 'image' },
+			multiple: false,
+		} );
+		frame.on( 'select', () => {
+			const attachment = frame
+				.state()
+				.get( 'selection' )
+				.first()
+				.toJSON();
+			setDraftIconId( attachment.id );
+			setDraftIconUrl(
+				attachment.sizes?.thumbnail?.url ||
+					attachment.sizes?.medium?.url ||
+					attachment.url ||
+					''
+			);
+		} );
+		frame.open();
 	};
 
 	const handleRemoveIcon = () => {
@@ -324,40 +345,22 @@ const Settings = () => {
 															}
 														/>
 													) }
-													<MediaUploadCheck>
-														<MediaUpload
-															onSelect={
-																handleSelectIcon
-															}
-															allowedTypes={ [
-																'image',
-															] }
-															value={
-																draftIconId ||
-																undefined
-															}
-															render={ ( {
-																open,
-															} ) => (
-																<Button
-																	variant="secondary"
-																	onClick={
-																		open
-																	}
-																>
-																	{ draftIconId
-																		? __(
-																				'Replace icon',
-																				'autoblue'
-																		  )
-																		: __(
-																				'Choose icon',
-																				'autoblue'
-																		  ) }
-																</Button>
-															) }
-														/>
-													</MediaUploadCheck>
+													<Button
+														variant="secondary"
+														onClick={
+															openIconPicker
+														}
+													>
+														{ draftIconId
+															? __(
+																	'Replace icon',
+																	'autoblue'
+															  )
+															: __(
+																	'Choose icon',
+																	'autoblue'
+															  ) }
+													</Button>
 													{ draftIconId && (
 														<Button
 															variant="tertiary"
