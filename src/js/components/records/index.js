@@ -9,6 +9,7 @@ import {
 	CardBody,
 	Notice,
 	Spinner,
+	Tooltip,
 	__experimentalHStack as HStack,
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
@@ -47,14 +48,14 @@ const bskyPostUrl = ( bskyPostRef ) => {
 const RelativeDate = ( { iso } ) => {
 	if ( ! iso ) return null;
 	const date = new Date( iso );
+	const absolute = dateI18n( 'F j, Y g:i a', date );
 	return (
 		<Text variant="muted">
-			<time
-				dateTime={ iso }
-				title={ dateI18n( 'F j, Y g:i a', date ) }
-			>
-				{ humanTimeDiff( date ) }
-			</time>
+			<Tooltip text={ absolute }>
+				<time dateTime={ iso } tabIndex={ 0 }>
+					{ humanTimeDiff( date ) }
+				</time>
+			</Tooltip>
 		</Text>
 	);
 };
@@ -239,97 +240,86 @@ const Records = () => {
 					</Card>
 				) : (
 					<VStack spacing={ 3 }>
-						<Card>
-							<CardBody>
-								<VStack spacing={ 3 }>
-									{ documents.map( ( doc ) => {
-										const did = extractDid( doc.uri ?? '' );
-										const coverUrl = blobThumbnailUrl(
-											did,
-											doc.value?.coverImage
-										);
-										const bskyUrl = bskyPostUrl(
-											doc.value?.bskyPostRef
-										);
-										return (
-											<div
-												key={ doc.uri }
-												className={ styles.row }
+						{ documents.map( ( doc ) => {
+							const did = extractDid( doc.uri ?? '' );
+							const coverUrl = blobThumbnailUrl(
+								did,
+								doc.value?.coverImage
+							);
+							const bskyUrl = bskyPostUrl(
+								doc.value?.bskyPostRef
+							);
+							return (
+								<Card key={ doc.uri }>
+									<CardBody>
+										<div className={ styles.row }>
+											{ coverUrl && (
+												<img
+													className={ styles.cover }
+													src={ coverUrl }
+													alt=""
+												/>
+											) }
+											<VStack
+												spacing={ 1 }
+												className={ styles.meta }
 											>
-												{ coverUrl && (
-													<img
-														className={
-															styles.cover
-														}
-														src={ coverUrl }
-														alt=""
-													/>
-												) }
-												<VStack
-													spacing={ 1 }
-													className={ styles.meta }
-												>
-													<Text weight="600">
-														{ doc.value?.title ||
-															__(
-																'(untitled)',
-																'autoblue'
-															) }
-													</Text>
-													{ doc.value
-														?.description && (
-														<Text variant="muted">
-															{
-																doc.value
-																	.description
-															}
-														</Text>
-													) }
-													<RelativeDate
-														iso={
+												<Text weight="600">
+													{ doc.value?.title ||
+														__(
+															'(untitled)',
+															'autoblue'
+														) }
+												</Text>
+												{ doc.value?.description && (
+													<Text variant="muted">
+														{
 															doc.value
-																?.publishedAt
+																.description
 														}
-													/>
-													<HStack
-														spacing={ 3 }
-														alignment="left"
-														className={
-															styles.links
-														}
+													</Text>
+												) }
+												<RelativeDate
+													iso={
+														doc.value?.publishedAt
+													}
+												/>
+												<HStack
+													spacing={ 3 }
+													alignment="left"
+													className={ styles.links }
+												>
+													<a
+														href={ pdslsUrl(
+															doc.uri
+														) }
+														target="_blank"
+														rel="noreferrer"
 													>
+														{ __(
+															'View raw',
+															'autoblue'
+														) }
+													</a>
+													{ bskyUrl && (
 														<a
-															href={ pdslsUrl(
-																doc.uri
-															) }
+															href={ bskyUrl }
 															target="_blank"
 															rel="noreferrer"
 														>
 															{ __(
-																'View raw',
+																'View on Bluesky',
 																'autoblue'
 															) }
 														</a>
-														{ bskyUrl && (
-															<a
-																href={ bskyUrl }
-																target="_blank"
-																rel="noreferrer"
-															>
-																{ __(
-																	'View on Bluesky',
-																	'autoblue'
-																) }
-															</a>
-														) }
-													</HStack>
-												</VStack>
-											</div>
-										);
-									} ) }
-								</VStack>
-							</CardBody>
-						</Card>
+													) }
+												</HStack>
+											</VStack>
+										</div>
+									</CardBody>
+								</Card>
+							);
+						} ) }
 						{ cursor && (
 							<Button
 								variant="secondary"
