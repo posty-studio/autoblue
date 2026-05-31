@@ -217,6 +217,34 @@ class Bluesky {
 			]
 		);
 
+		if ( $this->should_publish_document( $post_id, $response ) ) {
+			( new Standard\Document( $this->api_client, $this->log ) )->publish(
+				$post_id,
+				[
+					'uri' => (string) $response['uri'],
+					'cid' => (string) $response['cid'],
+				],
+				is_array( $image_blob ) ? $image_blob : null
+			);
+		}
+
 		return $share;
+	}
+
+	/**
+	 * Whether this share should also produce a standard.site document record.
+	 *
+	 * @param array<string,mixed> $bsky_response
+	 */
+	private function should_publish_document( int $post_id, array $bsky_response ): bool {
+		if ( empty( $bsky_response['uri'] ) || empty( $bsky_response['cid'] ) ) {
+			return false;
+		}
+
+		if ( ! Utils::is_standard_site_enabled() ) {
+			return false;
+		}
+
+		return (bool) get_post_meta( $post_id, 'autoblue_publish_document', true );
 	}
 }

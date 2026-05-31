@@ -254,6 +254,36 @@ class API {
 	}
 
 	/**
+	 * Create-or-update a record at a known rkey via com.atproto.repo.putRecord.
+	 *
+	 * @param array<string, mixed> $record Must include repo, collection, rkey, record.
+	 * @return array<string,mixed>|\WP_Error
+	 */
+	public function put_record( array $record, string $access_token, string $did ) {
+		if ( ! $record || ! $access_token ) {
+			return new \WP_Error( 'autoblue_invalid_record_or_access_token', __( 'Invalid record or access token.', 'autoblue' ) );
+		}
+
+		$pds_endpoint = $this->resolve_pds_endpoint( $did );
+
+		if ( is_wp_error( $pds_endpoint ) ) {
+			return $pds_endpoint;
+		}
+
+		return $this->send_request(
+			[
+				'endpoint' => 'com.atproto.repo.putRecord',
+				'method'   => 'POST',
+				'headers'  => [
+					'Authorization' => 'Bearer ' . $access_token,
+				],
+				'body'     => $record,
+				'base_url' => $pds_endpoint,
+			]
+		);
+	}
+
+	/**
 	 * @return array<string,mixed>|\WP_Error
 	 */
 	public function upload_blob( string $blob, string $mime_type, string $access_token, string $did ) {

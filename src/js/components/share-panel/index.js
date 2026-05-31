@@ -13,23 +13,30 @@ import AccountInfo from './../account-info';
 import PublishedPostPanel from './../published-post-panel';
 import useConnectAccountModal from './../connect-account-modal';
 import useAccounts from './../../hooks/use-accounts';
+import useSettings from './../../hooks/use-settings';
 import styles from './styles.module.scss';
 
 const SharePanel = () => {
 	const { accounts } = useAccounts();
 	const { renderModal, openModal } = useConnectAccountModal();
 	const { editPost } = useDispatch( 'core/editor' );
+	const { isStandardSiteEnabled, isRootInstall } = useSettings();
 
-	const { postStatus, isEnabled, customMessage } = useSelect( ( select ) => {
-		const { getEditedPostAttribute } = select( 'core/editor' );
+	const { postStatus, isEnabled, customMessage, publishDocument } = useSelect(
+		( select ) => {
+			const { getEditedPostAttribute } = select( 'core/editor' );
 
-		return {
-			postStatus: getEditedPostAttribute( 'status' ),
-			isEnabled: getEditedPostAttribute( 'meta' )?.autoblue_enabled,
-			customMessage:
-				getEditedPostAttribute( 'meta' )?.autoblue_custom_message,
-		};
-	}, [] );
+			return {
+				postStatus: getEditedPostAttribute( 'status' ),
+				isEnabled: getEditedPostAttribute( 'meta' )?.autoblue_enabled,
+				customMessage:
+					getEditedPostAttribute( 'meta' )?.autoblue_custom_message,
+				publishDocument:
+					getEditedPostAttribute( 'meta' )?.autoblue_publish_document,
+			};
+		},
+		[]
+	);
 
 	if ( postStatus === 'publish' ) {
 		return <PublishedPostPanel />;
@@ -58,8 +65,32 @@ const SharePanel = () => {
 		} );
 	};
 
+	const setPublishDocument = ( value ) => {
+		editPost( {
+			meta: { autoblue_publish_document: value },
+		} );
+	};
+
 	const hasBrokenConnection = accounts.some( ( a ) => a.needs_reauth );
 	const effectiveIsEnabled = isEnabled && ! hasBrokenConnection;
+	const standardSiteDisabledReason = ! isRootInstall
+		? __(
+				'standard.site is not available on subdirectory installs.',
+				'autoblue'
+		  )
+		: ! isStandardSiteEnabled
+		? __(
+				'Enable standard.site publishing in Autoblue settings.',
+				'autoblue'
+		  )
+		: hasBrokenConnection
+		? __(
+				'Reconnect your Bluesky account to publish documents.',
+				'autoblue'
+		  )
+		: null;
+	const standardSiteToggleEnabled =
+		isStandardSiteEnabled && isRootInstall && ! hasBrokenConnection;
 
 	return (
 		<VStack spacing={ 3 }>
@@ -86,6 +117,25 @@ const SharePanel = () => {
 				onChange={ setIsEnabled }
 				disabled={ hasBrokenConnection }
 			/>
+			{ effectiveIsEnabled && (
+				<ToggleControl
+					__nextHasNoMarginBottom
+					label={ __(
+						'Also publish as a standard.site document',
+						'autoblue'
+					) }
+					help={
+						standardSiteDisabledReason ||
+						__(
+							'Stores the full article on your AT Protocol PDS for discovery by other readers.',
+							'autoblue'
+						)
+					}
+					checked={ standardSiteToggleEnabled && !! publishDocument }
+					onChange={ setPublishDocument }
+					disabled={ ! standardSiteToggleEnabled }
+				/>
+			) }
 			{ effectiveIsEnabled && (
 				<>
 					<TextareaControl

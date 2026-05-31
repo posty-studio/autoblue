@@ -106,6 +106,39 @@ class Admin {
 
 		register_setting(
 			'autoblue',
+			'autoblue_publish_documents_enabled',
+			[
+				'type'              => 'boolean',
+				'description'       => __( 'Whether to publish posts as standard.site documents.', 'autoblue' ),
+				'show_in_rest'      => true,
+				'default'           => false,
+				'sanitize_callback' => 'rest_sanitize_boolean',
+			],
+		);
+
+		register_setting(
+			'autoblue',
+			'autoblue_publication_overrides',
+			[
+				'type'         => 'object',
+				'description'  => __( 'Per-field overrides for the standard.site publication record.', 'autoblue' ),
+				'show_in_rest' => [
+					'schema' => [
+						'type'                 => 'object',
+						'properties'           => [
+							'name'        => [ 'type' => [ 'string', 'null' ] ],
+							'description' => [ 'type' => [ 'string', 'null' ] ],
+							'icon_id'     => [ 'type' => [ 'integer', 'null' ] ],
+						],
+						'additionalProperties' => false,
+					],
+				],
+				'default'      => [],
+			],
+		);
+
+		register_setting(
+			'autoblue',
 			'autoblue_log_level',
 			[
 				'type'              => 'string',

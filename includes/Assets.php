@@ -108,6 +108,8 @@ class Assets {
 			],
 		];
 
+		$publication_record = get_option( 'autoblue_publication_record', [] );
+
 		return [
 			'accounts' => [
 				'items' => $connections,
@@ -115,6 +117,15 @@ class Assets {
 			'settings' => [
 				'enabled'            => get_option( 'autoblue_enabled', false ),
 				'availablePostTypes' => Utils::get_available_post_types(),
+				'standardSite'       => [
+					'isRootInstall' => Utils::is_root_install(),
+					'publication'   => [
+						'url'          => untrailingslashit( home_url( '/' ) ),
+						'siteName'     => get_bloginfo( 'name' ),
+						'siteDesc'     => get_bloginfo( 'description' ),
+						'publishedUri' => isset( $publication_record['uri'] ) ? (string) $publication_record['uri'] : null,
+					],
+				],
 			],
 			'logs'     => [
 				'items'      => $logs['data'],

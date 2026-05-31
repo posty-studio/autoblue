@@ -80,6 +80,18 @@ class Meta {
 					'sanitize_callback' => 'esc_url_raw',
 				]
 			);
+
+			register_post_meta(
+				$post_type,
+				'autoblue_publish_document',
+				[
+					'type'         => 'boolean',
+					'description'  => __( 'Whether the post should be published as a standard.site document.', 'autoblue' ),
+					'single'       => true,
+					'show_in_rest' => true,
+					'default'      => (bool) get_option( 'autoblue_publish_documents_enabled', false ),
+				]
+			);
 		}
 	}
 }

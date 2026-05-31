@@ -4,7 +4,10 @@ import {
 	Card,
 	CardBody,
 	CheckboxControl,
+	Notice,
 	Spinner,
+	TextControl,
+	TextareaControl,
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
@@ -25,6 +28,13 @@ const Settings = () => {
 		isLoadingPostTypes,
 		availablePostTypes,
 		togglePostType,
+		isStandardSiteEnabled,
+		isLoadingStandardSite,
+		setIsStandardSiteEnabled,
+		publicationOverrides,
+		setPublicationOverride,
+		standardSitePublication,
+		isRootInstall,
 	} = useSettings();
 
 	return (
@@ -100,6 +110,126 @@ const Settings = () => {
 									</VStack>
 								) }
 							</VStack>
+						</CardBody>
+					</Card>
+				</BaseControl>
+			) }
+			{ hasAccounts && (
+				<BaseControl
+					__nextHasNoMarginBottom
+					label={ __( 'standard.site', 'autoblue' ) }
+					id="autoblue-standard-site"
+				>
+					<Card>
+						<CardBody className={ styles.card }>
+							{ ! isRootInstall ? (
+								<Notice
+									status="info"
+									isDismissible={ false }
+								>
+									{ __(
+										'standard.site requires WordPress to be installed at your domain root. This install lives in a subdirectory, so the feature is unavailable.',
+										'autoblue'
+									) }
+								</Notice>
+							) : (
+								<VStack spacing={ 3 }>
+									{ isLoadingStandardSite ? (
+										<Spinner />
+									) : (
+										<SettingToggle
+											label={ __(
+												'Publish posts as standard.site documents',
+												'autoblue'
+											) }
+											help={ __(
+												'Also writes a site.standard.document record to your PDS for every post shared to Bluesky, so other AT-aware readers can discover it.',
+												'autoblue'
+											) }
+											checked={ isStandardSiteEnabled }
+											onChange={ setIsStandardSiteEnabled }
+										/>
+									) }
+									{ isStandardSiteEnabled && (
+										<VStack spacing={ 3 }>
+											<TextControl
+												__nextHasNoMarginBottom
+												label={ __(
+													'Publication name',
+													'autoblue'
+												) }
+												value={
+													publicationOverrides.name ?? ''
+												}
+												placeholder={
+													standardSitePublication.siteName ||
+													''
+												}
+												help={ __(
+													'Leave empty to use the WordPress site title.',
+													'autoblue'
+												) }
+												onChange={ ( value ) =>
+													setPublicationOverride(
+														'name',
+														value
+													)
+												}
+											/>
+											<TextareaControl
+												__nextHasNoMarginBottom
+												label={ __(
+													'Publication description',
+													'autoblue'
+												) }
+												value={
+													publicationOverrides.description ??
+													''
+												}
+												placeholder={
+													standardSitePublication.siteDesc ||
+													''
+												}
+												help={ __(
+													'Leave empty to use the WordPress site tagline.',
+													'autoblue'
+												) }
+												onChange={ ( value ) =>
+													setPublicationOverride(
+														'description',
+														value
+													)
+												}
+											/>
+											<TextControl
+												__nextHasNoMarginBottom
+												label={ __(
+													'Publication URL',
+													'autoblue'
+												) }
+												value={
+													standardSitePublication.url ||
+													''
+												}
+												readOnly
+											/>
+											{ standardSitePublication.publishedUri && (
+												<TextControl
+													__nextHasNoMarginBottom
+													label={ __(
+														'Publication record (AT-URI)',
+														'autoblue'
+													) }
+													value={
+														standardSitePublication.publishedUri
+													}
+													readOnly
+												/>
+											) }
+										</VStack>
+									) }
+								</VStack>
+							) }
 						</CardBody>
 					</Card>
 				</BaseControl>
