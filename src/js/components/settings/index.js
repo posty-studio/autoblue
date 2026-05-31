@@ -161,22 +161,22 @@ const Settings = () => {
 		{
 			slug: 'background',
 			name: __( 'Background', 'autoblue' ),
-			color: draftThemeBackground,
+			color: draftThemeBackground || 'transparent',
 		},
 		{
 			slug: 'foreground',
 			name: __( 'Foreground', 'autoblue' ),
-			color: draftThemeForeground,
+			color: draftThemeForeground || 'transparent',
 		},
 		{
 			slug: 'accent',
 			name: __( 'Accent', 'autoblue' ),
-			color: draftThemeAccent,
+			color: draftThemeAccent || 'transparent',
 		},
 		{
 			slug: 'accent_foreground',
 			name: __( 'Accent foreground', 'autoblue' ),
-			color: draftThemeAccentFg,
+			color: draftThemeAccentFg || 'transparent',
 		},
 	];
 
@@ -191,9 +191,10 @@ const Settings = () => {
 		if ( ! Array.isArray( nextPalette ) ) return;
 		nextPalette.forEach( ( entry ) => {
 			const setter = themeSetters[ entry.slug ];
-			if ( setter ) {
-				setter( entry.color || '' );
-			}
+			if ( ! setter ) return;
+			const raw = entry.color || '';
+			// Transparent (our sentinel for "no override") maps back to empty.
+			setter( raw === 'transparent' ? '' : raw );
 		} );
 	};
 
