@@ -1,7 +1,7 @@
 === Autoblue ===
 Contributors: danielpost
 Tags: social, bluesky, auto, share, post
-Stable tag: 1.0.0
+Stable tag: 2.0.0
 Requires at least: 6.6
 Tested up to: 7.0
 Requires PHP: 7.4
@@ -45,6 +45,14 @@ Currently, Autoblue only works in the block editor. It uses a lot of modern Word
 3. Keep track of everything that Autoblue does.
 
 == Changelog ==
+
+= 2.0.0 =
+* Feature: Publish posts as standard.site document records on your AT Protocol PDS.
+* Feature: Share from additional public post types beyond posts.
+* Improvement: Surface expired Bluesky connection states in the admin UI.
+* Improvement: Tested up to WordPress 7.0.
+* Security: Strip JWTs from public connection responses.
+* Fix: Surface silent cron share failures in the logs.
 
 = 1.0.0 =
 * Autoblue is now out of beta.
