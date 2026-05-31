@@ -8,6 +8,7 @@ import {
 	Button,
 	Card,
 	CardBody,
+	ColorIndicator,
 	Notice,
 	Spinner,
 	Tooltip,
@@ -36,6 +37,30 @@ const blobThumbnailUrl = ( did, blob ) => {
 
 const pdslsUrl = ( atUri ) =>
 	atUri ? `https://pdsls.dev/${ atUri }` : null;
+
+const rgbToHex = ( rgb ) => {
+	if ( ! rgb ) return null;
+	const { r, g, b } = rgb;
+	if (
+		typeof r !== 'number' ||
+		typeof g !== 'number' ||
+		typeof b !== 'number'
+	) {
+		return null;
+	}
+	const toHex = ( n ) =>
+		Math.max( 0, Math.min( 255, Math.round( n ) ) )
+			.toString( 16 )
+			.padStart( 2, '0' );
+	return `#${ toHex( r ) }${ toHex( g ) }${ toHex( b ) }`;
+};
+
+const THEME_FIELDS = [
+	{ key: 'background', label: 'Background' },
+	{ key: 'foreground', label: 'Foreground' },
+	{ key: 'accent', label: 'Accent' },
+	{ key: 'accentForeground', label: 'Accent foreground' },
+];
 
 const bskyPostUrl = ( bskyPostRef ) => {
 	const uri = bskyPostRef?.uri;
@@ -194,6 +219,42 @@ const Records = () => {
 										<Text variant="muted">
 											{ publication.value.description }
 										</Text>
+									) }
+									{ publication.value?.basicTheme && (
+										<HStack
+											spacing={ 2 }
+											alignment="left"
+											className={ styles.swatches }
+										>
+											{ THEME_FIELDS.map( ( field ) => {
+												const hex = rgbToHex(
+													publication.value
+														.basicTheme?.[
+														field.key
+													]
+												);
+												if ( ! hex ) return null;
+												return (
+													<Tooltip
+														key={ field.key }
+														text={ `${ field.label } — ${ hex }` }
+													>
+														<span
+															tabIndex={ 0 }
+															aria-label={
+																field.label
+															}
+														>
+															<ColorIndicator
+																colorValue={
+																	hex
+																}
+															/>
+														</span>
+													</Tooltip>
+												);
+											} ) }
+										</HStack>
 									) }
 									<HStack
 										spacing={ 3 }

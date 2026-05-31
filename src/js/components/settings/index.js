@@ -473,41 +473,58 @@ const Settings = () => {
 													readOnly
 												/>
 											) }
-											<ToggleControl
+											<BaseControl
 												__nextHasNoMarginBottom
 												label={ __(
-													'Customize publication colors',
+													'Publication colors',
 													'autoblue'
 												) }
-												checked={ draftHasTheme }
-												onChange={ handleToggleTheme }
-											/>
-											{ draftHasTheme && (
-												<>
-													<PaletteEdit
-														colors={ themePalette }
-														onChange={
-															handleThemeChange
+												id="autoblue-publication-colors"
+											>
+												<VStack spacing={ 3 }>
+													<ToggleControl
+														__nextHasNoMarginBottom
+														label={ __(
+															'Customize publication colors',
+															'autoblue'
+														) }
+														checked={
+															draftHasTheme
 														}
-														canOnlyChangeValues
-														paletteLabel={ __(
-															'Theme colors',
-															'autoblue'
-														) }
-														popoverProps={ {
-															offset: 8,
-															placement:
-																'bottom-start',
-														} }
+														onChange={
+															handleToggleTheme
+														}
 													/>
-													<Text variant="muted">
-														{ __(
-															'Theme colors are used by standard.site readers to style your publication.',
-															'autoblue'
-														) }
-													</Text>
-												</>
-											) }
+													{ draftHasTheme && (
+														<>
+															<PaletteEdit
+																colors={
+																	themePalette
+																}
+																onChange={
+																	handleThemeChange
+																}
+																canOnlyChangeValues
+																paletteLabel={ __(
+																	'Theme colors',
+																	'autoblue'
+																) }
+																popoverProps={ {
+																	offset: 8,
+																	placement:
+																		'bottom-start',
+																} }
+															/>
+															<Text variant="muted">
+																{ __(
+																	'Theme colors are used by standard.site readers to style your publication.',
+																	'autoblue'
+																) }
+															</Text>
+														</>
+													) }
+												</VStack>
+											</BaseControl>
 											<HStack alignment="left">
 												<Button
 													variant="primary"
